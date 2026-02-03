@@ -1,1 +1,7 @@
-{\n  \"version\": 2,\n  \"name\": \"nexia-ai\",\n  \"builds\": [\n    {\n      \"src\": \"package.json\",\n      \"use\": \"@vercel/next\"\n    }\n  ],\n  \"routes\": [\n    {\n      \"src\": \"/(.*)\",\n      \"dest\": \"/\"\n    }\n  ],\n  \"env\": {\n    \"GROQ_API_KEY\": \"@groq-api-key\",\n    \"NEXT_PUBLIC_SUPABASE_URL\": \"@supabase-url\",\n    \"NEXT_PUBLIC_SUPABASE_ANON_KEY\": \"@supabase-anon-key\"\n  },\n  \"functions\": {\n    \"app/api/**/*.ts\": {\n      \"maxDuration\": 30\n    }\n  }\n}
+{
+  "functions": {
+    "app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  }
+}
