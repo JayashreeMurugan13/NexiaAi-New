@@ -3,14 +3,14 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
     try {
         const { messages } = await req.json();
-        
+
         if (!messages || messages.length === 0) {
             return NextResponse.json({ title: "New Chat" });
         }
 
         const firstMessages = messages.slice(0, 3);
         const conversationContext = firstMessages
-            .map(m => `${m.role}: ${m.content}`)
+            .map((m: { role: string; content: string }) => `${m.role}: ${m.content}`)
             .join('\n');
 
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
 
         const data = await response.json();
         const title = data.choices[0].message.content.trim().replace(/['"]/g, '');
-        
+
         return NextResponse.json({ title: title || "New Chat" });
     } catch (error) {
         console.error('Title generation error:', error);

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Zap, Ghost, User, Heart, Sparkles, MessageCircle, Copy, Check, Plus, History, Search } from "lucide-react";
+import { Send, User, Heart, Sparkles, Copy, Check, Plus, History, Search } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface Message {
@@ -19,7 +19,7 @@ interface Conversation {
 const formatMessage = (content: string) => {
     // Split content by code blocks
     const parts = content.split(/(```[\s\S]*?```|`[^`]+`)/g);
-    
+
     return parts.map((part, index) => {
         if (part.startsWith('```') && part.endsWith('```')) {
             // Multi-line code block
@@ -27,7 +27,7 @@ const formatMessage = (content: string) => {
             const lines = code.split('\n');
             const language = lines[0].trim();
             const codeContent = lines.slice(1).join('\n');
-            
+
             return (
                 <div key={index} className="my-3 bg-zinc-950 border border-zinc-700 rounded-lg overflow-hidden">
                     <div className="flex items-center justify-between px-3 py-2 bg-zinc-800 border-b border-zinc-700">
@@ -56,13 +56,13 @@ const formatMessage = (content: string) => {
 
 const CopyButton = ({ text }: { text: string }) => {
     const [copied, setCopied] = useState(false);
-    
+
     const handleCopy = () => {
         navigator.clipboard.writeText(text);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
-    
+
     return (
         <button
             onClick={handleCopy}
@@ -77,7 +77,7 @@ const CopyButton = ({ text }: { text: string }) => {
 const ChatMessage = ({ message, isUser }: { message: string, isUser: boolean }) => {
     const [isVisible, setIsVisible] = useState(false);
     const [copied, setCopied] = useState(false);
-    
+
     useEffect(() => {
         const timer = setTimeout(() => setIsVisible(true), 100);
         return () => clearTimeout(timer);
@@ -97,7 +97,7 @@ const ChatMessage = ({ message, isUser }: { message: string, isUser: boolean }) 
             className={`flex w-full mb-6 ${isUser ? 'justify-end' : 'justify-start'}`}
         >
             <div className={`flex max-w-[85%] ${isUser ? 'flex-row-reverse' : 'flex-row'} items-end gap-3`}>
-                <motion.div 
+                <motion.div
                     className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg ${isUser ? 'bg-gradient-to-br from-blue-600 to-purple-600' : 'bg-gradient-to-br from-zinc-800 to-zinc-700 border border-zinc-600'}`}
                     whileHover={{ scale: 1.1, rotate: 5 }}
                     whileTap={{ scale: 0.95 }}
@@ -113,12 +113,12 @@ const ChatMessage = ({ message, isUser }: { message: string, isUser: boolean }) 
                         </motion.div>
                     )}
                 </motion.div>
-                
-                <motion.div 
+
+                <motion.div
                     className={`p-4 rounded-2xl text-sm leading-relaxed shadow-lg relative overflow-hidden group ${isUser
                         ? 'bg-gradient-to-br from-blue-600 to-purple-600 text-white rounded-br-md shadow-[0_4px_20px_rgba(37,99,235,0.3)]'
                         : 'bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 text-zinc-100 rounded-bl-md shadow-[0_4px_20px_rgba(0,0,0,0.4)]'
-                    }`}
+                        }`}
                     whileHover={{ scale: 1.02 }}
                     initial={{ scale: 0.9 }}
                     animate={{ scale: 1 }}
@@ -126,7 +126,7 @@ const ChatMessage = ({ message, isUser }: { message: string, isUser: boolean }) 
                     {!isUser && (
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 animate-pulse" />
                     )}
-                    
+
                     {/* Copy button */}
                     <button
                         onClick={copyMessage}
@@ -135,16 +135,16 @@ const ChatMessage = ({ message, isUser }: { message: string, isUser: boolean }) 
                     >
                         {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-zinc-300" />}
                     </button>
-                    
+
                     <div className="whitespace-pre-wrap relative z-10">
                         {formatMessage(message.replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&'))}
                     </div>
-                    
+
                     {/* Floating hearts for Nexia messages */}
                     {!isUser && message.includes('❤️') && (
                         <motion.div
                             className="absolute top-2 right-2"
-                            animate={{ 
+                            animate={{
                                 y: [-5, -15, -5],
                                 opacity: [0.5, 1, 0.5]
                             }}
@@ -179,7 +179,7 @@ const TypingIndicator = () => (
                 <motion.div
                     key={i}
                     className="w-2 h-2 bg-blue-400 rounded-full"
-                    animate={{ 
+                    animate={{
                         scale: [1, 1.5, 1],
                         opacity: [0.5, 1, 0.5]
                     }}
@@ -229,7 +229,7 @@ export function ChatInterface() {
         if (!query.trim()) {
             setFilteredConversations(conversations);
         } else {
-            const filtered = conversations.filter(conv => 
+            const filtered = conversations.filter(conv =>
                 conv.title.toLowerCase().includes(query.toLowerCase())
             );
             setFilteredConversations(filtered);
@@ -280,7 +280,7 @@ export function ChatInterface() {
                     .insert({ user_id: user.id, title })
                     .select()
                     .single();
-                
+
                 console.log('Conversation created:', conversation, error);
                 if (conversation) {
                     conversationId = conversation.id;
@@ -335,7 +335,7 @@ export function ChatInterface() {
             const data = await response.json();
             const finalMessages = [...newMessages, data];
             setMessages(finalMessages);
-            
+
             // Save assistant message
             await saveConversation(finalMessages);
         } catch (error) {
@@ -370,7 +370,7 @@ export function ChatInterface() {
                 <div className="flex items-center gap-4">
                     <motion.div
                         className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 flex items-center justify-center"
-                        animate={{ 
+                        animate={{
                             boxShadow: [
                                 "0 0 20px rgba(59,130,246,0.2)",
                                 "0 0 30px rgba(147,51,234,0.3)",
@@ -387,9 +387,9 @@ export function ChatInterface() {
                     </div>
                 </div>
                 <div className="flex items-center gap-3 px-4 py-2 bg-zinc-900/50 rounded-full border border-zinc-800">
-                    <motion.div 
+                    <motion.div
                         className="w-2 h-2 rounded-full bg-green-500"
-                        animate={{ 
+                        animate={{
                             boxShadow: [
                                 "0 0 5px rgba(34,197,94,0.5)",
                                 "0 0 15px rgba(34,197,94,0.8)",
@@ -400,7 +400,7 @@ export function ChatInterface() {
                     />
                     <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Online & Ready</span>
                 </div>
-                
+
                 <div className="flex gap-2">
                     <motion.button
                         onClick={() => setShowHistory(!showHistory)}
@@ -441,7 +441,7 @@ export function ChatInterface() {
                                     <span className="text-zinc-400">✕</span>
                                 </button>
                             </div>
-                            
+
                             {/* Search Bar */}
                             <div className="relative mb-4">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
@@ -453,7 +453,7 @@ export function ChatInterface() {
                                     className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg py-2 pl-10 pr-4 text-zinc-200 text-sm focus:outline-none focus:border-blue-500 transition-colors placeholder:text-zinc-500"
                                 />
                             </div>
-                            
+
                             <div className="space-y-2">
                                 {filteredConversations.length === 0 ? (
                                     <p className="text-zinc-500 text-sm">
@@ -464,11 +464,10 @@ export function ChatInterface() {
                                         <motion.button
                                             key={conv.id}
                                             onClick={() => loadConversation(conv.id)}
-                                            className={`w-full text-left p-3 rounded-lg transition-colors ${
-                                                currentConversationId === conv.id
+                                            className={`w-full text-left p-3 rounded-lg transition-colors ${currentConversationId === conv.id
                                                     ? 'bg-blue-600/20 border border-blue-500/30'
                                                     : 'bg-zinc-800/50 hover:bg-zinc-700/50'
-                                            }`}
+                                                }`}
                                             whileHover={{ scale: 1.02 }}
                                         >
                                             <div className="font-medium text-white text-sm truncate">
@@ -510,7 +509,7 @@ export function ChatInterface() {
                 {messages.length === 0 && (
                     <div className="h-full flex flex-col items-center justify-center text-center max-w-lg mx-auto space-y-8 relative z-10">
                         <motion.div
-                            animate={{ 
+                            animate={{
                                 scale: [1, 1.1, 1],
                                 rotate: [0, 5, -5, 0]
                             }}
@@ -520,9 +519,9 @@ export function ChatInterface() {
                             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 animate-pulse" />
                             <Sparkles className="w-16 h-16 text-blue-400 mx-auto relative z-10" />
                         </motion.div>
-                        
+
                         <div className="space-y-4">
-                            <motion.h3 
+                            <motion.h3
                                 className="text-3xl font-bold text-white tracking-tight bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -530,7 +529,7 @@ export function ChatInterface() {
                             >
                                 Hey there! I'm Nexia! 👋
                             </motion.h3>
-                            <motion.p 
+                            <motion.p
                                 className="text-zinc-400 leading-relaxed font-medium"
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -539,9 +538,9 @@ export function ChatInterface() {
                                 I'm your creative AI companion, ready to chat, brainstorm, and help bring your ideas to life! What's on your mind today? ✨
                             </motion.p>
                         </div>
-                        
+
                         {/* Quick prompts */}
-                        <motion.div 
+                        <motion.div
                             className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-md"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -569,14 +568,14 @@ export function ChatInterface() {
                 <AnimatePresence>
                     {loading && <TypingIndicator />}
                 </AnimatePresence>
-                
+
                 <div ref={scrollRef} />
             </div>
 
             {/* Input */}
             <div className="p-8 relative">
                 <div className="max-w-4xl mx-auto relative group">
-                    <motion.div 
+                    <motion.div
                         className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl blur opacity-20 group-focus-within:opacity-40 transition duration-1000"
                         animate={{
                             opacity: [0.2, 0.3, 0.2]

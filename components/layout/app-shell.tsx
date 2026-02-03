@@ -2,15 +2,16 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, MessageSquare, Layout, LogOut, User, Settings, Palette } from "lucide-react";
+import { Sparkles, MessageSquare, Layout, LogOut, User as UserIcon, Settings } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { User } from "@supabase/supabase-js";
 
 interface AppShellProps {
     children: (activeTab: "chat" | "studio") => React.ReactNode;
     initialTab?: "chat" | "studio";
-    user?: any;
+    user?: User | null;
 }
 
 export function AppShell({ children, initialTab = "chat", user }: AppShellProps) {
@@ -43,7 +44,7 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
     return (
         <div className="flex h-screen bg-black text-zinc-300 font-sans">
             {/* Sidebar */}
-            <motion.aside 
+            <motion.aside
                 className={cn(
                     "border-r border-zinc-800/50 flex flex-col items-center py-6 bg-gradient-to-b from-zinc-950/80 to-zinc-900/80 backdrop-blur-xl relative flex-shrink-0",
                     isCollapsed ? "w-20" : "w-20 md:w-72"
@@ -53,7 +54,7 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
             >
                 {/* Background decoration */}
                 <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none" />
-                
+
                 {/* Logo */}
                 <div className={cn("mb-10 relative z-10", isCollapsed ? "px-3" : "px-6 hidden md:block w-full")}>
                     <motion.div
@@ -73,7 +74,7 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
                             <Sparkles className="text-blue-400 w-6 h-6" />
                         </motion.div>
                         {!isCollapsed && (
-                            <motion.span 
+                            <motion.span
                                 className="font-bold text-white text-lg tracking-tight relative z-10"
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -96,7 +97,7 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = activeTab === item.id;
-                        
+
                         return (
                             <motion.button
                                 key={item.id}
@@ -118,7 +119,7 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
                                         transition={{ duration: 0.3 }}
                                     />
                                 )}
-                                
+
                                 <motion.div
                                     className="relative z-10"
                                     animate={isActive ? { rotate: [0, 5, -5, 0] } : {}}
@@ -126,7 +127,7 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
                                 >
                                     <Icon className="w-5 h-5" />
                                 </motion.div>
-                                
+
                                 {!isCollapsed && (
                                     <div className="hidden md:block flex-1 text-left relative z-10">
                                         <div className="font-semibold">{item.label}</div>
@@ -138,7 +139,7 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
                                         </div>
                                     </div>
                                 )}
-                                
+
                                 {isActive && (
                                     <motion.div
                                         className="absolute right-2 w-2 h-8 bg-white/30 rounded-full"
@@ -156,14 +157,14 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
                 <div className="mt-auto px-4 w-full space-y-3 relative z-10">
                     {/* User Profile */}
                     {!isCollapsed && (
-                        <motion.div 
+                        <motion.div
                             className="bg-zinc-900/60 p-4 rounded-2xl border border-zinc-800/50 mb-4 hidden md:block backdrop-blur-sm"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                         >
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-zinc-700 to-zinc-800 flex items-center justify-center border border-zinc-600">
-                                    <User className="w-5 h-5 text-zinc-300" />
+                                    <UserIcon className="w-5 h-5 text-zinc-300" />
                                 </div>
                                 <div className="flex-1 overflow-hidden">
                                     <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">Active User</p>
@@ -172,7 +173,7 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
                             </div>
                         </motion.div>
                     )}
-                    
+
                     {/* Settings Button */}
                     <motion.button
                         className="w-full flex items-center gap-3 p-3 rounded-xl text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 transition-all group"
@@ -182,7 +183,7 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
                         <Settings className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
                         {!isCollapsed && <span className="hidden md:block font-semibold">Settings</span>}
                     </motion.button>
-                    
+
                     {/* Sign Out */}
                     <motion.button
                         onClick={handleSignOut}
@@ -203,7 +204,7 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
                     <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-gradient-to-bl from-blue-500/5 via-transparent to-transparent" />
                     <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-gradient-to-tr from-purple-500/5 via-transparent to-transparent" />
                 </div>
-                
+
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={activeTab}
