@@ -1,0 +1,307 @@
+"use client";
+
+import { motion, useScroll, useTransform } from "framer-motion";
+import { Sparkles, MessageSquare, Zap, Brain, Palette, ArrowRight, Stars, Wand2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useRef } from "react";
+
+interface HomePageProps {
+    onGetStarted: () => void;
+    onGoToStudio?: () => void;
+}
+
+const FeatureBox = ({ 
+    icon, 
+    title, 
+    desc, 
+    delay = 0,
+    onClick
+}: {
+    icon: React.ReactNode;
+    title: string;
+    desc: string;
+    delay?: number;
+    onClick?: () => void;
+}) => {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 50, rotateX: -15 }}
+            whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+            viewport={{ margin: "-100px", once: true }}
+            transition={{ duration: 0.8, delay: delay * 0.1 }}
+            whileHover={{ 
+                scale: 1.05,
+                rotateY: 5,
+                z: 50
+            }}
+            onClick={onClick}
+            className="group relative p-8 rounded-[2rem] bg-gradient-to-br from-[#0F0F12] via-[#1A1D24] to-[#0F0F12] border border-zinc-800/50 backdrop-blur-xl shadow-2xl cursor-pointer overflow-hidden transform-gpu perspective-1000 hover:border-zinc-700/70 transition-all duration-500"
+        >
+            {/* Animated gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            
+            {/* Floating particles */}
+            {[...Array(6)].map((_, i) => (
+                <motion.div
+                    key={i}
+                    className="absolute w-1 h-1 bg-blue-400/30 rounded-full"
+                    style={{
+                        left: `${20 + Math.random() * 60}%`,
+                        top: `${20 + Math.random() * 60}%`,
+                    }}
+                    animate={{
+                        y: [-8, 8, -8],
+                        opacity: [0.3, 1, 0.3],
+                        scale: [0.5, 1, 0.5]
+                    }}
+                    transition={{
+                        duration: 2 + Math.random() * 2,
+                        repeat: Infinity,
+                        delay: Math.random() * 2,
+                    }}
+                />
+            ))}
+            
+            {/* Icon */}
+            <motion.div
+                className="relative z-10 mb-6"
+                whileHover={{ rotate: [0, -5, 5, 0], scale: 1.1 }}
+                transition={{ duration: 0.5 }}
+            >
+                {icon}
+            </motion.div>
+            
+            {/* Content */}
+            <div className="relative z-10">
+                <motion.h3 
+                    className="text-xl font-bold text-white mb-3 group-hover:text-blue-200 transition-colors"
+                    whileHover={{ x: 3 }}
+                >
+                    {title}
+                </motion.h3>
+                <motion.p 
+                    className="text-zinc-400 text-sm leading-relaxed group-hover:text-zinc-300 transition-colors"
+                    whileHover={{ x: 3 }}
+                >
+                    {desc}
+                </motion.p>
+            </div>
+            
+            {/* Corner accent */}
+            <div className="absolute top-4 right-4 w-2 h-2 bg-blue-500/50 rounded-full group-hover:bg-blue-400 group-hover:scale-150 transition-all duration-300" />
+        </motion.div>
+    );
+};
+
+export function HomePage({ onGetStarted, onGoToStudio }: HomePageProps) {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const { scrollYProgress } = useScroll({
+        target: containerRef,
+        offset: ["start start", "end end"]
+    });
+    
+    const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+    const heroY = useTransform(scrollYProgress, [0, 0.5], ["0%", "50%"]);
+
+    const features = [
+        {
+            icon: <MessageSquare className="w-12 h-12 text-blue-400" />,
+            title: "Chat Like Friends",
+            desc: "Have natural conversations with Nexia. She remembers context, understands emotions, and responds like your best friend who happens to be super smart."
+        },
+        {
+            icon: <Zap className="w-12 h-12 text-yellow-400" />,
+            title: "Enhance Your Ideas",
+            desc: "Transform simple thoughts into powerful, detailed prompts. Nexia's Neural Enhancer turns 'make a logo' into professional design briefs."
+        },
+        {
+            icon: <Palette className="w-12 h-12 text-pink-400" />,
+            title: "Creative Templates",
+            desc: "Access a curated library of stunning templates for art, nature, business, and imagination. Each template is crafted for maximum impact."
+        }
+    ];
+
+    return (
+        <div ref={containerRef} className="min-h-screen bg-black overflow-x-hidden">
+            {/* Animated Background */}
+            <motion.div 
+                className="fixed inset-0 pointer-events-none"
+                style={{ y: backgroundY }}
+            >
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,_var(--tw-gradient-stops))] from-blue-900/20 via-purple-900/10 to-transparent" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,_var(--tw-gradient-stops))] from-purple-900/15 via-pink-900/10 to-transparent" />
+                
+                {/* Floating elements */}
+                {[...Array(25)].map((_, i) => (
+                    <motion.div
+                        key={i}
+                        className="absolute"
+                        style={{
+                            left: `${Math.random() * 100}%`,
+                            top: `${Math.random() * 100}%`,
+                        }}
+                        animate={{
+                            y: [-20, 20, -20],
+                            x: [-10, 10, -10],
+                            rotate: [0, 180, 360],
+                            opacity: [0.1, 0.6, 0.1],
+                        }}
+                        transition={{
+                            duration: 3 + Math.random() * 4,
+                            repeat: Infinity,
+                            delay: Math.random() * 3,
+                        }}
+                    >
+                        {i % 4 === 0 ? (
+                            <Stars className="w-3 h-3 text-blue-400/30" />
+                        ) : i % 4 === 1 ? (
+                            <Wand2 className="w-2 h-2 text-purple-400/30" />
+                        ) : i % 4 === 2 ? (
+                            <Sparkles className="w-2 h-2 text-pink-400/30" />
+                        ) : (
+                            <div className="w-1 h-1 bg-blue-400/40 rounded-full" />
+                        )}
+                    </motion.div>
+                ))}
+            </motion.div>
+
+            {/* Hero Section */}
+            <motion.section 
+                className="relative z-10 min-h-screen flex flex-col items-center justify-center px-8 text-center"
+                style={{ y: heroY }}
+            >
+                <motion.div
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ duration: 1.2, type: "spring" }}
+                    className="mb-12"
+                >
+                    <div className="w-24 h-24 mx-auto bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center border border-blue-500/30 shadow-[0_0_40px_rgba(59,130,246,0.3)] relative overflow-hidden">
+                        <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                            className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10"
+                        />
+                        <Sparkles className="w-12 h-12 text-blue-400 relative z-10" />
+                    </div>
+                </motion.div>
+
+                <motion.h1
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3, duration: 1 }}
+                    className="text-8xl md:text-9xl font-black text-white mb-8 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tight"
+                >
+                    NEXIA
+                </motion.h1>
+
+                <motion.p
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6, duration: 0.8 }}
+                    className="text-xl text-zinc-300 mb-12 max-w-2xl leading-relaxed"
+                >
+                    Your intelligent creative companion that transforms ideas into reality
+                </motion.p>
+
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.9, duration: 0.6 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                >
+                    <Button
+                        onClick={onGetStarted}
+                        className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-500 hover:via-purple-500 hover:to-pink-500 text-white px-12 py-6 text-lg rounded-full font-bold shadow-[0_0_40px_rgba(147,51,234,0.4)] transition-all duration-300 border-0 h-auto"
+                    >
+                        <Sparkles className="mr-3 w-5 h-5" />
+                        Get Started
+                        <ArrowRight className="ml-3 w-5 h-5" />
+                    </Button>
+                </motion.div>
+            </motion.section>
+
+            {/* About Section */}
+            <section className="relative z-10 py-20 px-8">
+                <div className="max-w-4xl mx-auto text-center">
+                    <motion.h2
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="text-4xl font-bold text-white mb-8 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
+                    >
+                        About Nexia
+                    </motion.h2>
+                    <motion.p
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.2 }}
+                        className="text-lg text-zinc-300 leading-relaxed mb-12"
+                    >
+                        Nexia is more than just an AI assistant - she's your creative partner who understands the nuances of imagination, 
+                        logic, and artistic expression. Built with cutting-edge technology and designed with creators in mind, 
+                        Nexia helps you transform simple thoughts into extraordinary creations.
+                    </motion.p>
+                </div>
+            </section>
+
+            {/* Features Section */}
+            <section className="relative z-10 py-20 px-8">
+                <div className="max-w-6xl mx-auto">
+                    <motion.h2
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="text-4xl font-bold text-center text-white mb-16 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
+                    >
+                        What Nexia Can Do
+                    </motion.h2>
+                    
+                    <div className="grid md:grid-cols-3 gap-6">
+                        {features.map((feature, i) => (
+                            <FeatureBox
+                                key={i}
+                                icon={feature.icon}
+                                title={feature.title}
+                                desc={feature.desc}
+                                delay={i}
+                                onClick={feature.title === "Creative Templates" ? onGoToStudio : onGetStarted}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* CTA Section */}
+            <section className="relative z-10 py-20 px-8 text-center">
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="max-w-2xl mx-auto"
+                >
+                    <h3 className="text-3xl font-bold text-white mb-6">
+                        Ready to Create Magic?
+                    </h3>
+                    <p className="text-zinc-400 mb-8">
+                        Join thousands of creators who are already using Nexia to bring their ideas to life.
+                    </p>
+                    <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                    >
+                        <Button
+                            onClick={onGetStarted}
+                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-10 py-4 text-lg rounded-full font-semibold shadow-[0_0_30px_rgba(59,130,246,0.3)] transition-all duration-300 border-0 h-auto"
+                        >
+                            Start Creating Now
+                            <ArrowRight className="ml-2 w-5 h-5" />
+                        </Button>
+                    </motion.div>
+                </motion.div>
+            </section>
+        </div>
+    );
+}
