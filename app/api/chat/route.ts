@@ -33,25 +33,23 @@ export async function POST(req: Request) {
       !("messages" in body)
     ) {
       return NextResponse.json(
-        {
-          role: "assistant",
-          content: "Invalid request format",
-        },
+        { role: "assistant", content: "Invalid request format" },
         { status: 400 }
       );
     }
 
-    const { messages, enhance } = body as ChatRequestBody;
+    const parsedBody = body as ChatRequestBody;
 
-    if (!Array.isArray(messages)) {
+    if (!Array.isArray(parsedBody.messages)) {
       return NextResponse.json(
-        {
-          role: "assistant",
-          content: "Messages must be an array",
-        },
+        { role: "assistant", content: "Messages must be an array" },
         { status: 400 }
       );
     }
+
+    // 🔒 FORCE TYPE — this is the key fix
+    const messages: ChatMessage[] = parsedBody.messages;
+    const enhance: boolean = Boolean(parsedBody.enhance);
 
     console.log("=== API DEBUG ===");
     console.log("API Key exists:", !!process.env.GROQ_API_KEY);
@@ -62,7 +60,6 @@ export async function POST(req: Request) {
     console.log("Messages:", messages);
 
     if (!process.env.GROQ_API_KEY) {
-      console.log("ERROR: No API key");
       return NextResponse.json({
         role: "assistant",
         content: "API key missing",
@@ -73,18 +70,13 @@ export async function POST(req: Request) {
       ? "You are an expert prompt engineer. Transform the user's simple idea into a detailed, creative, and effective prompt for AI image/video generation. Make it vivid, specific, and optimized for the best results. Include style, lighting, composition, and technical details. Output ONLY the enhanced prompt, nothing else."
       : "You are Nexia, a friendly AI companion. Be warm, helpful, and conversational. Use emojis naturally. Keep responses concise but engaging.";
 
-    console.log("Making API call to Groq...");
-
-    // Clean messages (STRICT SAFE)
+    // ✅ CLEAN MESSAGES — NO IMPLICIT ANY POSSIBLE
     const cleanMessages: ChatMessage[] = messages.map(
-      (msg: ChatMessage) => ({
+      (msg: ChatMessage): ChatMessage => ({
         role: msg.role,
         content: msg.content,
       })
     );
-
-    console.log("Enhance mode:", enhance);
-    console.log("System prompt:", systemPrompt.substring(0, 50) + "...");
 
     const response = await fetch(
       "https://api.groq.com/openai/v1/chat/completions",
@@ -106,34 +98,20 @@ export async function POST(req: Request) {
       }
     );
 
-    console.log("Response status:", response.status);
-    console.log("Response ok:", response.ok);
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.log("Error response:", errorText);
       throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
     const data: GroqResponse = await response.json();
 
-    console.log(
-      "Success! Response:",
-      data.choices[0].message.content.substring(0, 50)
-    );
-
     return NextResponse.json(data.choices[0].message);
   } catch (error: unknown) {
-    console.log("=== ERROR CAUGHT ===");
-
     if (error instanceof Error) {
-      console.error("Full error:", error);
-      console.log("Error message:", error.message);
+      console.error("API Error:", error.message);
     } else {
       console.error("Unknown error:", error);
     }
-
-    console.log("==================");
 
     return NextResponse.json({
       role: "assistant",
