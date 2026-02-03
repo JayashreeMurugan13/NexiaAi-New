@@ -47,17 +47,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // 🔒 FORCE TYPE — this is the key fix
+    // ✅ FORCE TYPES
     const messages: ChatMessage[] = parsedBody.messages;
     const enhance: boolean = Boolean(parsedBody.enhance);
-
-    console.log("=== API DEBUG ===");
-    console.log("API Key exists:", !!process.env.GROQ_API_KEY);
-    console.log(
-      "API Key first 10 chars:",
-      process.env.GROQ_API_KEY?.substring(0, 10)
-    );
-    console.log("Messages:", messages);
 
     if (!process.env.GROQ_API_KEY) {
       return NextResponse.json({
@@ -70,7 +62,7 @@ export async function POST(req: Request) {
       ? "You are an expert prompt engineer. Transform the user's simple idea into a detailed, creative, and effective prompt for AI image/video generation. Make it vivid, specific, and optimized for the best results. Include style, lighting, composition, and technical details. Output ONLY the enhanced prompt, nothing else."
       : "You are Nexia, a friendly AI companion. Be warm, helpful, and conversational. Use emojis naturally. Keep responses concise but engaging.";
 
-    // ✅ CLEAN MESSAGES — NO IMPLICIT ANY POSSIBLE
+    // ✅ FIXED LINE — EXPLICIT TYPE (this stops Vercel error)
     const cleanMessages: ChatMessage[] = messages.map(
       (msg: ChatMessage): ChatMessage => ({
         role: msg.role,
