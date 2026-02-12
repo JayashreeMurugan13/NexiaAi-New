@@ -32,7 +32,7 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
 
     const handleSignOut = () => {
         localStorage.removeItem('nexia_current_user');
-        window.location.href = '/';
+        router.push('/signup');
     };
 
     const navItems = [
