@@ -23,26 +23,40 @@ export function AuthForm({ type }: AuthFormProps) {
         setLoading(true);
 
         try {
-            // Simple localStorage-based auth
-            const user = { email, id: Date.now().toString() };
-            localStorage.setItem('nexia_current_user', JSON.stringify(user));
-            
-            setTimeout(() => {
-                setLoading(false);
-                router.push("/chat");
-            }, 500);
+            if (type === "signup") {
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                });
+                if (error) throw error;
+                
+                if (data.user) {
+                    localStorage.setItem('nexia_current_user', JSON.stringify(data.user));
+                }
+            } else {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
+                if (error) throw error;
+                
+                if (data.user) {
+                    localStorage.setItem('nexia_current_user', JSON.stringify(data.user));
+                }
+            }
+            router.push("/chat");
         } catch (error) {
             console.error(error);
-            alert("Authentication failed. Please try again.");
+            alert("Authentication failed. Please check your credentials.");
+        } finally {
             setLoading(false);
         }
     };
 
     const handleGoogleLogin = async () => {
-        // Simple mock Google auth
-        const user = { email: "user@gmail.com", id: Date.now().toString() };
-        localStorage.setItem('nexia_current_user', JSON.stringify(user));
-        router.push("/chat");
+        await supabase.auth.signInWithOAuth({
+            provider: "google",
+        });
     };
 
     return (
