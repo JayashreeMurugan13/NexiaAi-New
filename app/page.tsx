@@ -1,33 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { AuthScreen } from "@/components/auth/auth-screen";
+import { HomePage } from "@/components/landing/home-page";
 import { AppShell } from "@/components/layout/app-shell";
 import { ChatInterface } from "@/components/chat/chat-interface";
 import { PromptStudio } from "@/components/studio/prompt-studio";
-import { HomePage } from "@/components/landing/home-page";
-import { supabase } from "@/lib/supabase";
-import { User } from "@supabase/supabase-js";
+import { WelcomeFlow } from "@/components/onboarding/welcome-flow";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [showHomePage, setShowHomePage] = useState(true);
-    const [activeTab, setActiveTab] = useState<"chat" | "studio">("chat");
+    const [showOnboarding, setShowOnboarding] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setUser(session?.user ?? null);
-            setLoading(false);
-        });
-
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null);
-        });
-
-        return () => subscription.unsubscribe();
+        if (typeof window !== 'undefined') {
+            const currentUser = localStorage.getItem('nexia_current_user');
+            setUser(currentUser ? JSON.parse(currentUser) : null);
+        }
+        setLoading(false);
     }, []);
 
     if (loading) {
@@ -35,28 +27,17 @@ export default function Home() {
     }
 
     if (!user) {
-        return <AuthScreen />;
+        return <HomePage onGetStarted={() => router.push('/signup')} onGoToStudio={() => router.push('/signup')} />;
     }
 
-    if (showHomePage) {
-        return (
-            <HomePage 
-                onGetStarted={() => {
-                    setShowHomePage(false);
-                    setActiveTab("chat");
-                }}
-                onGoToStudio={() => {
-                    setShowHomePage(false);
-                    setActiveTab("studio");
-                }}
-            />
-        );
+    if (showOnboarding) {
+        return <WelcomeFlow onComplete={() => setShowOnboarding(false)} />;
     }
 
     return (
-        <AppShell initialTab={activeTab} user={user}>
-            {(currentTab) => (
-                currentTab === "chat" ? <ChatInterface /> : <PromptStudio />
+        <AppShell>
+            {(activeTab) => (
+                activeTab === "chat" ? <ChatInterface /> : <PromptStudio />
             )}
         </AppShell>
     );

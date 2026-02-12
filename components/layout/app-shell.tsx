@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, MessageSquare, Layout, LogOut, User as UserIcon, Settings } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -17,11 +17,22 @@ interface AppShellProps {
 export function AppShell({ children, initialTab = "chat", user }: AppShellProps) {
     const [activeTab, setActiveTab] = useState<"chat" | "studio">(initialTab);
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [userName, setUserName] = useState("Guest");
     const router = useRouter();
 
-    const handleSignOut = async () => {
-        await supabase.auth.signOut();
-        router.refresh();
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const currentUser = localStorage.getItem('nexia_current_user');
+            if (currentUser) {
+                const parsed = JSON.parse(currentUser);
+                setUserName(parsed.email?.split('@')[0] || 'Guest');
+            }
+        }
+    }, []);
+
+    const handleSignOut = () => {
+        localStorage.removeItem('nexia_current_user');
+        window.location.href = '/';
     };
 
     const navItems = [
@@ -168,7 +179,7 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
                                 </div>
                                 <div className="flex-1 overflow-hidden">
                                     <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">Active User</p>
-                                    <p className="text-sm text-zinc-200 truncate font-medium">{user?.email?.split('@')[0] || 'User'}</p>
+                                    <p className="text-sm text-zinc-200 truncate font-medium">{userName}</p>
                                 </div>
                             </div>
                         </motion.div>

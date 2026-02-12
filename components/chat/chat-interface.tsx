@@ -206,7 +206,7 @@ export function ChatInterface() {
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        loadConversations();
+        // Skip loading conversations since we don't have database
     }, []);
 
     useEffect(() => {
@@ -214,14 +214,7 @@ export function ChatInterface() {
     }, [messages, loading]);
 
     const loadConversations = async () => {
-        const { data } = await supabase
-            .from('conversations')
-            .select('*')
-            .order('updated_at', { ascending: false });
-        if (data) {
-            setConversations(data);
-            setFilteredConversations(data);
-        }
+        // Skip - no database
     };
 
     const handleSearch = (query: string) => {
@@ -237,16 +230,7 @@ export function ChatInterface() {
     };
 
     const loadConversation = async (conversationId: string) => {
-        const { data } = await supabase
-            .from('messages')
-            .select('*')
-            .eq('conversation_id', conversationId)
-            .order('created_at', { ascending: true });
-        if (data) {
-            setMessages(data);
-            setCurrentConversationId(conversationId);
-            setShowHistory(false);
-        }
+        // Skip - no database
     };
 
     const createNewChat = () => {
@@ -256,62 +240,7 @@ export function ChatInterface() {
     };
 
     const saveConversation = async (newMessages: Message[]) => {
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            console.log('Current user:', user?.email);
-            if (!user) return;
-
-            let conversationId = currentConversationId;
-
-            if (!conversationId) {
-                console.log('Generating title for new conversation...');
-                // Generate title for new conversation
-                const titleResponse = await fetch('/api/generate-title', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ messages: newMessages })
-                });
-                const { title } = await titleResponse.json();
-                console.log('Generated title:', title);
-
-                // Create new conversation
-                const { data: conversation, error } = await supabase
-                    .from('conversations')
-                    .insert({ user_id: user.id, title })
-                    .select()
-                    .single();
-
-                console.log('Conversation created:', conversation, error);
-                if (conversation) {
-                    conversationId = conversation.id;
-                    setCurrentConversationId(conversationId);
-                }
-            }
-
-            if (conversationId) {
-                // Save new message
-                const lastMessage = newMessages[newMessages.length - 1];
-                const { error: messageError } = await supabase
-                    .from('messages')
-                    .insert({
-                        conversation_id: conversationId,
-                        role: lastMessage.role,
-                        content: lastMessage.content
-                    });
-
-                console.log('Message saved:', messageError);
-
-                // Update conversation timestamp
-                await supabase
-                    .from('conversations')
-                    .update({ updated_at: new Date().toISOString() })
-                    .eq('id', conversationId);
-
-                loadConversations();
-            }
-        } catch (error) {
-            console.error('Save conversation error:', error);
-        }
+        // Skip - no database
     };
 
     const sendMessage = async () => {

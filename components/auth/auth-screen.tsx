@@ -4,8 +4,6 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Mail, Lock, ShieldAlert, Chrome, Zap, Stars } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { GoogleAccountSelector } from "@/components/auth/google-account-selector";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
@@ -16,10 +14,9 @@ export function AuthScreen() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
-    const [showGoogleSelector, setShowGoogleSelector] = useState(false);
     const router = useRouter();
 
-    const handleAuth = async (e: React.FormEvent) => {
+    const handleAuth = (e: React.FormEvent) => {
         e.preventDefault();
         if (!email || !password) {
             setError("Please fill in all fields.");
@@ -29,52 +26,37 @@ export function AuthScreen() {
         setError("");
         setSuccess("");
 
-        try {
-            if (isLogin) {
-                const { error } = await supabase.auth.signInWithPassword({ email, password });
-                if (error) throw error;
-                router.refresh();
-            } else {
-                const { error } = await supabase.auth.signUp({ email, password });
-                if (error) {
-                    if (error.message.includes('already registered')) {
-                        setError("Account already exists. Please sign in instead.");
-                        return;
-                    }
-                    throw error;
-                }
-                setSuccess("Account created successfully! You can now sign in.");
-                setIsLogin(true);
-                setPassword("");
+        if (isLogin) {
+            const { data, error } = supabase.auth.signInWithPassword({ email, password });
+            if (error) {
+                setError(error.message);
+                setLoading(false);
+                return;
             }
-        } catch (err: any) {
-            setError(err.message || "Authentication failed.");
-        } finally {
-            setLoading(false);
+            setSuccess("Welcome back! 🎉");
+            setTimeout(() => window.location.href = '/', 500);
+        } else {
+            const { data, error } = supabase.auth.signUp({ email, password });
+            if (error) {
+                setError(error.message);
+                setLoading(false);
+                return;
+            }
+            setSuccess("Account created successfully! ✨");
+            setTimeout(() => window.location.href = '/', 500);
         }
     };
 
-    const handleGoogleAuth = async () => {
+    const handleGoogleAuth = () => {
         setLoading(true);
-        try {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google'
-            });
-            if (error) throw error;
-            router.refresh();
-        } catch (err: any) {
-            setError(err.message || "Google authentication failed.");
-        } finally {
-            setLoading(false);
-        }
+        supabase.auth.signInWithOAuth({ provider: 'google' });
+        window.location.href = '/';
     };
 
-    const handleMockLogin = async () => {
-        setLoading(true);
-        setTimeout(() => {
-            router.refresh();
-            setLoading(false);
-        }, 1000);
+    const handleDemoMode = () => {
+        const demoUser = { id: 'demo', email: 'demo@nexia.ai' };
+        localStorage.setItem('nexia_current_user', JSON.stringify(demoUser));
+        window.location.href = '/';
     };
 
     return (
@@ -282,7 +264,7 @@ export function AuthScreen() {
                         <Button
                             variant="outline"
                             className="w-full bg-zinc-900/50 border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-white rounded-xl py-3 h-auto backdrop-blur-sm"
-                            onClick={handleMockLogin}
+                            onClick={handleDemoMode}
                             disabled={loading}
                         >
                             <Sparkles className="w-4 h-4 mr-2" />
