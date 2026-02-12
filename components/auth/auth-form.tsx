@@ -22,49 +22,27 @@ export function AuthForm({ type }: AuthFormProps) {
         e.preventDefault();
         setLoading(true);
 
-        // Mock auth for now if no keys provided, to let user test UI
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-            console.log("Mock Auth Success");
+        try {
+            // Simple localStorage-based auth
+            const user = { email, id: Date.now().toString() };
+            localStorage.setItem('nexia_current_user', JSON.stringify(user));
+            
             setTimeout(() => {
                 setLoading(false);
                 router.push("/chat");
-            }, 1500);
-            return;
-        }
-
-        try {
-            if (type === "signup") {
-                const { error } = await supabase.auth.signUp({
-                    email,
-                    password,
-                });
-                if (error) throw error;
-                // Redirect or show success
-            } else {
-                const { error } = await supabase.auth.signInWithPassword({
-                    email,
-                    password,
-                });
-                if (error) throw error;
-            }
-            router.push("/chat");
+            }, 500);
         } catch (error) {
             console.error(error);
-            alert("Authentication failed. (If testing without keys, this is expected for real auth)");
-        } finally {
+            alert("Authentication failed. Please try again.");
             setLoading(false);
         }
     };
 
     const handleGoogleLogin = async () => {
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-            console.log("Mock Google Auth Success");
-            router.push("/chat");
-            return;
-        }
-        await supabase.auth.signInWithOAuth({
-            provider: "google",
-        });
+        // Simple mock Google auth
+        const user = { email: "user@gmail.com", id: Date.now().toString() };
+        localStorage.setItem('nexia_current_user', JSON.stringify(user));
+        router.push("/chat");
     };
 
     return (
