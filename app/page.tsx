@@ -1,16 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { AuthScreen } from "@/components/auth/auth-screen";
+import { HomePage } from "@/components/landing/home-page";
 import { AppShell } from "@/components/layout/app-shell";
 import { ChatInterface } from "@/components/chat/chat-interface";
 import { PromptStudio } from "@/components/studio/prompt-studio";
 import { WelcomeFlow } from "@/components/onboarding/welcome-flow";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [showOnboarding, setShowOnboarding] = useState(true);
+    const [showOnboarding, setShowOnboarding] = useState(false);
+    const [showApp, setShowApp] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -25,11 +28,15 @@ export default function Home() {
     }
 
     if (!user) {
-        return <AuthScreen />;
+        return <HomePage onGetStarted={() => router.push('/signup')} onGoToStudio={() => router.push('/signup')} />;
     }
 
     if (showOnboarding) {
         return <WelcomeFlow onComplete={() => setShowOnboarding(false)} />;
+    }
+
+    if (!showApp) {
+        return <HomePage onGetStarted={() => setShowApp(true)} onGoToStudio={() => setShowApp(true)} />;
     }
 
     return (

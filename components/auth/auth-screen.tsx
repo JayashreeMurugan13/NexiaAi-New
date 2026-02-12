@@ -36,7 +36,7 @@ export function AuthScreen() {
                     localStorage.setItem('nexia_current_user', JSON.stringify(data.user));
                 }
                 setSuccess("Welcome back! 🎉");
-                setTimeout(() => router.push('/chat'), 500);
+                setTimeout(() => router.push('/'), 500);
             } else {
                 const { data, error } = await supabase.auth.signUp({ email, password });
                 if (error) {
@@ -46,13 +46,13 @@ export function AuthScreen() {
                     localStorage.setItem('nexia_current_user', JSON.stringify(data.user));
                 }
                 setSuccess("Account created successfully! ✨");
-                setTimeout(() => router.push('/chat'), 500);
+                setTimeout(() => router.push('/'), 500);
             }
         } catch (error) {
             const user = { email, id: Date.now().toString() };
             localStorage.setItem('nexia_current_user', JSON.stringify(user));
             setSuccess(isLogin ? "Welcome back! 🎉" : "Account created successfully! ✨");
-            setTimeout(() => router.push('/chat'), 500);
+            setTimeout(() => router.push('/'), 500);
         } finally {
             setLoading(false);
         }
@@ -65,14 +65,14 @@ export function AuthScreen() {
         } catch (error) {
             const user = { email: "user@gmail.com", id: Date.now().toString() };
             localStorage.setItem('nexia_current_user', JSON.stringify(user));
-            router.push('/chat');
+            router.push('/');
         }
     };
 
     const handleDemoMode = () => {
         const demoUser = { id: 'demo', email: 'demo@nexia.ai' };
         localStorage.setItem('nexia_current_user', JSON.stringify(demoUser));
-        router.push('/chat');
+        router.push('/');
     };
 
     return (
