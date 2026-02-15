@@ -155,22 +155,14 @@ export function AuthScreen() {
                     <div className="relative flex justify-center text-[10px] font-black uppercase tracking-[0.2em]"><span className="bg-zinc-950 px-3 text-zinc-600">Quick Access</span></div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                     <Button
                         variant="outline"
                         className="w-full bg-zinc-900/50 border-zinc-800 hover:border-zinc-600 text-zinc-400 rounded-xl py-2.5 h-auto"
                         onClick={handleMockLogin}
                     >
-                        Demo Mode
-                    </Button>
-                    <Button
-                        variant="secondary"
-                        className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl py-2.5 h-auto"
-                        onClick={handleGoogleAuth}
-                        disabled={loading}
-                    >
-                        <Chrome className="w-4 h-4 mr-2" />
-                        Google
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Demo Mode - Try Now
                     </Button>
                 </div>
 
