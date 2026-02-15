@@ -2,20 +2,20 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, MessageSquare, Layout, LogOut, User as UserIcon, Settings, Gem, ImageIcon, Music } from "lucide-react";
+import { Sparkles, MessageSquare, Layout, LogOut, User as UserIcon, Settings, Gem, Music } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { User } from "@supabase/supabase-js";
 
 interface AppShellProps {
-    children: (activeTab: "chat" | "studio" | "fortune" | "meme" | "karaoke") => React.ReactNode;
-    initialTab?: "chat" | "studio" | "fortune" | "meme" | "karaoke";
+    children: (activeTab: "chat" | "studio" | "fortune" | "karaoke") => React.ReactNode;
+    initialTab?: "chat" | "studio" | "fortune" | "karaoke";
     user?: User | null;
 }
 
 export function AppShell({ children, initialTab = "chat", user }: AppShellProps) {
-    const [activeTab, setActiveTab] = useState<"chat" | "studio" | "fortune" | "meme" | "karaoke">(initialTab);
+    const [activeTab, setActiveTab] = useState<"chat" | "studio" | "fortune" | "karaoke">(initialTab);
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [userName, setUserName] = useState("Guest");
     const router = useRouter();
@@ -56,13 +56,6 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
             icon: Gem,
             gradient: "from-violet-500 to-fuchsia-500",
             description: "Mystical predictions"
-        },
-        {
-            id: "meme" as const,
-            label: "AI Image Generator",
-            icon: ImageIcon,
-            gradient: "from-orange-500 to-red-500",
-            description: "Generate AI images"
         },
         {
             id: "karaoke" as const,

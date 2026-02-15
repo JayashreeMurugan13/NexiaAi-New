@@ -6,7 +6,6 @@ import { AppShell } from "@/components/layout/app-shell";
 import { ChatInterface } from "@/components/chat/chat-interface";
 import { PromptStudio } from "@/components/studio/prompt-studio";
 import { FortuneTeller } from "@/components/features/fortune-teller";
-import { MemeGenerator } from "@/components/features/meme-generator";
 import { ChatKaraoke } from "@/components/features/chat-karaoke";
 import { WelcomeFlow } from "@/components/onboarding/welcome-flow";
 import { useRouter } from "next/navigation";
@@ -48,7 +47,6 @@ export default function Home() {
                 if (activeTab === "chat") return <ChatInterface />;
                 if (activeTab === "studio") return <PromptStudio />;
                 if (activeTab === "fortune") return <FortuneTeller />;
-                if (activeTab === "meme") return <MemeGenerator />;
                 if (activeTab === "karaoke") return <ChatKaraoke />;
                 return <ChatInterface />;
             }}
