@@ -20,7 +20,18 @@ export default function Home() {
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const currentUser = localStorage.getItem('nexia_current_user');
-            setUser(currentUser ? JSON.parse(currentUser) : null);
+            if (currentUser) {
+                setUser(JSON.parse(currentUser));
+            } else {
+                // Check for user from OAuth callback cookie
+                const cookies = document.cookie.split(';');
+                const userCookie = cookies.find(c => c.trim().startsWith('nexia_user='));
+                if (userCookie) {
+                    const userData = JSON.parse(decodeURIComponent(userCookie.split('=')[1]));
+                    localStorage.setItem('nexia_current_user', JSON.stringify(userData));
+                    setUser(userData);
+                }
+            }
         }
         setLoading(false);
     }, []);

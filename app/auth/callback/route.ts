@@ -1,15 +1,23 @@
 import { NextResponse } from 'next/server'
+import { supabase } from '@/lib/supabase'
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
 
   if (code) {
-    // In a real implementation, you would exchange the code for a session
-    // For now, we'll just redirect to the main app
-    console.log('OAuth callback received with code:', code)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+    
+    if (!error && data.session) {
+      // Store user in a way that client can access
+      const response = NextResponse.redirect(requestUrl.origin)
+      response.cookies.set('nexia_user', JSON.stringify(data.user), {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7 // 7 days
+      })
+      return response
+    }
   }
 
-  // URL to redirect to after sign in process completes
   return NextResponse.redirect(requestUrl.origin)
 }
