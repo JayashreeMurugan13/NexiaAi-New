@@ -59,10 +59,10 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
         },
         {
             id: "meme" as const,
-            label: "Meme Generator",
+            label: "AI Image Generator",
             icon: ImageIcon,
             gradient: "from-orange-500 to-red-500",
-            description: "Create funny memes"
+            description: "Generate AI images"
         },
         {
             id: "karaoke" as const,
