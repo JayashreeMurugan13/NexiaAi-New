@@ -2,38 +2,79 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ImageIcon, Sparkles, Send } from "lucide-react";
+import { ImageIcon, Sparkles, Send, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function MemeGenerator() {
     const [topic, setTopic] = useState("");
-    const [meme, setMeme] = useState("");
+    const [memeText, setMemeText] = useState("");
+    const [memeImage, setMemeImage] = useState("");
     const [loading, setLoading] = useState(false);
+
+    const memeTemplates = [
+        { id: "181913649", name: "Drake Hotline Bling" },
+        { id: "87743020", name: "Two Buttons" },
+        { id: "112126428", name: "Distracted Boyfriend" },
+        { id: "131087935", name: "Running Away Balloon" },
+        { id: "4087833", name: "Waiting Skeleton" },
+        { id: "102156234", name: "Mocking Spongebob" },
+        { id: "438680", name: "Batman Slapping Robin" },
+        { id: "124822590", name: "Left Exit 12 Off Ramp" },
+    ];
 
     const generateMeme = async () => {
         if (!topic.trim()) return;
         setLoading(true);
         
         try {
+            // Get AI to generate meme text
             const response = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    messages: [{ role: "user", content: `Create a funny meme caption and format for: ${topic}. Include the meme template name and text.` }]
+                    messages: [{ 
+                        role: "user", 
+                        content: `Create a funny two-line meme text for: ${topic}. Format: TOP TEXT|BOTTOM TEXT. Keep it short and punchy.` 
+                    }]
                 })
             });
             
             const data = await response.json();
-            setMeme(data.content || "Meme generation failed... that's the real meme 😅");
+            const text = data.content || "WHEN YOU|FORGET THE MEME";
+            setMemeText(text);
+            
+            // Parse the text
+            const [topText, bottomText] = text.split('|').map(t => t.trim());
+            
+            // Pick random template
+            const template = memeTemplates[Math.floor(Math.random() * memeTemplates.length)];
+            
+            // Generate meme image using imgflip API
+            const memeResponse = await fetch('https://api.imgflip.com/caption_image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    template_id: template.id,
+                    username: 'imgflip_hubot',
+                    password: 'imgflip_hubot',
+                    text0: topText || 'TOP TEXT',
+                    text1: bottomText || 'BOTTOM TEXT'
+                })
+            });
+            
+            const memeData = await memeResponse.json();
+            if (memeData.success) {
+                setMemeImage(memeData.data.url);
+            }
         } catch (error) {
-            setMeme("Meme generation failed... that's the real meme 😅");
+            setMemeText("Meme generation failed... that's the real meme 😅");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="flex-1 flex flex-col h-full bg-zinc-950 p-8">
+        <div className="flex-1 flex flex-col h-full bg-zinc-950 p-8 overflow-y-auto">
             <div className="max-w-3xl mx-auto w-full">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -66,15 +107,30 @@ export function MemeGenerator() {
                         </Button>
                     </div>
 
-                    {meme && (
+                    {memeImage && (
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="bg-gradient-to-br from-orange-900/20 to-red-900/20 border border-orange-500/30 rounded-2xl p-8 backdrop-blur-sm"
+                            className="bg-gradient-to-br from-orange-900/20 to-red-900/20 border border-orange-500/30 rounded-2xl p-6 backdrop-blur-sm"
                         >
-                            <div className="flex items-start gap-4">
-                                <ImageIcon className="w-6 h-6 text-orange-400 flex-shrink-0 mt-1" />
-                                <div className="text-zinc-200 text-lg leading-relaxed whitespace-pre-wrap">{meme}</div>
+                            <img 
+                                src={memeImage} 
+                                alt="Generated Meme" 
+                                className="w-full rounded-xl mb-4"
+                            />
+                            <div className="flex items-center justify-between">
+                                <p className="text-zinc-400 text-sm">{memeText}</p>
+                                <a 
+                                    href={memeImage} 
+                                    download="nexia-meme.jpg"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    <Button className="bg-orange-600 hover:bg-orange-500">
+                                        <Download className="w-4 h-4 mr-2" />
+                                        Download
+                                    </Button>
+                                </a>
                             </div>
                         </motion.div>
                     )}
