@@ -46,15 +46,31 @@ export function AuthScreen() {
         }
     };
 
-    const handleGoogleAuth = () => {
-        // Simple mock Google login that works immediately
-        const mockUser = { 
-            id: 'google-' + Date.now(), 
-            email: 'user@gmail.com', 
-            name: 'Google User' 
-        };
-        localStorage.setItem('nexia_current_user', JSON.stringify(mockUser));
-        router.push('/');
+    const handleGoogleAuth = async () => {
+        setLoading(true);
+        try {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: `${window.location.origin}/auth/callback`,
+                    queryParams: {
+                        access_type: 'offline',
+                        prompt: 'select_account',
+                    },
+                }
+            });
+            
+            if (error) {
+                console.error('OAuth error:', error);
+                setError('Google login failed. Please try email/password or Demo Mode.');
+                setLoading(false);
+            }
+            // Don't set loading to false here - redirect will happen
+        } catch (err: any) {
+            console.error('Google auth error:', err);
+            setError('Google login failed. Please try email/password or Demo Mode.');
+            setLoading(false);
+        }
     };
 
     const handleMockLogin = () => {
