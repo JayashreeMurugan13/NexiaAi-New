@@ -206,15 +206,23 @@ export function ChatInterface() {
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        // Skip loading conversations since we don't have database
+        loadConversations();
     }, []);
 
     useEffect(() => {
         scrollRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, loading]);
 
-    const loadConversations = async () => {
-        // Skip - no database
+    const loadConversations = () => {
+        const user = localStorage.getItem('nexia_current_user');
+        if (!user) return;
+        const { email } = JSON.parse(user);
+        const userConvos = localStorage.getItem(`nexia_conversations_${email}`);
+        if (userConvos) {
+            const convos = JSON.parse(userConvos);
+            setConversations(convos);
+            setFilteredConversations(convos);
+        }
     };
 
     const handleSearch = (query: string) => {
@@ -229,8 +237,16 @@ export function ChatInterface() {
         }
     };
 
-    const loadConversation = async (conversationId: string) => {
-        // Skip - no database
+    const loadConversation = (conversationId: string) => {
+        const user = localStorage.getItem('nexia_current_user');
+        if (!user) return;
+        const { email } = JSON.parse(user);
+        const userMessages = localStorage.getItem(`nexia_messages_${email}_${conversationId}`);
+        if (userMessages) {
+            setMessages(JSON.parse(userMessages));
+            setCurrentConversationId(conversationId);
+            setShowHistory(false);
+        }
     };
 
     const createNewChat = () => {
@@ -240,7 +256,67 @@ export function ChatInterface() {
     };
 
     const saveConversation = async (newMessages: Message[]) => {
-        // Skip - no database
+        const user = localStorage.getItem('nexia_current_user');
+        if (!user) return;
+        const { email } = JSON.parse(user);
+        
+        let conversationId = currentConversationId;
+        
+        if (!conversationId) {
+            // Generate title using AI
+            const firstUserMsg = newMessages.find(m => m.role === 'user')?.content || 'New Chat';
+            let title = firstUserMsg.slice(0, 40);
+            
+            // Try to generate better title with AI
+            try {
+                const response = await fetch("/api/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ 
+                        messages: [{ 
+                            role: "user", 
+                            content: `Generate a short 3-5 word title for this conversation: "${firstUserMsg}"` 
+                        }],
+                        enhance: false
+                    }),
+                });
+                const data = await response.json();
+                title = data.content.replace(/["']/g, '').slice(0, 40);
+            } catch {
+                // Use fallback title
+            }
+            
+            conversationId = Date.now().toString();
+            
+            // Get existing conversations
+            const existingConvos = localStorage.getItem(`nexia_conversations_${email}`);
+            const convos = existingConvos ? JSON.parse(existingConvos) : [];
+            
+            // Add new conversation
+            const newConvo = {
+                id: conversationId,
+                title,
+                updated_at: new Date().toISOString()
+            };
+            convos.unshift(newConvo);
+            localStorage.setItem(`nexia_conversations_${email}`, JSON.stringify(convos));
+            setConversations(convos);
+            setFilteredConversations(convos);
+            setCurrentConversationId(conversationId);
+        }
+        
+        // Save messages
+        localStorage.setItem(`nexia_messages_${email}_${conversationId}`, JSON.stringify(newMessages));
+        
+        // Update conversation timestamp
+        const existingConvos = localStorage.getItem(`nexia_conversations_${email}`);
+        if (existingConvos) {
+            const convos = JSON.parse(existingConvos).map((c: any) => 
+                c.id === conversationId ? { ...c, updated_at: new Date().toISOString() } : c
+            );
+            localStorage.setItem(`nexia_conversations_${email}`, JSON.stringify(convos));
+            setConversations(convos);
+        }
     };
 
     const sendMessage = async () => {

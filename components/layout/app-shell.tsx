@@ -2,20 +2,20 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, MessageSquare, Layout, LogOut, User as UserIcon, Settings } from "lucide-react";
+import { Sparkles, MessageSquare, Layout, LogOut, User as UserIcon, Settings, Crystal, ImageIcon, Music } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { User } from "@supabase/supabase-js";
 
 interface AppShellProps {
-    children: (activeTab: "chat" | "studio") => React.ReactNode;
-    initialTab?: "chat" | "studio";
+    children: (activeTab: "chat" | "studio" | "fortune" | "meme" | "karaoke") => React.ReactNode;
+    initialTab?: "chat" | "studio" | "fortune" | "meme" | "karaoke";
     user?: User | null;
 }
 
 export function AppShell({ children, initialTab = "chat", user }: AppShellProps) {
-    const [activeTab, setActiveTab] = useState<"chat" | "studio">(initialTab);
+    const [activeTab, setActiveTab] = useState<"chat" | "studio" | "fortune" | "meme" | "karaoke">(initialTab);
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [userName, setUserName] = useState("Guest");
     const router = useRouter();
@@ -49,6 +49,27 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
             icon: Layout,
             gradient: "from-purple-500 to-pink-500",
             description: "Enhance your prompts"
+        },
+        {
+            id: "fortune" as const,
+            label: "AI Fortune Teller",
+            icon: Crystal,
+            gradient: "from-violet-500 to-fuchsia-500",
+            description: "Mystical predictions"
+        },
+        {
+            id: "meme" as const,
+            label: "Meme Generator",
+            icon: ImageIcon,
+            gradient: "from-orange-500 to-red-500",
+            description: "Create funny memes"
+        },
+        {
+            id: "karaoke" as const,
+            label: "Chat Karaoke",
+            icon: Music,
+            gradient: "from-green-500 to-teal-500",
+            description: "Turn chats into songs"
         }
     ];
 
