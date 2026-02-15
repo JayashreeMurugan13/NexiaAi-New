@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, MessageSquare, Layout, LogOut, User as UserIcon, Settings, Crystal, ImageIcon, Music } from "lucide-react";
+import { Sparkles, MessageSquare, Layout, LogOut, User as UserIcon, Settings, Gem, ImageIcon, Music } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -53,7 +53,7 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
         {
             id: "fortune" as const,
             label: "AI Fortune Teller",
-            icon: Crystal,
+            icon: Gem,
             gradient: "from-violet-500 to-fuchsia-500",
             description: "Mystical predictions"
         },

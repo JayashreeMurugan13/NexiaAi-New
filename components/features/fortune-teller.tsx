@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Crystal, Sparkles, Send } from "lucide-react";
+import { Sparkles, Send, Gem } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function FortuneTeller() {
@@ -40,7 +40,7 @@ export function FortuneTeller() {
                     animate={{ opacity: 1, y: 0 }}
                     className="text-center mb-8"
                 >
-                    <Crystal className="w-16 h-16 mx-auto mb-4 text-violet-400" />
+                    <Gem className="w-16 h-16 mx-auto mb-4 text-violet-400" />
                     <h1 className="text-4xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent mb-2">
                         AI Fortune Teller
                     </h1>
@@ -73,7 +73,7 @@ export function FortuneTeller() {
                             className="bg-gradient-to-br from-violet-900/20 to-fuchsia-900/20 border border-violet-500/30 rounded-2xl p-8 backdrop-blur-sm"
                         >
                             <div className="flex items-start gap-4">
-                                <Crystal className="w-6 h-6 text-violet-400 flex-shrink-0 mt-1" />
+                                <Gem className="w-6 h-6 text-violet-400 flex-shrink-0 mt-1" />
                                 <p className="text-zinc-200 text-lg leading-relaxed">{fortune}</p>
                             </div>
                         </motion.div>
