@@ -23,9 +23,9 @@ export function ChatKaraoke() {
         setLoading(true);
         
         try {
-            const systemPrompt = `You are a professional songwriter and lyricist. Create catchy, well-structured song lyrics with proper verses, chorus, and bridge. Use rhyme schemes, metaphors, and emotional depth. Match the style and tone of the specified genre. Include [Verse 1], [Chorus], [Verse 2], [Bridge] labels. Make it memorable and singable.`;
+            const systemPrompt = `You are a master poet and lyricist with deep expertise in creating beautiful, emotional, and highly poetic song lyrics. Your lyrics should be rich with metaphors, imagery, and emotional depth. Use literary devices like alliteration, personification, and symbolism. Create flowing, melodic verses that paint vivid pictures. If the user requests lyrics in a specific language (like Tamil, Hindi, Spanish, etc.), write the ENTIRE song in that language with proper grammar and poetic beauty. Make every line memorable and deeply poetic. IMPORTANT: Complete the entire song - never stop mid-verse or mid-chorus. Always finish what you start.`;
             
-            const userPrompt = `Genre: ${genre}\nTopic/Story: ${text}\n\nCreate complete song lyrics with:\n- Catchy chorus that repeats\n- 2-3 verses telling a story\n- Optional bridge for emotional peak\n- Proper rhyme scheme\n- Genre-appropriate language and style`;
+            const userPrompt = `Genre: ${genre}\nTopic/Story: ${text}\n\nCreate a COMPLETE, highly poetic song with:\n- Beautiful, metaphor-rich verses (at least 2-3 full verses)\n- Emotionally powerful chorus that repeats\n- Optional poetic bridge\n- Deep imagery and symbolism\n- Flowing, melodic language\n- If a specific language is requested, write EVERYTHING in that language\n- COMPLETE all sections - do not stop mid-sentence\n\nMake it as poetic and beautiful as possible. Use [Verse 1], [Chorus], [Verse 2], [Bridge] labels.`;
             
             const response = await fetch("/api/chat", {
                 method: "POST",
@@ -95,7 +95,7 @@ export function ChatKaraoke() {
                         <textarea
                             value={text}
                             onChange={(e) => setText(e.target.value)}
-                            placeholder="Write your story, feelings, or idea for a song..."
+                            placeholder="Write your story, feelings, or idea for a song... (Specify language if needed, e.g., 'in Tamil')"
                             rows={4}
                             className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl py-4 px-6 text-zinc-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 resize-none"
                         />
