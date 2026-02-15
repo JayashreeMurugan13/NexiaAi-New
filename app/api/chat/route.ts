@@ -85,7 +85,7 @@ export async function POST(req: Request) {
             ...cleanMessages,
           ],
           temperature: 0.7,
-          max_tokens: 500,
+          max_tokens: 1000,
         }),
       }
     );
