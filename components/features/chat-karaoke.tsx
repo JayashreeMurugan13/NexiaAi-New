@@ -24,7 +24,7 @@ export function ChatKaraoke() {
             });
             
             const data = await response.json();
-            setLyrics(data.message);
+            setLyrics(data.content || "🎵 The song couldn't be found... 🎵");
         } catch (error) {
             setLyrics("🎵 The song couldn't be found... 🎵");
         } finally {

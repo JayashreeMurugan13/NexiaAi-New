@@ -24,7 +24,7 @@ export function FortuneTeller() {
             });
             
             const data = await response.json();
-            setFortune(data.message);
+            setFortune(data.content || "The spirits are unclear... try again later 🔮");
         } catch (error) {
             setFortune("The spirits are unclear... try again later 🔮");
         } finally {

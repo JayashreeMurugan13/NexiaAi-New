@@ -24,7 +24,7 @@ export function MemeGenerator() {
             });
             
             const data = await response.json();
-            setMeme(data.message);
+            setMeme(data.content || "Meme generation failed... that's the real meme 😅");
         } catch (error) {
             setMeme("Meme generation failed... that's the real meme 😅");
         } finally {
