@@ -5,8 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Mail, Lock, ShieldAlert, Chrome } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
-import { auth, googleProvider } from "@/lib/firebase";
-import { signInWithPopup } from "firebase/auth";
+import { useRouter } from "next/navigation";
 
 export function AuthScreen() {
     const [isLogin, setIsLogin] = useState(true);
@@ -14,6 +13,7 @@ export function AuthScreen() {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const router = useRouter();
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -24,47 +24,54 @@ export function AuthScreen() {
         setLoading(true);
         setError("");
 
-        const result = isLogin 
-            ? await supabase.auth.signInWithPassword({ email, password })
-            : await supabase.auth.signUp({ email, password });
-        
-        if (result.error) {
-            setError(result.error.message);
+        try {
+            if (isLogin) {
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+                if (data.user) {
+                    localStorage.setItem('nexia_current_user', JSON.stringify(data.user));
+                }
+            } else {
+                const { data, error } = await supabase.auth.signUp({ email, password });
+                if (error) throw error;
+                if (data.user) {
+                    localStorage.setItem('nexia_current_user', JSON.stringify(data.user));
+                }
+            }
+            router.push('/');
+        } catch (err: any) {
+            setError(err.message || "Authentication failed");
+        } finally {
             setLoading(false);
-            return;
         }
-        
-        window.location.href = '/';
     };
 
     const handleGoogleAuth = async () => {
         setLoading(true);
         try {
-            if (!auth || !googleProvider) {
-                throw new Error('Firebase not configured');
-            }
-            const result = await signInWithPopup(auth, googleProvider);
-            const user = { 
-                id: result.user.uid, 
-                email: result.user.email,
-                name: result.user.displayName,
-                photo: result.user.photoURL
-            };
-            localStorage.setItem('nexia_current_user', JSON.stringify(user));
-            window.location.href = '/';
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: `${window.location.origin}/auth/callback`,
+                    queryParams: {
+                        access_type: 'offline',
+                        prompt: 'select_account',
+                    },
+                }
+            });
+            
+            if (error) throw error;
         } catch (err: any) {
             console.error('Google auth error:', err);
-            // Fallback to mock Google user
-            const mockUser = { id: 'google-' + Date.now(), email: 'user@gmail.com', name: 'Google User' };
-            localStorage.setItem('nexia_current_user', JSON.stringify(mockUser));
-            window.location.href = '/';
+            setError("Google authentication failed. Please try again.");
+            setLoading(false);
         }
     };
 
     const handleMockLogin = () => {
         const demoUser = { id: 'demo', email: 'demo@nexia.ai' };
         localStorage.setItem('nexia_current_user', JSON.stringify(demoUser));
-        window.location.href = '/';
+        router.push('/');
     };
 
     return (
@@ -133,7 +140,7 @@ export function AuthScreen() {
                         )}
                     </AnimatePresence>
 
-                    <Button type="submit" className="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] rounded-xl py-2.5 h-auto">
+                    <Button type="submit" disabled={loading} className="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] rounded-xl py-2.5 h-auto">
                         {loading ? "Processing..." : (isLogin ? 'Sign In' : 'Create Account')}
                     </Button>
                 </form>
