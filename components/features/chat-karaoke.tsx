@@ -23,9 +23,9 @@ export function ChatKaraoke() {
         setLoading(true);
         
         try {
-            const systemPrompt = `You are a master poet and lyricist with deep expertise in creating beautiful, emotional, and highly poetic song lyrics. Your lyrics should be rich with metaphors, imagery, and emotional depth. Use literary devices like alliteration, personification, and symbolism. Create flowing, melodic verses that paint vivid pictures. If the user requests lyrics in a specific language (like Tamil, Hindi, Spanish, etc.), write the ENTIRE song in that language with proper grammar and poetic beauty. Make every line memorable and deeply poetic. IMPORTANT: Complete the entire song - never stop mid-verse or mid-chorus. Always finish what you start.`;
+            const systemPrompt = `You are a master poet and lyricist. Create SHORT, beautiful, and highly poetic song lyrics - like a poem set to music. Keep it concise but deeply emotional. Use rich metaphors and imagery. Each verse should be 4-6 lines maximum. If the user requests lyrics in a specific language (like Tamil, Hindi, Spanish, etc.), write the ENTIRE song in that language with proper grammar and poetic beauty. Focus on quality over quantity - make every word count.`;
             
-            const userPrompt = `Genre: ${genre}\nTopic/Story: ${text}\n\nCreate a COMPLETE, highly poetic song with:\n- Beautiful, metaphor-rich verses (at least 2-3 full verses)\n- Emotionally powerful chorus that repeats\n- Optional poetic bridge\n- Deep imagery and symbolism\n- Flowing, melodic language\n- If a specific language is requested, write EVERYTHING in that language\n- COMPLETE all sections - do not stop mid-sentence\n\nMake it as poetic and beautiful as possible. Use [Verse 1], [Chorus], [Verse 2], [Bridge] labels.`;
+            const userPrompt = `Genre: ${genre}\nTopic/Story: ${text}\n\nCreate a SHORT, poetic song (like a beautiful poem) with:\n- 1-2 short verses (4-6 lines each)\n- One memorable chorus (4 lines)\n- Deep imagery and metaphors\n- Concise but emotionally powerful\n- If a specific language is requested, write EVERYTHING in that language\n\nKeep it brief and poetic. Use [Verse 1], [Chorus], [Verse 2] labels.`;
             
             const response = await fetch("/api/chat", {
                 method: "POST",
