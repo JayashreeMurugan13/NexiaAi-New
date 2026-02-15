@@ -34,39 +34,59 @@ export function MemeGenerator() {
                 body: JSON.stringify({
                     messages: [{ 
                         role: "user", 
-                        content: `Create a funny two-line meme text for: ${topic}. Format: TOP TEXT|BOTTOM TEXT. Keep it short and punchy.` 
+                        content: `Create a funny two-line meme about: ${topic}. Format as: TOP TEXT|BOTTOM TEXT. Keep each line under 30 characters.` 
                     }]
                 })
             });
             
             const data = await response.json();
-            const text = data.content || "WHEN YOU|FORGET THE MEME";
+            let text = data.content || "WHEN YOU TRY|BUT IT FAILS";
+            
+            // Clean up the text
+            text = text.replace(/["'`]/g, '').trim();
             setMemeText(text);
             
             // Parse the text
-            const [topText, bottomText] = text.split('|').map(t => t.trim());
+            let topText = "TOP TEXT";
+            let bottomText = "BOTTOM TEXT";
+            
+            if (text.includes('|')) {
+                const parts = text.split('|');
+                topText = parts[0].trim().toUpperCase();
+                bottomText = parts[1]?.trim().toUpperCase() || "BOTTOM TEXT";
+            } else {
+                const words = text.split(' ');
+                const mid = Math.ceil(words.length / 2);
+                topText = words.slice(0, mid).join(' ').toUpperCase();
+                bottomText = words.slice(mid).join(' ').toUpperCase();
+            }
             
             // Pick random template
             const template = memeTemplates[Math.floor(Math.random() * memeTemplates.length)];
             
-            // Generate meme image using imgflip API
+            // Generate meme image
+            const formData = new URLSearchParams();
+            formData.append('template_id', template.id);
+            formData.append('username', 'imgflip_hubot');
+            formData.append('password', 'imgflip_hubot');
+            formData.append('text0', topText);
+            formData.append('text1', bottomText);
+            
             const memeResponse = await fetch('https://api.imgflip.com/caption_image', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({
-                    template_id: template.id,
-                    username: 'imgflip_hubot',
-                    password: 'imgflip_hubot',
-                    text0: topText || 'TOP TEXT',
-                    text1: bottomText || 'BOTTOM TEXT'
-                })
+                body: formData
             });
             
             const memeData = await memeResponse.json();
-            if (memeData.success) {
+            
+            if (memeData.success && memeData.data?.url) {
                 setMemeImage(memeData.data.url);
+            } else {
+                console.error('Meme API error:', memeData);
+                setMemeText("Failed to generate image. Try again!");
             }
         } catch (error) {
+            console.error('Error:', error);
             setMemeText("Meme generation failed... that's the real meme 😅");
         } finally {
             setLoading(false);
