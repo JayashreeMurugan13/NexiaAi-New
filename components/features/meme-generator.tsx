@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ImageIcon, Sparkles, Send, Download } from "lucide-react";
+import { ImageIcon, Sparkles, Send, Download, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function MemeGenerator() {
@@ -10,31 +10,64 @@ export function MemeGenerator() {
     const [memeText, setMemeText] = useState("");
     const [memeImage, setMemeImage] = useState("");
     const [loading, setLoading] = useState(false);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
 
     const memeTemplates = [
-        { id: "181913649", name: "Drake Hotline Bling" },
-        { id: "87743020", name: "Two Buttons" },
-        { id: "112126428", name: "Distracted Boyfriend" },
-        { id: "131087935", name: "Running Away Balloon" },
-        { id: "4087833", name: "Waiting Skeleton" },
-        { id: "102156234", name: "Mocking Spongebob" },
-        { id: "438680", name: "Batman Slapping Robin" },
-        { id: "124822590", name: "Left Exit 12 Off Ramp" },
+        "https://i.imgflip.com/30b1gx.jpg", // Drake
+        "https://i.imgflip.com/1bij.jpg", // Success Kid
+        "https://i.imgflip.com/1g8my4.jpg", // Distracted Boyfriend
+        "https://i.imgflip.com/26am.jpg", // Disaster Girl
+        "https://i.imgflip.com/9ehk.jpg", // Philosoraptor
+        "https://i.imgflip.com/1ur9b0.jpg", // Surprised Pikachu
     ];
+
+    const createMemeImage = (topText: string, bottomText: string, templateUrl: string) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+            canvas.width = 500;
+            canvas.height = 500;
+            
+            ctx.drawImage(img, 0, 0, 500, 500);
+            
+            // Style for meme text
+            ctx.fillStyle = 'white';
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 3;
+            ctx.font = 'bold 40px Impact';
+            ctx.textAlign = 'center';
+            
+            // Top text
+            ctx.strokeText(topText, 250, 50);
+            ctx.fillText(topText, 250, 50);
+            
+            // Bottom text
+            ctx.strokeText(bottomText, 250, 470);
+            ctx.fillText(bottomText, 250, 470);
+            
+            setMemeImage(canvas.toDataURL('image/jpeg'));
+        };
+        img.src = templateUrl;
+    };
 
     const generateMeme = async () => {
         if (!topic.trim()) return;
         setLoading(true);
         
         try {
-            // Get AI to generate meme text
             const response = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     messages: [{ 
                         role: "user", 
-                        content: `Create a funny two-line meme about: ${topic}. Format as: TOP TEXT|BOTTOM TEXT. Keep each line under 30 characters.` 
+                        content: `Create a funny two-line meme about: ${topic}. Format as: TOP TEXT|BOTTOM TEXT. Keep each line under 25 characters. Be creative and funny!` 
                     }]
                 })
             });
@@ -42,11 +75,9 @@ export function MemeGenerator() {
             const data = await response.json();
             let text = data.content || "WHEN YOU TRY|BUT IT FAILS";
             
-            // Clean up the text
             text = text.replace(/["'`]/g, '').trim();
             setMemeText(text);
             
-            // Parse the text
             let topText = "TOP TEXT";
             let bottomText = "BOTTOM TEXT";
             
@@ -61,30 +92,9 @@ export function MemeGenerator() {
                 bottomText = words.slice(mid).join(' ').toUpperCase();
             }
             
-            // Pick random template
             const template = memeTemplates[Math.floor(Math.random() * memeTemplates.length)];
+            createMemeImage(topText, bottomText, template);
             
-            // Generate meme image
-            const formData = new URLSearchParams();
-            formData.append('template_id', template.id);
-            formData.append('username', 'imgflip_hubot');
-            formData.append('password', 'imgflip_hubot');
-            formData.append('text0', topText);
-            formData.append('text1', bottomText);
-            
-            const memeResponse = await fetch('https://api.imgflip.com/caption_image', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const memeData = await memeResponse.json();
-            
-            if (memeData.success && memeData.data?.url) {
-                setMemeImage(memeData.data.url);
-            } else {
-                console.error('Meme API error:', memeData);
-                setMemeText("Failed to generate image. Try again!");
-            }
         } catch (error) {
             console.error('Error:', error);
             setMemeText("Meme generation failed... that's the real meme 😅");
@@ -93,8 +103,17 @@ export function MemeGenerator() {
         }
     };
 
+    const downloadMeme = () => {
+        if (!memeImage) return;
+        const link = document.createElement('a');
+        link.download = 'nexia-meme.jpg';
+        link.href = memeImage;
+        link.click();
+    };
+
     return (
         <div className="flex-1 flex flex-col h-full bg-zinc-950 p-8 overflow-y-auto">
+            <canvas ref={canvasRef} style={{ display: 'none' }} />
             <div className="max-w-3xl mx-auto w-full">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -138,19 +157,24 @@ export function MemeGenerator() {
                                 alt="Generated Meme" 
                                 className="w-full rounded-xl mb-4"
                             />
-                            <div className="flex items-center justify-between">
-                                <p className="text-zinc-400 text-sm">{memeText}</p>
-                                <a 
-                                    href={memeImage} 
-                                    download="nexia-meme.jpg"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    <Button className="bg-orange-600 hover:bg-orange-500">
+                            <div className="flex items-center justify-between gap-4">
+                                <p className="text-zinc-400 text-sm flex-1">{memeText}</p>
+                                <div className="flex gap-2">
+                                    <Button 
+                                        onClick={generateMeme}
+                                        className="bg-zinc-700 hover:bg-zinc-600"
+                                    >
+                                        <RefreshCw className="w-4 h-4 mr-2" />
+                                        Regenerate
+                                    </Button>
+                                    <Button 
+                                        onClick={downloadMeme}
+                                        className="bg-orange-600 hover:bg-orange-500"
+                                    >
                                         <Download className="w-4 h-4 mr-2" />
                                         Download
                                     </Button>
-                                </a>
+                                </div>
                             </div>
                         </motion.div>
                     )}
