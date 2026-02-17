@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, User, Heart, Sparkles, Copy, Check, Plus, History, Search } from "lucide-react";
+import { Send, User, Heart, Sparkles, Copy, Check, Plus, History, Search, Mic, Volume2, VolumeX } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface Message {
@@ -203,10 +203,27 @@ export function ChatInterface() {
     const [showHistory, setShowHistory] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [filteredConversations, setFilteredConversations] = useState<Conversation[]>([]);
+    const [isRecording, setIsRecording] = useState(false);
+    const [voiceEnabled, setVoiceEnabled] = useState(false);
+    const [isSpeaking, setIsSpeaking] = useState(false);
+    const [selectedVoice, setSelectedVoice] = useState<'male' | 'female'>('female');
+    const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const recognitionRef = useRef<any>(null);
 
     useEffect(() => {
         loadConversations();
+        
+        // Load voices for speech synthesis
+        if ('speechSynthesis' in window) {
+            const loadVoices = () => {
+                const voices = window.speechSynthesis.getVoices();
+                setAvailableVoices(voices);
+            };
+            
+            loadVoices();
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+        }
     }, []);
 
     useEffect(() => {
@@ -319,6 +336,153 @@ export function ChatInterface() {
         }
     };
 
+    const startVoiceRecording = () => {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            alert('Voice input not supported in your browser');
+            return;
+        }
+
+        const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = () => setIsRecording(true);
+        recognition.onend = () => setIsRecording(false);
+        recognition.onresult = (event: any) => {
+            const transcript = event.results[0][0].transcript;
+            setInput(transcript);
+        };
+        recognition.onerror = () => setIsRecording(false);
+
+        recognitionRef.current = recognition;
+        recognition.start();
+    };
+
+    const stopVoiceRecording = () => {
+        if (recognitionRef.current) {
+            recognitionRef.current.stop();
+        }
+    };
+
+    const speakText = (text: string) => {
+        if (!voiceEnabled || !('speechSynthesis' in window)) return;
+        
+        try {
+            window.speechSynthesis.cancel();
+            
+            setTimeout(() => {
+                const cleanText = text
+                    .replace(/[*_`#\[\]()]/g, '')
+                    .replace(/[\u{1F300}-\u{1F9FF}]/gu, '') // Remove emojis
+                    .replace(/[\u{2600}-\u{26FF}]/gu, '')  // Remove symbols
+                    .replace(/[\u{2700}-\u{27BF}]/gu, '')  // Remove dingbats
+                    .replace(/\s+/g, ' ')
+                    .slice(0, 300)
+                    .trim();
+                
+                if (!cleanText) return;
+                
+                const hasTamil = /[\u0B80-\u0BFF]/.test(cleanText);
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                
+                let voice = null;
+                
+                if (hasTamil) {
+                    // Tamil voice - look for any Tamil voice
+                    voice = availableVoices.find(v => 
+                        v.lang.includes('ta') || 
+                        v.lang.includes('Tamil') ||
+                        v.name.includes('Tamil')
+                    );
+                    
+                    if (voice) {
+                        utterance.lang = 'ta-IN';
+                    } else {
+                        // No Tamil voice found, use English voice but set Tamil language
+                        utterance.lang = 'ta-IN';
+                        console.warn('No Tamil voice found. Install Tamil voice in Windows Settings.');
+                    }
+                } else {
+                    // English voice - prioritize by gender
+                    const englishVoices = availableVoices.filter(v => v.lang.startsWith('en'));
+                    
+                    if (selectedVoice === 'female') {
+                        // Try to find female voice
+                        voice = englishVoices.find(v => 
+                            v.name.includes('Female') ||
+                            v.name.includes('Zira') ||
+                            v.name.includes('Samantha') ||
+                            v.name.includes('Victoria') ||
+                            v.name.includes('Karen') ||
+                            v.name.includes('Moira') ||
+                            v.name.includes('Tessa') ||
+                            v.name.includes('Google US English Female') ||
+                            v.name.includes('Microsoft Zira')
+                        );
+                        
+                        // Fallback: use first voice with higher pitch
+                        if (!voice) {
+                            voice = englishVoices[0];
+                            utterance.pitch = 1.3;
+                        }
+                    } else {
+                        // Try to find male voice
+                        voice = englishVoices.find(v => 
+                            (v.name.includes('Male') ||
+                             v.name.includes('David') ||
+                             v.name.includes('Mark') ||
+                             v.name.includes('Daniel') ||
+                             v.name.includes('Google US English Male') ||
+                             v.name.includes('Microsoft David')) &&
+                            !v.name.includes('Female')
+                        );
+                        
+                        // Fallback: use first voice with lower pitch
+                        if (!voice) {
+                            voice = englishVoices[0];
+                            utterance.pitch = 0.7;
+                        }
+                    }
+                }
+                
+                // Final fallback
+                if (!voice && availableVoices.length > 0) {
+                    voice = availableVoices[0];
+                }
+                
+                if (voice) {
+                    utterance.voice = voice;
+                    utterance.lang = voice.lang;
+                } else {
+                    utterance.lang = hasTamil ? 'ta-IN' : 'en-US';
+                }
+                
+                // Set pitch based on gender if not already set
+                if (!utterance.pitch) {
+                    utterance.pitch = selectedVoice === 'female' ? 1.2 : 0.8;
+                }
+                
+                utterance.rate = 1.0;
+                utterance.volume = 1.0;
+                
+                utterance.onstart = () => setIsSpeaking(true);
+                utterance.onend = () => setIsSpeaking(false);
+                utterance.onerror = () => setIsSpeaking(false);
+                
+                window.speechSynthesis.speak(utterance);
+            }, 200);
+        } catch (error) {
+            setIsSpeaking(false);
+        }
+    };
+
+    const stopSpeaking = () => {
+        window.speechSynthesis.cancel();
+        setIsSpeaking(false);
+    };
+
     const sendMessage = async () => {
         if (!input.trim() || loading) return;
 
@@ -340,6 +504,11 @@ export function ChatInterface() {
             const data = await response.json();
             const finalMessages = [...newMessages, data];
             setMessages(finalMessages);
+
+            // Speak AI response if voice is enabled
+            if (voiceEnabled && data.content) {
+                speakText(data.content);
+            }
 
             // Save assistant message
             await saveConversation(finalMessages);
@@ -392,21 +561,37 @@ export function ChatInterface() {
                     </div>
                 </div>
                 <div className="flex items-center gap-3 px-4 py-2 bg-zinc-900/50 rounded-full border border-zinc-800">
-                    <motion.div
-                        className="w-2 h-2 rounded-full bg-green-500"
-                        animate={{
-                            boxShadow: [
-                                "0 0 5px rgba(34,197,94,0.5)",
-                                "0 0 15px rgba(34,197,94,0.8)",
-                                "0 0 5px rgba(34,197,94,0.5)"
-                            ]
-                        }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                    />
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Online & Ready</span>
-                </div>
+                        <motion.div
+                            className="w-2 h-2 rounded-full bg-green-500"
+                            animate={{
+                                boxShadow: [
+                                    "0 0 5px rgba(34,197,94,0.5)",
+                                    "0 0 15px rgba(34,197,94,0.8)",
+                                    "0 0 5px rgba(34,197,94,0.5)"
+                                ]
+                            }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                        />
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Online & Ready</span>
+                    </div>
 
-                <div className="flex gap-2">
+                    <div className="flex gap-2">
+                    <motion.button
+                        onClick={() => {
+                            setVoiceEnabled(!voiceEnabled);
+                            if (isSpeaking) stopSpeaking();
+                        }}
+                        className={`p-2 rounded-lg transition-colors ${
+                            voiceEnabled 
+                                ? 'bg-green-600/20 border border-green-500/30 text-green-400' 
+                                : 'bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-400'
+                        }`}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        title={voiceEnabled ? 'Voice responses ON' : 'Voice responses OFF'}
+                    >
+                        {voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                    </motion.button>
                     <motion.button
                         onClick={() => setShowHistory(!showHistory)}
                         className="p-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-lg transition-colors"
@@ -594,17 +779,45 @@ export function ChatInterface() {
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                             placeholder="Chat with Nexia... ✨"
-                            className="w-full bg-zinc-900/80 border border-zinc-800 rounded-2xl py-4 pl-6 pr-16 text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-700 transition-all shadow-2xl backdrop-blur-sm"
+                            className="w-full bg-zinc-900/80 border border-zinc-800 rounded-2xl py-4 pl-6 pr-48 text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-700 transition-all shadow-2xl backdrop-blur-sm"
                         />
-                        <motion.button
-                            onClick={sendMessage}
-                            disabled={!input.trim() || loading}
-                            className="absolute right-3 p-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:opacity-30 disabled:hover:from-blue-600 disabled:hover:to-purple-600 text-white rounded-xl transition-all shadow-lg"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                        >
-                            <Send className="w-5 h-5" />
-                        </motion.button>
+                        <div className="absolute right-3 flex gap-2 items-center">
+                            {/* Voice Gender Selector */}
+                            {voiceEnabled && (
+                                <motion.select
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    value={selectedVoice}
+                                    onChange={(e) => setSelectedVoice(e.target.value as 'male' | 'female')}
+                                    className="px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-xs text-zinc-300 focus:outline-none focus:border-blue-500 transition-colors cursor-pointer"
+                                >
+                                    <option value="female">👩 Female</option>
+                                    <option value="male">👨 Male</option>
+                                </motion.select>
+                            )}
+                            <motion.button
+                                onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
+                                className={`p-3 rounded-xl transition-all shadow-lg ${
+                                    isRecording 
+                                        ? 'bg-red-600 hover:bg-red-500 animate-pulse' 
+                                        : 'bg-zinc-800 hover:bg-zinc-700'
+                                } text-white`}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                title="Voice input"
+                            >
+                                <Mic className="w-5 h-5" />
+                            </motion.button>
+                            <motion.button
+                                onClick={sendMessage}
+                                disabled={!input.trim() || loading}
+                                className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:opacity-30 disabled:hover:from-blue-600 disabled:hover:to-purple-600 text-white rounded-xl transition-all shadow-lg"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                <Send className="w-5 h-5" />
+                            </motion.button>
+                        </div>
                     </div>
                 </div>
             </div>
