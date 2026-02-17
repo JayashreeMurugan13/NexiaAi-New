@@ -70,110 +70,41 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
         <div className="flex h-screen bg-black text-zinc-300 font-sans">
             {/* Sidebar */}
             <motion.aside
-                className={cn(
-                    "border-r border-zinc-800/50 flex flex-col items-center py-6 bg-gradient-to-b from-zinc-950/80 to-zinc-900/80 backdrop-blur-xl relative flex-shrink-0",
-                    isCollapsed ? "w-20" : "w-20 md:w-72"
-                )}
-                animate={{ width: isCollapsed ? 80 : window.innerWidth >= 768 ? 288 : 80 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="w-16 md:w-72 border-r border-zinc-800/50 flex flex-col items-center py-4 md:py-6 bg-gradient-to-b from-zinc-950/80 to-zinc-900/80 backdrop-blur-xl relative flex-shrink-0"
             >
                 {/* Background decoration */}
                 <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none" />
 
                 {/* Logo */}
-                <div className={cn("mb-10 relative z-10", isCollapsed ? "px-3" : "px-6 hidden md:block w-full")}>
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className={cn(
-                            "flex items-center gap-3 bg-gradient-to-br from-blue-600/20 to-purple-600/20 p-4 rounded-2xl border border-blue-500/30 relative overflow-hidden",
-                            isCollapsed && "justify-center"
-                        )}
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 animate-pulse" />
-                        <motion.div
-                            animate={{ rotate: [0, 10, -10, 0] }}
-                            transition={{ duration: 4, repeat: Infinity }}
-                            className="relative z-10"
-                        >
-                            <Sparkles className="text-blue-400 w-6 h-6" />
-                        </motion.div>
-                        {!isCollapsed && (
-                            <motion.span
-                                className="font-bold text-white text-lg tracking-tight relative z-10"
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                            >
-                                Nexia AI
-                            </motion.span>
-                        )}
-                    </motion.div>
-                </div>
-
-                {/* Mobile logo */}
-                <div className={cn("md:hidden mb-10 relative z-10", !isCollapsed && "hidden")}>
-                    <div className="p-3 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-xl border border-blue-500/30">
-                        <Sparkles className="text-blue-400 w-7 h-7" />
+                <div className="mb-6 md:mb-10 px-2 md:px-6 w-full relative z-10">
+                    <div className="flex items-center justify-center md:justify-start gap-3 bg-gradient-to-br from-blue-600/20 to-purple-600/20 p-3 md:p-4 rounded-xl md:rounded-2xl border border-blue-500/30">
+                        <Sparkles className="text-blue-400 w-5 h-5 md:w-6 md:h-6" />
+                        <span className="hidden md:block font-bold text-white text-lg">Nexia AI</span>
                     </div>
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 w-full space-y-3 px-3 md:px-4 relative z-10">
+                <nav className="flex-1 w-full space-y-2 px-2 md:px-4 relative z-10">
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = activeTab === item.id;
 
                         return (
-                            <motion.button
+                            <button
                                 key={item.id}
                                 onClick={() => setActiveTab(item.id)}
                                 className={cn(
-                                    "w-full flex items-center gap-3 p-4 rounded-2xl transition-all duration-300 relative overflow-hidden group",
+                                    "w-full flex items-center justify-center md:justify-start gap-3 p-3 md:p-4 rounded-xl md:rounded-2xl transition-all",
                                     isActive
-                                        ? 'bg-gradient-to-r ' + item.gradient + ' text-white shadow-2xl transform scale-105'
-                                        : 'hover:bg-zinc-800/50 text-zinc-400 hover:text-zinc-200'
+                                        ? 'bg-gradient-to-r ' + item.gradient + ' text-white'
+                                        : 'hover:bg-zinc-800/50 text-zinc-400'
                                 )}
-                                whileHover={{ scale: isActive ? 1.05 : 1.02, x: 2 }}
-                                whileTap={{ scale: 0.98 }}
                             >
-                                {isActive && (
-                                    <motion.div
-                                        className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ duration: 0.3 }}
-                                    />
-                                )}
-
-                                <motion.div
-                                    className="relative z-10"
-                                    animate={isActive ? { rotate: [0, 5, -5, 0] } : {}}
-                                    transition={{ duration: 2, repeat: Infinity }}
-                                >
-                                    <Icon className="w-5 h-5" />
-                                </motion.div>
-
-                                {!isCollapsed && (
-                                    <div className="hidden md:block flex-1 text-left relative z-10">
-                                        <div className="font-semibold">{item.label}</div>
-                                        <div className={cn(
-                                            "text-xs opacity-70",
-                                            isActive ? "text-white/80" : "text-zinc-500"
-                                        )}>
-                                            {item.description}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {isActive && (
-                                    <motion.div
-                                        className="absolute right-2 w-2 h-8 bg-white/30 rounded-full"
-                                        initial={{ scaleY: 0 }}
-                                        animate={{ scaleY: 1 }}
-                                        transition={{ duration: 0.3 }}
-                                    />
-                                )}
-                            </motion.button>
+                                <Icon className="w-5 h-5" />
+                                <div className="hidden md:block flex-1 text-left">
+                                    <div className="font-semibold text-sm">{item.label}</div>
+                                </div>
+                            </button>
                         );
                     })}
                 </nav>
