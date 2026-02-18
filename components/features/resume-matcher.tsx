@@ -712,25 +712,33 @@ export function ResumeMatcher() {
                                         <input
                                             ref={resumeFileInputRef}
                                             type="file"
-                                            accept=".pdf,.txt"
+                                            accept="application/pdf,.pdf,.txt,text/plain"
                                             onChange={handleResumeUpload}
                                             className="hidden"
+                                            capture="environment"
                                         />
                                         <Button
                                             onClick={() => resumeFileInputRef.current?.click()}
-                                            className="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 p-8 rounded-2xl flex flex-col items-center gap-3"
+                                            disabled={loading}
+                                            className="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 p-6 md:p-8 rounded-2xl flex flex-col items-center gap-3 touch-manipulation"
                                         >
-                                            <Upload className="w-8 h-8 text-blue-400" />
-                                            <span>{resumeUploaded ? "✓ Resume Uploaded" : "Click to upload PDF/TXT"}</span>
+                                            {loading ? (
+                                                <Brain className="w-8 h-8 text-blue-400 animate-pulse" />
+                                            ) : (
+                                                <Upload className="w-8 h-8 text-blue-400" />
+                                            )}
+                                            <span className="text-sm md:text-base">{loading ? "Uploading..." : resumeUploaded ? "✓ Resume Uploaded" : "Click to upload PDF"}</span>
                                         </Button>
                                     </div>
                                     <textarea
                                         value={resume}
-                                        onChange={(e) => setResume(e.target.value)}
+                                        onChange={(e) => {
+                                            setResume(e.target.value);
+                                            if (e.target.value.trim()) setResumeUploaded(true);
+                                        }}
                                         placeholder="Or paste your resume content here..."
                                         rows={8}
-                                        className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
-                                        style={{ display: 'none' }}
+                                        className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none text-sm"
                                     />
                                 </div>
 
