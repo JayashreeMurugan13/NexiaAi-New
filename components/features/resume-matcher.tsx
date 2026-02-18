@@ -40,7 +40,7 @@ export function ResumeMatcher() {
         const file = event.target.files?.[0];
         if (!file) return;
 
-        if (file.type === "application/pdf") {
+        if (file.type === "application/pdf" || file.name.toLowerCase().endsWith('.pdf')) {
             setLoading(true);
             const formData = new FormData();
             formData.append('file', file);
@@ -50,23 +50,37 @@ export function ResumeMatcher() {
                     method: 'POST',
                     body: formData
                 });
+                
+                if (!response.ok) {
+                    throw new Error('PDF parsing failed');
+                }
+                
                 const data = await response.json();
-                setResume(data.text || '');
-                setResumeUploaded(true);
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                if (data.text && data.text.trim().length > 0) {
+                    setResume(data.text);
+                    setResumeUploaded(true);
+                } else {
+                    throw new Error('No text extracted from PDF');
+                }
             } catch (error) {
-                alert('Failed to parse PDF. Please try pasting text instead.');
+                console.error('PDF upload error:', error);
+                setResume('');
+                setResumeUploaded(false);
             } finally {
                 setLoading(false);
             }
-        } else if (file.type === "text/plain") {
+        } else if (file.type === "text/plain" || file.name.toLowerCase().endsWith('.txt')) {
             const reader = new FileReader();
             reader.onload = (e) => {
                 setResume(e.target?.result as string);
                 setResumeUploaded(true);
             };
             reader.readAsText(file);
-        } else {
-            alert("Please upload a PDF or TXT file");
         }
     };
 
@@ -74,7 +88,7 @@ export function ResumeMatcher() {
         const file = event.target.files?.[0];
         if (!file) return;
 
-        if (file.type === "application/pdf") {
+        if (file.type === "application/pdf" || file.name.toLowerCase().endsWith('.pdf')) {
             setLoading(true);
             const formData = new FormData();
             formData.append('file', file);
@@ -84,23 +98,37 @@ export function ResumeMatcher() {
                     method: 'POST',
                     body: formData
                 });
+                
+                if (!response.ok) {
+                    throw new Error('PDF parsing failed');
+                }
+                
                 const data = await response.json();
-                setJobDescription(data.text || '');
-                setJobUploaded(true);
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                if (data.text && data.text.trim().length > 0) {
+                    setJobDescription(data.text);
+                    setJobUploaded(true);
+                } else {
+                    throw new Error('No text extracted from PDF');
+                }
             } catch (error) {
-                alert('Failed to parse PDF. Please try pasting text instead.');
+                console.error('PDF upload error:', error);
+                setJobDescription('');
+                setJobUploaded(false);
             } finally {
                 setLoading(false);
             }
-        } else if (file.type === "text/plain") {
+        } else if (file.type === "text/plain" || file.name.toLowerCase().endsWith('.txt')) {
             const reader = new FileReader();
             reader.onload = (e) => {
                 setJobDescription(e.target?.result as string);
                 setJobUploaded(true);
             };
             reader.readAsText(file);
-        } else {
-            alert("Please upload a PDF or TXT file");
         }
     };
 
