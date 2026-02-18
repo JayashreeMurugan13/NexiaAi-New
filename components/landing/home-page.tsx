@@ -36,7 +36,7 @@ const FeatureBox = ({
                 z: 50
             }}
             onClick={onClick}
-            className="group relative p-8 rounded-[2rem] bg-gradient-to-br from-[#0F0F12] via-[#1A1D24] to-[#0F0F12] border border-zinc-800/50 backdrop-blur-xl shadow-2xl cursor-pointer overflow-hidden transform-gpu perspective-1000 hover:border-zinc-700/70 transition-all duration-500"
+            className="group relative p-6 md:p-8 rounded-2xl md:rounded-[2rem] bg-gradient-to-br from-[#0F0F12] via-[#1A1D24] to-[#0F0F12] border border-zinc-800/50 backdrop-blur-xl shadow-2xl cursor-pointer overflow-hidden transform-gpu perspective-1000 hover:border-zinc-700/70 transition-all duration-500"
         >
             {/* Animated gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -65,7 +65,7 @@ const FeatureBox = ({
             
             {/* Icon */}
             <motion.div
-                className="relative z-10 mb-6"
+                className="relative z-10 mb-4 md:mb-6"
                 whileHover={{ rotate: [0, -5, 5, 0], scale: 1.1 }}
                 transition={{ duration: 0.5 }}
             >
@@ -75,13 +75,13 @@ const FeatureBox = ({
             {/* Content */}
             <div className="relative z-10">
                 <motion.h3 
-                    className="text-xl font-bold text-white mb-3 group-hover:text-blue-200 transition-colors"
+                    className="text-lg md:text-xl font-bold text-white mb-2 md:mb-3 group-hover:text-blue-200 transition-colors"
                     whileHover={{ x: 3 }}
                 >
                     {title}
                 </motion.h3>
                 <motion.p 
-                    className="text-zinc-400 text-sm leading-relaxed group-hover:text-zinc-300 transition-colors"
+                    className="text-zinc-400 text-xs md:text-sm leading-relaxed group-hover:text-zinc-300 transition-colors"
                     whileHover={{ x: 3 }}
                 >
                     {desc}
@@ -171,22 +171,22 @@ export function HomePage({ onGetStarted, onGoToStudio, onGoToGoals }: HomePagePr
 
             {/* Hero Section */}
             <motion.section 
-                className="relative z-10 min-h-screen flex flex-col items-center justify-center px-8 text-center"
+                className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 md:px-8 py-16 md:py-20 text-center"
                 style={{ y: heroY }}
             >
                 <motion.div
                     initial={{ scale: 0, rotate: -180 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ duration: 1.2, type: "spring" }}
-                    className="mb-12"
+                    className="mb-6 md:mb-8 lg:mb-12"
                 >
-                    <div className="w-24 h-24 mx-auto bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center border border-blue-500/30 shadow-[0_0_40px_rgba(59,130,246,0.3)] relative overflow-hidden">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mx-auto bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center border border-blue-500/30 shadow-[0_0_40px_rgba(59,130,246,0.3)] relative overflow-hidden">
                         <motion.div
                             animate={{ rotate: 360 }}
                             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                             className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10"
                         />
-                        <Sparkles className="w-12 h-12 text-blue-400 relative z-10" />
+                        <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-blue-400 relative z-10" />
                     </div>
                 </motion.div>
 
@@ -194,7 +194,7 @@ export function HomePage({ onGetStarted, onGoToStudio, onGoToGoals }: HomePagePr
                     initial={{ opacity: 0, y: 50 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3, duration: 1 }}
-                    className="text-8xl md:text-9xl font-black text-white mb-8 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tight"
+                    className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black text-white mb-4 md:mb-6 lg:mb-8 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tight leading-tight"
                 >
                     NEXIA
                 </motion.h1>
@@ -203,7 +203,7 @@ export function HomePage({ onGetStarted, onGoToStudio, onGoToGoals }: HomePagePr
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6, duration: 0.8 }}
-                    className="text-xl text-zinc-300 mb-12 max-w-2xl leading-relaxed"
+                    className="text-sm sm:text-base md:text-lg lg:text-xl text-zinc-300 mb-6 md:mb-8 lg:mb-10 max-w-2xl leading-relaxed px-4"
                 >
                     Your intelligent creative companion that transforms ideas into reality
                 </motion.p>
@@ -227,13 +227,13 @@ export function HomePage({ onGetStarted, onGoToStudio, onGoToGoals }: HomePagePr
             </motion.section>
 
             {/* About Section */}
-            <section className="relative z-10 py-20 px-8">
+            <section className="relative z-10 py-12 md:py-20 px-4 sm:px-6 md:px-8">
                 <div className="max-w-4xl mx-auto text-center">
                     <motion.h2
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="text-4xl font-bold text-white mb-8 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
+                        className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-6 md:mb-8 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
                     >
                         About Nexia
                     </motion.h2>
@@ -242,7 +242,7 @@ export function HomePage({ onGetStarted, onGoToStudio, onGoToGoals }: HomePagePr
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: 0.2 }}
-                        className="text-lg text-zinc-300 leading-relaxed mb-12"
+                        className="text-sm sm:text-base md:text-lg text-zinc-300 leading-relaxed mb-8 md:mb-12 px-4"
                     >
                         Nexia is more than just an AI assistant - she's your creative partner who understands the nuances of imagination, 
                         logic, and artistic expression. Built with cutting-edge technology and designed with creators in mind, 
@@ -252,18 +252,18 @@ export function HomePage({ onGetStarted, onGoToStudio, onGoToGoals }: HomePagePr
             </section>
 
             {/* Features Section */}
-            <section className="relative z-10 py-20 px-8">
+            <section className="relative z-10 py-12 md:py-20 px-4 sm:px-6 md:px-8">
                 <div className="max-w-6xl mx-auto">
                     <motion.h2
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="text-4xl font-bold text-center text-white mb-16 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
+                        className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-white mb-10 md:mb-16 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
                     >
                         What Nexia Can Do
                     </motion.h2>
                     
-                    <div className="grid md:grid-cols-3 gap-6">
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                         {features.map((feature, i) => {
                             const handleClick = () => {
                                 if (feature.action === "chat") onGetStarted();
@@ -287,17 +287,17 @@ export function HomePage({ onGetStarted, onGoToStudio, onGoToGoals }: HomePagePr
             </section>
 
             {/* CTA Section */}
-            <section className="relative z-10 py-20 px-8 text-center">
+            <section className="relative z-10 py-12 md:py-20 px-4 sm:px-6 md:px-8 text-center">
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     className="max-w-2xl mx-auto"
                 >
-                    <h3 className="text-3xl font-bold text-white mb-6">
+                    <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4 md:mb-6">
                         Ready to Create Magic?
                     </h3>
-                    <p className="text-zinc-400 mb-8">
+                    <p className="text-sm sm:text-base text-zinc-400 mb-6 md:mb-8 px-4">
                         Join thousands of creators who are already using Nexia to bring their ideas to life.
                     </p>
                     <motion.div

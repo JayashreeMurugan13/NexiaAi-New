@@ -288,8 +288,8 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
                 )}
             </AnimatePresence>
 
-            {/* Main Content */}
-            <main className="flex-1 flex flex-col h-screen bg-zinc-950 relative">
+            {/* Main Content - Scrollable */}
+            <main className="flex-1 flex flex-col h-screen bg-zinc-950 relative overflow-hidden">
                 {/* Background decoration */}
                 <div className="absolute inset-0 pointer-events-none">
                     <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-gradient-to-bl from-blue-500/5 via-transparent to-transparent" />
@@ -305,18 +305,21 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
                     <div className="w-10" /> {/* Spacer for balance */}
                 </div>
 
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={activeTab}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.3, ease: "easeInOut" }}
-                        className="flex-1 flex flex-col h-full overflow-hidden"
-                    >
-                        {children(activeTab)}
-                    </motion.div>
-                </AnimatePresence>
+                {/* Scrollable Content Area */}
+                <div className="flex-1 overflow-y-auto overflow-x-hidden relative z-10">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={activeTab}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                            className="min-h-full"
+                        >
+                            {children(activeTab)}
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
             </main>
         </div>
     );
