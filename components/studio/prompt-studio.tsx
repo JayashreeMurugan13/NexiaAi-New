@@ -26,19 +26,19 @@ const TemplateItem = ({ title, desc, prompt, category, icon, gradient, onSelect 
         }}
         whileTap={{ scale: 0.98 }}
         onClick={() => onSelect(prompt)}
-        className={`group relative p-6 bg-gradient-to-br ${gradient} border border-white/10 rounded-3xl cursor-pointer transition-all overflow-hidden backdrop-blur-sm`}
+        className={`group relative p-4 md:p-6 bg-gradient-to-br ${gradient} border border-white/10 rounded-2xl md:rounded-3xl cursor-pointer transition-all overflow-hidden backdrop-blur-sm`}
     >
         {/* Animated background */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         
         {/* Category badge */}
-        <div className="absolute top-4 right-4 px-2 py-1 bg-black/20 rounded-full text-[10px] font-bold text-white/70 uppercase tracking-wider">
+        <div className="absolute top-3 right-3 md:top-4 md:right-4 px-2 py-1 bg-black/20 rounded-full text-[9px] md:text-[10px] font-bold text-white/70 uppercase tracking-wider">
             {category}
         </div>
         
         {/* Icon */}
         <motion.div
-            className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center mb-4 group-hover:bg-white/20 transition-colors"
+            className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-white/10 flex items-center justify-center mb-3 md:mb-4 group-hover:bg-white/20 transition-colors"
             whileHover={{ rotate: 10, scale: 1.1 }}
         >
             {icon}
@@ -46,10 +46,10 @@ const TemplateItem = ({ title, desc, prompt, category, icon, gradient, onSelect 
         
         {/* Content */}
         <div className="relative z-10">
-            <h3 className="text-lg font-bold text-white mb-2 group-hover:text-blue-200 transition-colors">
+            <h3 className="text-base md:text-lg font-bold text-white mb-2 group-hover:text-blue-200 transition-colors">
                 {title}
             </h3>
-            <p className="text-sm text-white/70 leading-relaxed mb-4 line-clamp-2 group-hover:text-white/90 transition-colors">
+            <p className="text-xs md:text-sm text-white/70 leading-relaxed mb-3 md:mb-4 line-clamp-2 group-hover:text-white/90 transition-colors">
                 {desc}
             </p>
             
@@ -58,13 +58,14 @@ const TemplateItem = ({ title, desc, prompt, category, icon, gradient, onSelect 
                 className="flex items-center gap-2 text-xs font-bold text-white/60 group-hover:text-white transition-colors"
                 whileHover={{ x: 5 }}
             >
-                <Plus className="w-3.5 h-3.5" />
-                Use Template
+                <Plus className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                <span className="hidden sm:inline">Use Template</span>
+                <span className="sm:hidden">Use</span>
             </motion.div>
         </div>
         
         {/* Hover glow */}
-        <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-blue-500/0 via-purple-500/0 to-pink-500/0 group-hover:from-blue-500/10 group-hover:via-purple-500/10 group-hover:to-pink-500/10 transition-all duration-500" />
+        <div className="absolute inset-0 rounded-2xl md:rounded-3xl bg-gradient-to-r from-blue-500/0 via-purple-500/0 to-pink-500/0 group-hover:from-blue-500/10 group-hover:via-purple-500/10 group-hover:to-pink-500/10 transition-all duration-500" />
     </motion.div>
 );
 
@@ -186,10 +187,10 @@ export function PromptStudio() {
             className="flex flex-col h-full"
         >
             {/* Header */}
-            <header className="px-8 py-6 border-b border-zinc-800/50 bg-gradient-to-r from-zinc-950/80 to-zinc-900/80 backdrop-blur-md">
-                <div className="flex items-center gap-4 mb-4">
+            <header className="px-4 md:px-8 py-4 md:py-6 border-b border-zinc-800/50 bg-gradient-to-r from-zinc-950/80 to-zinc-900/80 backdrop-blur-md">
+                <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-4">
                     <motion.div
-                        className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600/20 to-pink-600/20 border border-purple-500/30 flex items-center justify-center"
+                        className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-gradient-to-br from-purple-600/20 to-pink-600/20 border border-purple-500/30 flex items-center justify-center"
                         animate={{ 
                             boxShadow: [
                                 "0 0 20px rgba(147,51,234,0.2)",
@@ -199,21 +200,21 @@ export function PromptStudio() {
                         }}
                         transition={{ duration: 3, repeat: Infinity }}
                     >
-                        <Layout className="w-6 h-6 text-purple-400" />
+                        <Layout className="w-5 h-5 md:w-6 md:h-6 text-purple-400" />
                     </motion.div>
                     <div>
-                        <h2 className="text-2xl font-bold text-white tracking-tight">Prompt Studio</h2>
-                        <p className="text-sm text-zinc-400 font-medium">Transform ideas into powerful prompts</p>
+                        <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">Prompt Studio</h2>
+                        <p className="text-xs md:text-sm text-zinc-400 font-medium">Transform ideas into powerful prompts</p>
                     </div>
                 </div>
                 
                 {/* Category tabs */}
-                <div className="flex gap-2">
+                <div className="flex gap-1 md:gap-2 overflow-x-auto pb-2">
                     {categories.map((category) => (
                         <motion.button
                             key={category.key}
                             onClick={() => setActiveCategory(category.key)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                            className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all whitespace-nowrap ${
                                 activeCategory === category.key
                                     ? 'bg-gradient-to-r ' + category.color + ' text-white shadow-lg'
                                     : 'bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50'
@@ -222,24 +223,24 @@ export function PromptStudio() {
                             whileTap={{ scale: 0.95 }}
                         >
                             {category.icon}
-                            {category.label}
+                            <span className="hidden sm:inline">{category.label}</span>
                         </motion.button>
                     ))}
                 </div>
             </header>
 
-            <div className="flex-1 min-h-0 overflow-y-scroll p-8">
-                <div className="max-w-7xl mx-auto grid lg:grid-cols-3 gap-8">
+            <div className="flex-1 min-h-0 overflow-y-scroll p-4 md:p-8">
+                <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
                     {/* Prompt Editor */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <section className="space-y-4">
-                            <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 text-purple-500" />
+                    <div className="lg:col-span-2 space-y-4 md:space-y-6">
+                        <section className="space-y-3 md:space-y-4">
+                            <h3 className="text-xs md:text-sm font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+                                <Sparkles className="w-3 h-3 md:w-4 md:h-4 text-purple-500" />
                                 Prompt Enhancement Lab
                             </h3>
                             
                             <motion.div 
-                                className="bg-gradient-to-br from-zinc-900/80 to-zinc-800/80 border border-zinc-700/50 rounded-3xl p-6 space-y-6 shadow-2xl backdrop-blur-sm"
+                                className="bg-gradient-to-br from-zinc-900/80 to-zinc-800/80 border border-zinc-700/50 rounded-2xl md:rounded-3xl p-4 md:p-6 space-y-4 md:space-y-6 shadow-2xl backdrop-blur-sm"
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                             >
@@ -247,7 +248,7 @@ export function PromptStudio() {
                                     value={promptInput}
                                     onChange={(e) => setPromptInput(e.target.value)}
                                     placeholder="Describe your creative vision here... \n\nExample: 'A magical forest with glowing mushrooms'"
-                                    className="w-full h-40 bg-zinc-950/50 border border-zinc-700/50 rounded-2xl p-4 text-sm text-zinc-200 focus:outline-none focus:border-purple-500/50 transition-all resize-none font-mono leading-relaxed placeholder:text-zinc-600"
+                                    className="w-full h-32 md:h-40 bg-zinc-950/50 border border-zinc-700/50 rounded-xl md:rounded-2xl p-3 md:p-4 text-xs md:text-sm text-zinc-200 focus:outline-none focus:border-purple-500/50 transition-all resize-none font-mono leading-relaxed placeholder:text-zinc-600"
                                 />
                                 
                                 <motion.div
@@ -257,17 +258,19 @@ export function PromptStudio() {
                                     <Button
                                         onClick={enhancePrompt}
                                         disabled={enhancing || !promptInput.trim()}
-                                        className="w-full py-4 text-base font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white border-0 h-auto rounded-2xl shadow-lg"
+                                        className="w-full py-3 md:py-4 text-sm md:text-base font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white border-0 h-auto rounded-xl md:rounded-2xl shadow-lg"
                                     >
                                         {enhancing ? (
                                             <div className="flex items-center gap-2">
-                                                <Wand2 className="w-5 h-5 animate-spin" />
-                                                Enhancing Magic...
+                                                <Wand2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" />
+                                                <span className="hidden sm:inline">Enhancing Magic...</span>
+                                                <span className="sm:hidden">Enhancing...</span>
                                             </div>
                                         ) : (
                                             <div className="flex items-center gap-2">
-                                                <Sparkles className="w-5 h-5" />
-                                                Enhance with AI Magic
+                                                <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
+                                                <span className="hidden sm:inline">Enhance with AI Magic</span>
+                                                <span className="sm:hidden">Enhance</span>
                                             </div>
                                         )}
                                     </Button>
@@ -282,21 +285,23 @@ export function PromptStudio() {
                                     initial={{ opacity: 0, scale: 0.95, y: 20 }}
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.95, y: -20 }}
-                                    className="space-y-4"
+                                    className="space-y-3 md:space-y-4"
                                 >
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider">Enhanced Result</h3>
+                                    <div className="flex items-center justify-between gap-2">
+                                        <h3 className="text-xs md:text-sm font-bold text-zinc-400 uppercase tracking-wider">Enhanced Result</h3>
                                         <motion.button
                                             onClick={() => copyToClipboard(enhancedResult)}
-                                            className="flex items-center gap-2 text-xs font-bold text-purple-400 hover:text-purple-300 transition-colors bg-purple-500/10 px-3 py-2 rounded-full border border-purple-500/20"
+                                            className="flex items-center gap-1 md:gap-2 text-xs font-bold text-purple-400 hover:text-purple-300 transition-colors bg-purple-500/10 px-2 md:px-3 py-1 md:py-2 rounded-full border border-purple-500/20"
                                             whileHover={{ scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}
                                         >
-                                            <Copy className="w-3.5 h-3.5" /> Copy Enhanced Prompt
+                                            <Copy className="w-3 h-3 md:w-3.5 md:h-3.5" /> 
+                                            <span className="hidden sm:inline">Copy Enhanced Prompt</span>
+                                            <span className="sm:hidden">Copy</span>
                                         </motion.button>
                                     </div>
                                     
-                                    <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 rounded-3xl p-6 text-sm leading-relaxed text-zinc-200 font-mono shadow-inner border-l-4 border-l-purple-500 whitespace-pre-wrap relative overflow-hidden">
+                                    <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 rounded-2xl md:rounded-3xl p-4 md:p-6 text-xs md:text-sm leading-relaxed text-zinc-200 font-mono shadow-inner border-l-4 border-l-purple-500 whitespace-pre-wrap relative overflow-hidden">
                                         <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-transparent" />
                                         <div className="relative z-10">{enhancedResult}</div>
                                     </div>
@@ -306,14 +311,14 @@ export function PromptStudio() {
                     </div>
 
                     {/* Template Library */}
-                    <div className="space-y-6">
-                        <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
-                            <Image className="w-4 h-4 text-blue-500" />
+                    <div className="space-y-4 md:space-y-6">
+                        <h3 className="text-xs md:text-sm font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+                            <Image className="w-3 h-3 md:w-4 md:h-4 text-blue-500" />
                             Template Gallery
                         </h3>
                         
                         <motion.div 
-                            className="grid gap-4"
+                            className="grid gap-3 md:gap-4"
                             key={activeCategory}
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
