@@ -8,6 +8,7 @@ import { useRef } from "react";
 interface HomePageProps {
     onGetStarted: () => void;
     onGoToStudio?: () => void;
+    onGoToGoals?: () => void;
 }
 
 const FeatureBox = ({ 
@@ -93,7 +94,7 @@ const FeatureBox = ({
     );
 };
 
-export function HomePage({ onGetStarted, onGoToStudio }: HomePageProps) {
+export function HomePage({ onGetStarted, onGoToStudio, onGoToGoals }: HomePageProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const { scrollYProgress } = useScroll({
         target: containerRef,
@@ -106,18 +107,21 @@ export function HomePage({ onGetStarted, onGoToStudio }: HomePageProps) {
     const features = [
         {
             icon: <MessageSquare className="w-12 h-12 text-blue-400" />,
-            title: "Chat Like Friends",
-            desc: "Have natural conversations with Nexia. She remembers context, understands emotions, and responds like your best friend who happens to be super smart."
+            title: "Chat",
+            desc: "Have natural conversations with Nexia. Chat, create prompts, generate lyrics, and get mystical fortunes - all in one place.",
+            action: "chat"
         },
         {
-            icon: <Zap className="w-12 h-12 text-yellow-400" />,
-            title: "Enhance Your Ideas",
-            desc: "Transform simple thoughts into powerful, detailed prompts. Nexia's Neural Enhancer turns 'make a logo' into professional design briefs."
+            icon: <Brain className="w-12 h-12 text-green-400" />,
+            title: "Goals",
+            desc: "Achieve your dreams with AI-powered Study Buddy and Habit Tracker. Learn faster, build better habits, reach your goals.",
+            action: "goals"
         },
         {
             icon: <Palette className="w-12 h-12 text-pink-400" />,
             title: "Creative Templates",
-            desc: "Access a curated library of stunning templates for art, nature, business, and imagination. Each template is crafted for maximum impact."
+            desc: "Access a curated library of stunning templates for art, nature, business, and imagination. Each template is crafted for maximum impact.",
+            action: "studio"
         }
     ];
 
@@ -260,16 +264,24 @@ export function HomePage({ onGetStarted, onGoToStudio }: HomePageProps) {
                     </motion.h2>
                     
                     <div className="grid md:grid-cols-3 gap-6">
-                        {features.map((feature, i) => (
-                            <FeatureBox
-                                key={i}
-                                icon={feature.icon}
-                                title={feature.title}
-                                desc={feature.desc}
-                                delay={i}
-                                onClick={feature.title === "Creative Templates" ? onGoToStudio : onGetStarted}
-                            />
-                        ))}
+                        {features.map((feature, i) => {
+                            const handleClick = () => {
+                                if (feature.action === "chat") onGetStarted();
+                                else if (feature.action === "goals") onGoToGoals?.();
+                                else if (feature.action === "studio") onGoToStudio?.();
+                            };
+                            
+                            return (
+                                <FeatureBox
+                                    key={i}
+                                    icon={feature.icon}
+                                    title={feature.title}
+                                    desc={feature.desc}
+                                    delay={i}
+                                    onClick={handleClick}
+                                />
+                            );
+                        })}
                     </div>
                 </div>
             </section>

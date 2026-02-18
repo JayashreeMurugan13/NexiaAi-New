@@ -5,9 +5,12 @@ import { HomePage } from "@/components/landing/home-page";
 import { AppShell } from "@/components/layout/app-shell";
 import { ChatInterface } from "@/components/chat/chat-interface";
 import { PromptStudio } from "@/components/studio/prompt-studio";
-import { FortuneTeller } from "@/components/features/fortune-teller";
+import { ResumeMatcher } from "@/components/features/resume-matcher";
+import { Goals } from "@/components/goals/goals";
+import { Dashboard } from "@/components/features/dashboard";
+import { JobRecommendations } from "@/components/features/job-recommendations";
+import { InterviewCoach } from "@/components/features/interview-coach";
 import { ChatKaraoke } from "@/components/features/chat-karaoke";
-import { WelcomeFlow } from "@/components/onboarding/welcome-flow";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
@@ -46,7 +49,11 @@ export default function Home() {
     }
 
     if (!user) {
-        return <HomePage onGetStarted={() => router.push('/signup')} onGoToStudio={() => router.push('/signup')} />;
+        return <HomePage 
+            onGetStarted={() => router.push('/signup')} 
+            onGoToStudio={() => router.push('/signup')}
+            onGoToGoals={() => router.push('/signup')}
+        />;
     }
 
     if (showOnboarding) {
@@ -54,15 +61,23 @@ export default function Home() {
     }
 
     if (!showApp && !user) {
-        return <HomePage onGetStarted={() => router.push('/signup')} onGoToStudio={() => router.push('/signup')} />;
+        return <HomePage 
+            onGetStarted={() => router.push('/signup')} 
+            onGoToStudio={() => router.push('/signup')}
+            onGoToGoals={() => router.push('/signup')}
+        />;
     }
 
     return (
         <AppShell>
             {(activeTab) => {
+                if (activeTab === "dashboard") return <Dashboard />;
+                if (activeTab === "jobs") return <JobRecommendations />;
                 if (activeTab === "chat") return <ChatInterface />;
                 if (activeTab === "studio") return <PromptStudio />;
-                if (activeTab === "fortune") return <FortuneTeller />;
+                if (activeTab === "goals") return <Goals />;
+                if (activeTab === "resume") return <ResumeMatcher />;
+                if (activeTab === "interview") return <InterviewCoach />;
                 if (activeTab === "karaoke") return <ChatKaraoke />;
                 return <ChatInterface />;
             }}

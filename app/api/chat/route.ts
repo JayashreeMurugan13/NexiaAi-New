@@ -12,6 +12,7 @@ type ChatMessage = {
 type ChatRequestBody = {
   messages: ChatMessage[];
   enhance?: boolean;
+  formatQA?: boolean;
 };
 
 type GroqResponse = {
@@ -60,6 +61,8 @@ export async function POST(req: Request) {
 
     const systemPrompt: string = enhance
       ? "You are an expert prompt engineer. Transform the user's simple idea into a detailed, creative, and effective prompt for AI image/video generation. Make it vivid, specific, and optimized for the best results. Include style, lighting, composition, and technical details. Output ONLY the enhanced prompt, nothing else."
+      : parsedBody.formatQA
+      ? "You are a helpful AI tutor. When providing educational content, format your response as Q&A pairs using this exact format:\n\nQ: [Question here]\n\nA: [Answer here]\n\nUse this format for study materials, explanations, and educational content. For regular conversation, respond normally."
       : "You are Nexia, a friendly AI companion. Be warm, helpful, and conversational. Use emojis naturally. Keep responses concise but engaging.";
 
     // ✅ FIXED LINE — EXPLICIT TYPE (this stops Vercel error)

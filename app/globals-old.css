@@ -23,6 +23,31 @@
   }
 }
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 221.2 83.2% 53.3%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+    --radius: 0.75rem;
+  }
+}
+
 @layer base {
   * {
     border-color: var(--border);
@@ -30,101 +55,34 @@
 
   html {
     scroll-behavior: smooth;
-    /* Mobile optimizations */
+    /* Prevent zoom and scroll on mobile */
     touch-action: manipulation;
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
-    /* Prevent zoom */
-    -ms-touch-action: manipulation;
   }
 
   body {
     background-color: #09090b;
     color: var(--foreground);
     font-feature-settings: "rlig" 1, "calt" 1;
-    /* Mobile scroll optimizations */
+    /* Prevent overscroll bounce on mobile */
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
+    /* Prevent zoom on double tap */
     touch-action: manipulation;
-    /* Prevent pull-to-refresh */
-    overscroll-behavior-y: contain;
   }
 
-  /* Prevent zoom on input focus - critical for mobile */
+  /* Prevent zoom on input focus */
   input, textarea, select {
     font-size: 16px !important;
-    /* Prevent zoom on iOS */
-    -webkit-appearance: none;
-    border-radius: 0;
   }
 
   @media screen and (max-width: 768px) {
     input, textarea, select {
       font-size: 16px !important;
       transform: translateZ(0);
-      /* Better mobile performance */
-      will-change: transform;
-    }
-    
-    /* Improve mobile scrolling */
-    body {
-      -webkit-overflow-scrolling: touch;
-      overflow-scrolling: touch;
     }
   }
-
-  /* Safe area support for mobile devices */
-  .safe-area-inset {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-  }
-  
-  .pb-safe {
-    padding-bottom: max(1rem, env(safe-area-inset-bottom));
-  }
-  
-  .pt-safe {
-    padding-top: max(1rem, env(safe-area-inset-top));
-  }
-}
-
-@layer utilities {
-  /* Touch-friendly interactions */
-  .touch-manipulation {
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    /* Better mobile performance */
-    transform: translateZ(0);
-    will-change: transform;
-  }
-  
-  /* Mobile scrolling improvements */
-  .mobile-scroll {
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-  }
-  
-  /* Hide scrollbars on mobile while keeping functionality */
-  .hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-
-  /* Mobile-first responsive text sizes */
-  .text-responsive-xs { font-size: clamp(0.75rem, 2vw, 0.875rem); }
-  .text-responsive-sm { font-size: clamp(0.875rem, 2.5vw, 1rem); }
-  .text-responsive-base { font-size: clamp(1rem, 3vw, 1.125rem); }
-  .text-responsive-lg { font-size: clamp(1.125rem, 3.5vw, 1.25rem); }
-  .text-responsive-xl { font-size: clamp(1.25rem, 4vw, 1.5rem); }
-  .text-responsive-2xl { font-size: clamp(1.5rem, 5vw, 2rem); }
-  .text-responsive-3xl { font-size: clamp(1.875rem, 6vw, 2.5rem); }
-  .text-responsive-4xl { font-size: clamp(2.25rem, 7vw, 3rem); }
 }
 
 /* Enhanced Scrollbar Styling */
@@ -150,6 +108,25 @@
 
 ::-webkit-scrollbar-corner {
   background-color: #09090b;
+}
+
+/* Hide scrollbar for specific elements */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
 /* Custom animations */
@@ -233,14 +210,13 @@
   @apply bg-white/5 backdrop-blur-xl border border-white/10;
 }
 
-/* Mobile-optimized button styles */
-.btn-mobile {
-  @apply min-h-[44px] min-w-[44px] touch-manipulation;
+/* Perspective for 3D effects */
+.perspective-1000 {
+  perspective: 1000px;
 }
 
-/* Improved mobile interactions */
-.mobile-tap {
-  @apply touch-manipulation active:scale-95 transition-transform duration-150;
+.transform-gpu {
+  transform: translate3d(0, 0, 0);
 }
 
 /* Line clamp utilities */
@@ -270,6 +246,11 @@
 
 .animate-spin-slow {
   animation: spin-slow 3s linear infinite;
+}
+
+/* Improved button hover effects */
+.btn-hover {
+  @apply transition-all duration-300 ease-out transform hover:scale-105 active:scale-95;
 }
 
 /* Smooth transitions for all interactive elements */
