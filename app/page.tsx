@@ -22,6 +22,11 @@ export default function Home() {
             const currentUser = localStorage.getItem('nexia_current_user');
             if (currentUser) {
                 setUser(JSON.parse(currentUser));
+                // Check if user was already using the app (skip landing page)
+                const hasUsedApp = localStorage.getItem('nexia_has_used_app');
+                if (hasUsedApp === 'true') {
+                    setShowApp(true);
+                }
             } else {
                 // Check for user from OAuth callback cookie
                 const cookies = document.cookie.split(';');
@@ -49,7 +54,16 @@ export default function Home() {
     }
 
     if (!showApp) {
-        return <HomePage onGetStarted={() => setShowApp(true)} onGoToStudio={() => setShowApp(true)} />;
+        return <HomePage 
+            onGetStarted={() => {
+                setShowApp(true);
+                localStorage.setItem('nexia_has_used_app', 'true');
+            }} 
+            onGoToStudio={() => {
+                setShowApp(true);
+                localStorage.setItem('nexia_has_used_app', 'true');
+            }} 
+        />;
     }
 
     return (
