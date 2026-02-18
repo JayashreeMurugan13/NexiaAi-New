@@ -6,6 +6,10 @@ import { ChatInterface } from "@/components/chat/chat-interface";
 import { PromptStudio } from "@/components/studio/prompt-studio";
 import { ChatKaraoke } from "@/components/features/chat-karaoke";
 import { Goals } from "@/components/goals/goals";
+import { ResumeMatcher } from "@/components/features/resume-matcher";
+import { InterviewCoach } from "@/components/features/interview-coach";
+import { JobRecommendations } from "@/components/features/job-recommendations";
+import { Dashboard } from "@/components/features/dashboard";
 import { useRouter } from "next/navigation";
 
 export default function ChatPage() {
@@ -37,10 +41,16 @@ export default function ChatPage() {
                         return <ChatInterface />;
                     case "studio":
                         return <PromptStudio />;
+                    case "resume":
+                        return <ResumeMatcher />;
+                    case "interview":
+                        return <InterviewCoach />;
+                    case "jobs":
+                        return <JobRecommendations />;
+                    case "dashboard":
+                        return <Dashboard />;
                     case "goals":
                         return <Goals />;
-                    case "fortune":
-                        return <div className="text-white p-4">Feature coming soon!</div>;
                     case "karaoke":
                         return <ChatKaraoke />;
                     default:
