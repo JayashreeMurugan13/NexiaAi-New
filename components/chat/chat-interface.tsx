@@ -212,13 +212,25 @@ export function ChatInterface() {
     const recognitionRef = useRef<any>(null);
 
     useEffect(() => {
-        loadConversations();
+        const initChat = async () => {
+            await loadConversations();
+            
+            // Load last active conversation on mount
+            const lastConvoId = localStorage.getItem('nexia_last_conversation');
+            if (lastConvoId) {
+                const user = localStorage.getItem('nexia_current_user');
+                if (user) {
+                    const { email } = JSON.parse(user);
+                    const userMessages = localStorage.getItem(`nexia_messages_${email}_${lastConvoId}`);
+                    if (userMessages) {
+                        setMessages(JSON.parse(userMessages));
+                        setCurrentConversationId(lastConvoId);
+                    }
+                }
+            }
+        };
         
-        // Load last active conversation on mount
-        const lastConvoId = localStorage.getItem('nexia_last_conversation');
-        if (lastConvoId) {
-            loadConversation(lastConvoId);
-        }
+        initChat();
         
         // Load voices for speech synthesis
         if ('speechSynthesis' in window) {
