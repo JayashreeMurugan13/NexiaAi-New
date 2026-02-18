@@ -101,10 +101,10 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
 
     return (
         <div className="flex h-screen bg-black text-zinc-300 font-sans relative overflow-hidden">
-            {/* Mobile Menu Button */}
+            {/* Mobile Menu Button - Show on tablets and phones */}
             <button
                 onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-                className="md:hidden fixed top-4 left-4 z-50 p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white hover:bg-zinc-800 transition-colors shadow-lg"
+                className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white hover:bg-zinc-800 transition-colors shadow-lg"
             >
                 {isMobileSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -112,13 +112,13 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
             {/* Mobile Overlay */}
             {isMobileSidebarOpen && (
                 <div 
-                    className="md:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
+                    className="lg:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
                     onClick={() => setIsMobileSidebarOpen(false)}
                 />
             )}
 
-            {/* Desktop Sidebar - Always Visible */}
-            <aside className="hidden md:flex border-r border-zinc-800/50 flex-col items-center py-6 bg-gradient-to-b from-zinc-950/80 to-zinc-900/80 backdrop-blur-xl flex-shrink-0 w-72">
+            {/* Desktop Sidebar - Always Visible on Laptop/Desktop */}
+            <aside className="hidden lg:flex border-r border-zinc-800/50 flex-col items-center py-6 bg-gradient-to-b from-zinc-950/80 to-zinc-900/80 backdrop-blur-xl flex-shrink-0 w-72">
                 {/* Background decoration */}
                 <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none" />
 
@@ -206,7 +206,7 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
                         animate={{ x: 0 }}
                         exit={{ x: -320 }}
                         transition={{ duration: 0.3, ease: "easeInOut" }}
-                        className="md:hidden border-r border-zinc-800/50 flex flex-col py-4 bg-gradient-to-b from-zinc-950/95 to-zinc-900/95 backdrop-blur-xl flex-shrink-0 fixed z-50 h-full w-80 safe-area-inset"
+                        className="lg:hidden border-r border-zinc-800/50 flex flex-col py-4 bg-gradient-to-b from-zinc-950/95 to-zinc-900/95 backdrop-blur-xl flex-shrink-0 fixed z-50 h-full w-80 safe-area-inset"
                     >
                 {/* Background decoration */}
                 <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none" />
@@ -296,8 +296,8 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
                     <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-gradient-to-tr from-purple-500/5 via-transparent to-transparent" />
                 </div>
 
-                {/* Mobile Top Bar */}
-                <div className="md:hidden flex items-center justify-between p-4 bg-zinc-950/80 backdrop-blur-sm border-b border-zinc-800/50 relative z-10">
+                {/* Mobile Top Bar - Show on tablets and phones only */}
+                <div className="lg:hidden flex items-center justify-between p-4 bg-zinc-950/80 backdrop-blur-sm border-b border-zinc-800/50 relative z-10">
                     <div className="w-10" /> {/* Spacer for menu button */}
                     <h1 className="text-lg font-bold text-white">
                         {navItems.find(item => item.id === activeTab)?.label || 'Nexia AI'}
