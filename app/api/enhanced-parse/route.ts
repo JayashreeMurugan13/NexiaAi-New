@@ -1,10 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import * as pdfjsLib from 'pdfjs-dist';
-
-// Set worker source for PDF.js
-if (typeof window === 'undefined') {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-}
 
 export async function POST(request: NextRequest) {
     try {
@@ -31,7 +25,13 @@ export async function POST(request: NextRequest) {
             const buffer = await file.arrayBuffer();
 
             if (file.type === 'application/pdf') {
-                text = await extractPDFText(buffer);
+                try {
+                    text = await extractPDFText(buffer);
+                } catch (error) {
+                    return NextResponse.json({ 
+                        error: 'PDF parsing not available in this environment. Please use text files.' 
+                    }, { status: 400 });
+                }
             } else if (file.type === 'text/plain' || file.type.includes('text/')) {
                 text = new TextDecoder().decode(buffer);
             } else {
@@ -65,6 +65,10 @@ export async function POST(request: NextRequest) {
 }
 
 async function extractPDFText(buffer: ArrayBuffer): Promise<string> {
+    // Dynamic import for server-side compatibility
+    const pdfjsLib = await import('pdfjs-dist');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    
     const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
     let fullText = '';
     
