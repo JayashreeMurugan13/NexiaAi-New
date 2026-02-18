@@ -14,7 +14,7 @@ export default function Home() {
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [showOnboarding, setShowOnboarding] = useState(false);
-    const [showApp, setShowApp] = useState(false);
+    const [showApp, setShowApp] = useState(true); // Start with app shown
     const router = useRouter();
 
     useEffect(() => {
@@ -53,17 +53,8 @@ export default function Home() {
         return <WelcomeFlow onComplete={() => setShowOnboarding(false)} />;
     }
 
-    if (!showApp) {
-        return <HomePage 
-            onGetStarted={() => {
-                setShowApp(true);
-                localStorage.setItem('nexia_has_used_app', 'true');
-            }} 
-            onGoToStudio={() => {
-                setShowApp(true);
-                localStorage.setItem('nexia_has_used_app', 'true');
-            }} 
-        />;
+    if (!showApp && !user) {
+        return <HomePage onGetStarted={() => router.push('/signup')} onGoToStudio={() => router.push('/signup')} />;
     }
 
     return (
