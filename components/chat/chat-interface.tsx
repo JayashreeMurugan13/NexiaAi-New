@@ -214,6 +214,12 @@ export function ChatInterface() {
     useEffect(() => {
         loadConversations();
         
+        // Load last active conversation on mount
+        const lastConvoId = localStorage.getItem('nexia_last_conversation');
+        if (lastConvoId) {
+            loadConversation(lastConvoId);
+        }
+        
         // Load voices for speech synthesis
         if ('speechSynthesis' in window) {
             const loadVoices = () => {
@@ -262,6 +268,7 @@ export function ChatInterface() {
         if (userMessages) {
             setMessages(JSON.parse(userMessages));
             setCurrentConversationId(conversationId);
+            localStorage.setItem('nexia_last_conversation', conversationId);
             setShowHistory(false);
         }
     };
@@ -269,6 +276,7 @@ export function ChatInterface() {
     const createNewChat = () => {
         setMessages([]);
         setCurrentConversationId(null);
+        localStorage.removeItem('nexia_last_conversation');
         setShowHistory(false);
     };
 
