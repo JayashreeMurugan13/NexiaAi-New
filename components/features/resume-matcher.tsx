@@ -560,7 +560,8 @@ export function ResumeMatcher() {
                     let specificResources = [];
                     
                     // Determine importance based on job description frequency/context
-                    const skillMentions = (jobLower.match(new RegExp(skill.toLowerCase(), 'g')) || []).length;
+                    const escapedSkill = skill.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const skillMentions = (jobLower.match(new RegExp(escapedSkill, 'g')) || []).length;
                     const isRequired = jobLower.includes('required') && jobLower.includes(skill.toLowerCase());
                     const isPreferred = jobLower.includes('preferred') && jobLower.includes(skill.toLowerCase());
                     
