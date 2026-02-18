@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, MessageSquare, Layout, LogOut, User as UserIcon, Settings, Gem, Music } from "lucide-react";
+import { Sparkles, MessageSquare, Layout, LogOut, User as UserIcon, Settings, Gem, Music, Menu, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -16,7 +16,7 @@ interface AppShellProps {
 
 export function AppShell({ children, initialTab = "chat", user }: AppShellProps) {
     const [activeTab, setActiveTab] = useState<"chat" | "studio" | "fortune" | "karaoke">(initialTab);
-    const [isCollapsed, setIsCollapsed] = useState(true); // Start collapsed on mobile
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [userName, setUserName] = useState("Guest");
     const router = useRouter();
 
@@ -67,27 +67,44 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
     ];
 
     return (
-        <div className="flex h-screen bg-black text-zinc-300 font-sans">
+        <div className="flex h-screen bg-black text-zinc-300 font-sans relative">
+            {/* Mobile Menu Button */}
+            <button
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="md:hidden fixed top-4 left-4 z-50 p-3 bg-zinc-900 border border-zinc-800 rounded-xl text-white"
+            >
+                {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+
+            {/* Overlay */}
+            {isSidebarOpen && (
+                <div 
+                    className="md:hidden fixed inset-0 bg-black/50 z-40"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
             <motion.aside
                 className={cn(
-                    "border-r border-zinc-800/50 flex flex-col items-center py-4 md:py-6 bg-gradient-to-b from-zinc-950/80 to-zinc-900/80 backdrop-blur-xl relative flex-shrink-0",
-                    "w-16 md:w-72"
+                    "border-r border-zinc-800/50 flex flex-col items-center py-6 bg-gradient-to-b from-zinc-950/80 to-zinc-900/80 backdrop-blur-xl relative flex-shrink-0",
+                    "fixed md:relative z-50 h-full w-72 md:w-72 transition-transform",
+                    isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0 md:w-20"
                 )}
             >
                 {/* Background decoration */}
                 <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none" />
 
                 {/* Logo */}
-                <div className="mb-6 md:mb-10 px-2 md:px-6 w-full relative z-10">
-                    <div className="flex items-center justify-center md:justify-start gap-3 bg-gradient-to-br from-blue-600/20 to-purple-600/20 p-3 md:p-4 rounded-xl md:rounded-2xl border border-blue-500/30">
-                        <Sparkles className="text-blue-400 w-5 h-5 md:w-6 md:h-6 flex-shrink-0" />
-                        <span className="hidden md:block font-bold text-white text-lg whitespace-nowrap">Nexia AI</span>
+                <div className="mb-6 md:mb-10 px-6 w-full relative z-10">
+                    <div className="flex items-center gap-3 bg-gradient-to-br from-blue-600/20 to-purple-600/20 p-4 rounded-2xl border border-blue-500/30">
+                        <Sparkles className="text-blue-400 w-6 h-6 flex-shrink-0" />
+                        <span className="font-bold text-white text-lg whitespace-nowrap md:block hidden">Nexia AI</span>
                     </div>
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 w-full space-y-2 px-2 md:px-4 relative z-10">
+                <nav className="flex-1 w-full space-y-2 px-4 relative z-10">
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = activeTab === item.id;
@@ -95,16 +112,19 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
                         return (
                             <button
                                 key={item.id}
-                                onClick={() => setActiveTab(item.id)}
+                                onClick={() => {
+                                    setActiveTab(item.id);
+                                    setIsSidebarOpen(false);
+                                }}
                                 className={cn(
-                                    "w-full flex items-center justify-center md:justify-start gap-3 p-3 md:p-4 rounded-xl md:rounded-2xl transition-all",
+                                    "w-full flex items-center gap-3 p-4 rounded-2xl transition-all",
                                     isActive
                                         ? 'bg-gradient-to-r ' + item.gradient + ' text-white'
                                         : 'hover:bg-zinc-800/50 text-zinc-400'
                                 )}
                             >
                                 <Icon className="w-5 h-5 flex-shrink-0" />
-                                <div className="hidden md:block flex-1 text-left">
+                                <div className="flex-1 text-left md:block hidden">
                                     <div className="font-semibold text-sm">{item.label}</div>
                                 </div>
                             </button>
@@ -115,7 +135,7 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
                 {/* User Profile & Settings */}
                 <div className="mt-auto px-4 w-full space-y-3 relative z-10">
                     {/* User Profile */}
-                    {!isCollapsed && (
+                    {!isSidebarOpen && (
                         <motion.div
                             className="bg-zinc-900/60 p-4 rounded-2xl border border-zinc-800/50 mb-4 hidden md:block backdrop-blur-sm"
                             initial={{ opacity: 0, y: 20 }}
@@ -140,7 +160,7 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
                         whileTap={{ scale: 0.98 }}
                     >
                         <Settings className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
-                        {!isCollapsed && <span className="hidden md:block font-semibold">Settings</span>}
+                        {!isSidebarOpen && <span className="hidden md:block font-semibold">Settings</span>}
                     </motion.button>
 
                     {/* Sign Out */}
@@ -151,7 +171,7 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
                         whileTap={{ scale: 0.98 }}
                     >
                         <LogOut className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                        {!isCollapsed && <span className="hidden md:block font-semibold">Sign Out</span>}
+                        {!isSidebarOpen && <span className="hidden md:block font-semibold">Sign Out</span>}
                     </motion.button>
                 </div>
             </motion.aside>
