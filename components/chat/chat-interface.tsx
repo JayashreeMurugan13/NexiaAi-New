@@ -560,10 +560,10 @@ export function ChatInterface() {
             className="flex flex-col h-full"
         >
             {/* Header */}
-            <header className="px-8 py-6 border-b border-zinc-800/50 bg-gradient-to-r from-zinc-950/80 to-zinc-900/80 backdrop-blur-md flex items-center justify-between z-10 relative">
-                <div className="flex items-center gap-4">
+            <header className="px-4 md:px-8 py-4 md:py-6 border-b border-zinc-800/50 bg-gradient-to-r from-zinc-950/80 to-zinc-900/80 backdrop-blur-md flex items-center justify-between z-10 relative">
+                <div className="flex items-center gap-3 md:gap-4">
                     <motion.div
-                        className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 flex items-center justify-center"
+                        className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 flex items-center justify-center"
                         animate={{
                             boxShadow: [
                                 "0 0 20px rgba(59,130,246,0.2)",
@@ -573,14 +573,15 @@ export function ChatInterface() {
                         }}
                         transition={{ duration: 3, repeat: Infinity }}
                     >
-                        <Sparkles className="w-6 h-6 text-blue-400" />
+                        <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-blue-400" />
                     </motion.div>
                     <div>
-                        <h2 className="text-xl font-bold text-white tracking-tight">Nexia</h2>
+                        <h2 className="text-lg md:text-xl font-bold text-white tracking-tight">Nexia</h2>
                         <p className="text-xs text-zinc-400 font-medium">Your Creative AI Friend</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-3 px-4 py-2 bg-zinc-900/50 rounded-full border border-zinc-800">
+                <div className="flex items-center gap-2 md:gap-3">
+                    <div className="hidden sm:flex items-center gap-3 px-3 md:px-4 py-2 bg-zinc-900/50 rounded-full border border-zinc-800">
                         <motion.div
                             className="w-2 h-2 rounded-full bg-green-500"
                             animate={{
@@ -595,7 +596,7 @@ export function ChatInterface() {
                         <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Online & Ready</span>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 md:gap-2">
                     <motion.button
                         onClick={() => {
                             setVoiceEnabled(!voiceEnabled);
@@ -610,7 +611,7 @@ export function ChatInterface() {
                         whileTap={{ scale: 0.95 }}
                         title={voiceEnabled ? 'Voice responses ON' : 'Voice responses OFF'}
                     >
-                        {voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                        {voiceEnabled ? <Volume2 className="w-3 h-3 md:w-4 md:h-4" /> : <VolumeX className="w-3 h-3 md:w-4 md:h-4" />}
                     </motion.button>
                     <motion.button
                         onClick={() => setShowHistory(!showHistory)}
@@ -618,7 +619,7 @@ export function ChatInterface() {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                     >
-                        <History className="w-4 h-4 text-zinc-400" />
+                        <History className="w-3 h-3 md:w-4 md:h-4 text-zinc-400" />
                     </motion.button>
                     <motion.button
                         onClick={createNewChat}
@@ -626,13 +627,14 @@ export function ChatInterface() {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                     >
-                        <Plus className="w-4 h-4 text-zinc-400" />
+                        <Plus className="w-3 h-3 md:w-4 md:h-4 text-zinc-400" />
                     </motion.button>
+                </div>
                 </div>
             </header>
 
             {/* Messages */}
-            <div className="flex-1 min-h-0 overflow-y-scroll p-8 space-y-2 relative">
+            <div className="flex-1 min-h-0 overflow-y-scroll p-4 md:p-8 space-y-2 relative">
                 {/* Chat History Sidebar */}
                 <AnimatePresence>
                     {showHistory && (
@@ -640,10 +642,9 @@ export function ChatInterface() {
                             initial={{ x: -300, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: -300, opacity: 0 }}
-                            className="fixed left-20 md:left-72 top-0 bottom-0 w-80 bg-zinc-900/95 backdrop-blur-xl border-r border-zinc-800 z-50 p-4 overflow-y-auto"
-                        >
+                            className="fixed left-4 md:left-20 lg:left-72 top-0 bottom-0 w-72 md:w-80 bg-zinc-900/95 backdrop-blur-xl border-r border-zinc-800 z-50 p-4 overflow-y-auto">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-bold text-white">Chat History</h3>
+                                <h3 className="text-base md:text-lg font-bold text-white">Chat History</h3>
                                 <button
                                     onClick={() => setShowHistory(false)}
                                     className="p-1 hover:bg-zinc-800 rounded"
@@ -783,7 +784,7 @@ export function ChatInterface() {
             </div>
 
             {/* Input */}
-            <div className="p-8 relative">
+            <div className="p-4 md:p-8 relative">
                 <div className="max-w-4xl mx-auto relative group">
                     <motion.div
                         className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl blur opacity-20 group-focus-within:opacity-40 transition duration-1000"
@@ -799,9 +800,9 @@ export function ChatInterface() {
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                             placeholder="Chat with Nexia... ✨"
-                            className="w-full bg-zinc-900/80 border border-zinc-800 rounded-2xl py-4 pl-6 pr-48 text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-700 transition-all shadow-2xl backdrop-blur-sm"
+                            className="w-full bg-zinc-900/80 border border-zinc-800 rounded-2xl py-3 md:py-4 pl-4 md:pl-6 pr-32 md:pr-48 text-sm md:text-base text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-700 transition-all shadow-2xl backdrop-blur-sm"
                         />
-                        <div className="absolute right-3 flex gap-2 items-center">
+                        <div className="absolute right-2 md:right-3 flex gap-1 md:gap-2 items-center">
                             {/* Voice Gender Selector */}
                             {voiceEnabled && (
                                 <motion.select
@@ -809,7 +810,7 @@ export function ChatInterface() {
                                     animate={{ opacity: 1, scale: 1 }}
                                     value={selectedVoice}
                                     onChange={(e) => setSelectedVoice(e.target.value as 'male' | 'female')}
-                                    className="px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-xs text-zinc-300 focus:outline-none focus:border-blue-500 transition-colors cursor-pointer"
+                                    className="hidden sm:block px-2 md:px-3 py-1 md:py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-xs text-zinc-300 focus:outline-none focus:border-blue-500 transition-colors cursor-pointer"
                                 >
                                     <option value="female">👩 Female</option>
                                     <option value="male">👨 Male</option>
@@ -817,7 +818,7 @@ export function ChatInterface() {
                             )}
                             <motion.button
                                 onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
-                                className={`p-3 rounded-xl transition-all shadow-lg ${
+                                className={`p-2 md:p-3 rounded-xl transition-all shadow-lg ${
                                     isRecording 
                                         ? 'bg-red-600 hover:bg-red-500 animate-pulse' 
                                         : 'bg-zinc-800 hover:bg-zinc-700'
@@ -826,16 +827,16 @@ export function ChatInterface() {
                                 whileTap={{ scale: 0.95 }}
                                 title="Voice input"
                             >
-                                <Mic className="w-5 h-5" />
+                                <Mic className="w-4 h-4 md:w-5 md:h-5" />
                             </motion.button>
                             <motion.button
                                 onClick={sendMessage}
                                 disabled={!input.trim() || loading}
-                                className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:opacity-30 disabled:hover:from-blue-600 disabled:hover:to-purple-600 text-white rounded-xl transition-all shadow-lg"
+                                className="p-2 md:p-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:opacity-30 disabled:hover:from-blue-600 disabled:hover:to-purple-600 text-white rounded-xl transition-all shadow-lg"
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                             >
-                                <Send className="w-5 h-5" />
+                                <Send className="w-4 h-4 md:w-5 md:h-5" />
                             </motion.button>
                         </div>
                     </div>
