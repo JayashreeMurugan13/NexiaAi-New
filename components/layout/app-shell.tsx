@@ -16,7 +16,7 @@ interface AppShellProps {
 
 export function AppShell({ children, initialTab = "chat", user }: AppShellProps) {
     const [activeTab, setActiveTab] = useState<"chat" | "studio" | "fortune" | "karaoke">(initialTab);
-    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(true); // Start collapsed on mobile
     const [userName, setUserName] = useState("Guest");
     const router = useRouter();
 
@@ -70,7 +70,10 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
         <div className="flex h-screen bg-black text-zinc-300 font-sans">
             {/* Sidebar */}
             <motion.aside
-                className="w-16 md:w-72 border-r border-zinc-800/50 flex flex-col items-center py-4 md:py-6 bg-gradient-to-b from-zinc-950/80 to-zinc-900/80 backdrop-blur-xl relative flex-shrink-0"
+                className={cn(
+                    "border-r border-zinc-800/50 flex flex-col items-center py-4 md:py-6 bg-gradient-to-b from-zinc-950/80 to-zinc-900/80 backdrop-blur-xl relative flex-shrink-0",
+                    "w-16 md:w-72"
+                )}
             >
                 {/* Background decoration */}
                 <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none" />
@@ -78,8 +81,8 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
                 {/* Logo */}
                 <div className="mb-6 md:mb-10 px-2 md:px-6 w-full relative z-10">
                     <div className="flex items-center justify-center md:justify-start gap-3 bg-gradient-to-br from-blue-600/20 to-purple-600/20 p-3 md:p-4 rounded-xl md:rounded-2xl border border-blue-500/30">
-                        <Sparkles className="text-blue-400 w-5 h-5 md:w-6 md:h-6" />
-                        <span className="hidden md:block font-bold text-white text-lg">Nexia AI</span>
+                        <Sparkles className="text-blue-400 w-5 h-5 md:w-6 md:h-6 flex-shrink-0" />
+                        <span className="hidden md:block font-bold text-white text-lg whitespace-nowrap">Nexia AI</span>
                     </div>
                 </div>
 
@@ -100,7 +103,7 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
                                         : 'hover:bg-zinc-800/50 text-zinc-400'
                                 )}
                             >
-                                <Icon className="w-5 h-5" />
+                                <Icon className="w-5 h-5 flex-shrink-0" />
                                 <div className="hidden md:block flex-1 text-left">
                                     <div className="font-semibold text-sm">{item.label}</div>
                                 </div>
