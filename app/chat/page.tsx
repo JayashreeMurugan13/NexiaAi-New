@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { ChatInterface } from "@/components/chat/chat-interface";
 import { PromptStudio } from "@/components/studio/prompt-studio";
-import { FortuneTeller } from "@/components/features/fortune-teller";
 import { ChatKaraoke } from "@/components/features/chat-karaoke";
 import { Goals } from "@/components/goals/goals";
 import { useRouter } from "next/navigation";
@@ -41,7 +40,7 @@ export default function ChatPage() {
                     case "goals":
                         return <Goals />;
                     case "fortune":
-                        return <FortuneTeller />;
+                        return <div className="text-white p-4">Feature coming soon!</div>;
                     case "karaoke":
                         return <ChatKaraoke />;
                     default:

@@ -3,8 +3,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 
 // Set worker source for PDF.js
 if (typeof window === 'undefined') {
-    const pdfjsWorker = require('pdfjs-dist/build/pdf.worker.entry');
-    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 
 export async function POST(request: NextRequest) {
