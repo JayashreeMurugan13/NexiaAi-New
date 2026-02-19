@@ -65,7 +65,7 @@ export function ResumeMatcher() {
                 if (data.text && data.text.trim().length > 0) {
                     setResume(data.text);
                     setResumeUploaded(true);
-                    setUploadMessage("✓ Resume uploaded successfully!");
+                    setUploadMessage("✅ Resume Uploaded Successfully!");
                     setTimeout(() => setUploadMessage(""), 3000);
                 } else {
                     throw new Error('No text extracted from PDF');
@@ -74,7 +74,7 @@ export function ResumeMatcher() {
                 console.error('PDF upload error:', error);
                 setResume('');
                 setResumeUploaded(false);
-                setUploadMessage("✗ PDF upload failed - please paste text below");
+                setUploadMessage("❌ Resume Upload Failed - Please Try Again");
                 setTimeout(() => setUploadMessage(""), 5000);
             } finally {
                 setLoading(false);
@@ -84,12 +84,12 @@ export function ResumeMatcher() {
             reader.onload = (e) => {
                 setResume(e.target?.result as string);
                 setResumeUploaded(true);
-                setUploadMessage("✓ Resume uploaded successfully!");
+                setUploadMessage("✅ Resume Uploaded Successfully!");
                 setTimeout(() => setUploadMessage(""), 3000);
             };
             reader.readAsText(file);
         } else {
-            setUploadMessage("✗ Please upload PDF or TXT files only");
+            setUploadMessage("❌ Please Upload PDF or TXT Files Only");
             setTimeout(() => setUploadMessage(""), 3000);
         }
     };
@@ -110,7 +110,7 @@ export function ResumeMatcher() {
                 });
                 
                 if (!response.ok) {
-                    throw new Error('PDF parsing failed');
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
                 const data = await response.json();
@@ -122,6 +122,8 @@ export function ResumeMatcher() {
                 if (data.text && data.text.trim().length > 0) {
                     setJobDescription(data.text);
                     setJobUploaded(true);
+                    setUploadMessage("✅ Job Description Uploaded Successfully!");
+                    setTimeout(() => setUploadMessage(""), 3000);
                 } else {
                     throw new Error('No text extracted from PDF');
                 }
@@ -129,6 +131,8 @@ export function ResumeMatcher() {
                 console.error('PDF upload error:', error);
                 setJobDescription('');
                 setJobUploaded(false);
+                setUploadMessage("❌ Job Description Upload Failed");
+                setTimeout(() => setUploadMessage(""), 3000);
             } finally {
                 setLoading(false);
             }
@@ -137,8 +141,13 @@ export function ResumeMatcher() {
             reader.onload = (e) => {
                 setJobDescription(e.target?.result as string);
                 setJobUploaded(true);
+                setUploadMessage("✅ Job Description Uploaded Successfully!");
+                setTimeout(() => setUploadMessage(""), 3000);
             };
             reader.readAsText(file);
+        } else {
+            setUploadMessage("❌ Please upload PDF or TXT files only");
+            setTimeout(() => setUploadMessage(""), 3000);
         }
     };
 
@@ -769,7 +778,7 @@ export function ResumeMatcher() {
                                             <span className={`text-base md:text-lg font-bold ${
                                                 resumeUploaded ? 'text-white' : 'text-zinc-300'
                                             }`}>
-                                                {loading ? "Uploading..." : resumeUploaded ? "✓ RESUME UPLOADED" : "Click to upload PDF"}
+                                                {loading ? "Uploading Resume..." : resumeUploaded ? "✅ RESUME UPLOADED" : "Upload Resume PDF"}
                                             </span>
                                         </Button>
                                     </div>
@@ -819,7 +828,7 @@ export function ResumeMatcher() {
                                             <span className={`text-base md:text-lg font-bold ${
                                                 jobUploaded ? 'text-white' : 'text-zinc-300'
                                             }`}>
-                                                {loading ? "Uploading..." : jobUploaded ? "✓ JOB DESCRIPTION UPLOADED" : "Click to upload PDF"}
+                                                {loading ? "Uploading Job Description..." : jobUploaded ? "✅ JOB DESCRIPTION UPLOADED" : "Upload Job Description PDF"}
                                             </span>
                                         </Button>
                                     </div>
