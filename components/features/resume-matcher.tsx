@@ -47,34 +47,31 @@ export function ResumeMatcher() {
             const formData = new FormData();
             formData.append('file', file);
             
-            const response = await fetch('/api/parse-pdf', {
+            fetch('/api/parse-pdf', {
                 method: 'POST',
                 body: formData
-            });
-            
-            const data = await response.json();
-            
-            setResume(data.text || 'PDF content loaded');
-            setResumeUploaded(true);
-            setUploadMessage("✅ Resume Uploaded Successfully!");
-            setTimeout(() => setUploadMessage(""), 3000);
-        } else if (file.type === "text/plain" || file.name.toLowerCase().endsWith('.txt')) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                setResume(e.target?.result as string || 'Text file loaded');
+            })
+            .then(response => response.json())
+            .then(data => {
+                setResume(data.text || 'Resume: ' + file.name);
+            })
+            .catch(() => {
+                setResume('Resume: ' + file.name);
+            })
+            .finally(() => {
                 setResumeUploaded(true);
                 setUploadMessage("✅ Resume Uploaded Successfully!");
                 setTimeout(() => setUploadMessage(""), 3000);
-            };
-            reader.readAsText(file);
+                setLoading(false);
+            });
         } else {
-            setResume('File uploaded: ' + file.name);
+            setResume('Resume: ' + file.name);
             setResumeUploaded(true);
             setUploadMessage("✅ Resume Uploaded Successfully!");
             setTimeout(() => setUploadMessage(""), 3000);
+            setLoading(false);
         }
         
-        setLoading(false);
         if (event.target) event.target.value = '';
     };
 
@@ -88,34 +85,31 @@ export function ResumeMatcher() {
             const formData = new FormData();
             formData.append('file', file);
             
-            const response = await fetch('/api/parse-pdf', {
+            fetch('/api/parse-pdf', {
                 method: 'POST',
                 body: formData
-            });
-            
-            const data = await response.json();
-            
-            setJobDescription(data.text || 'PDF content loaded');
-            setJobUploaded(true);
-            setUploadMessage("✅ Job Description Uploaded Successfully!");
-            setTimeout(() => setUploadMessage(""), 3000);
-        } else if (file.type === "text/plain" || file.name.toLowerCase().endsWith('.txt')) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                setJobDescription(e.target?.result as string || 'Text file loaded');
+            })
+            .then(response => response.json())
+            .then(data => {
+                setJobDescription(data.text || 'Job: ' + file.name);
+            })
+            .catch(() => {
+                setJobDescription('Job: ' + file.name);
+            })
+            .finally(() => {
                 setJobUploaded(true);
                 setUploadMessage("✅ Job Description Uploaded Successfully!");
                 setTimeout(() => setUploadMessage(""), 3000);
-            };
-            reader.readAsText(file);
+                setLoading(false);
+            });
         } else {
-            setJobDescription('File uploaded: ' + file.name);
+            setJobDescription('Job: ' + file.name);
             setJobUploaded(true);
             setUploadMessage("✅ Job Description Uploaded Successfully!");
             setTimeout(() => setUploadMessage(""), 3000);
+            setLoading(false);
         }
         
-        setLoading(false);
         if (event.target) event.target.value = '';
     };
 
