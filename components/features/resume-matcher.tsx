@@ -152,9 +152,9 @@ export function ResumeMatcher() {
             
             let userPrompt = '';
             if (resume.trim() && jobDescription.trim()) {
-                userPrompt = `Extract all technical and professional skills mentioned in this resume and job description:\n\nResume: ${resume}\n\nJob Description: ${jobDescription}`;
+                userPrompt = `Extract ONLY the technical skills mentioned in this RESUME (not from job description):\n\nRESUME: ${resume}`;
             } else if (resume.trim()) {
-                userPrompt = `Extract all skills mentioned in this resume: ${resume}`;
+                userPrompt = `Extract all technical skills mentioned in this resume: ${resume}`;
             } else {
                 userPrompt = `Extract all required skills from this job description: ${jobDescription}`;
             }
@@ -185,11 +185,11 @@ export function ResumeMatcher() {
                 skillsData = JSON.parse(jsonStr);
             } catch (parseError) {
                 console.log("JSON parse failed, extracting skills manually");
-                // Extract skills manually from text
-                const content = (resume + ' ' + jobDescription).toLowerCase();
+                // Extract skills ONLY from resume
+                const resumeContent = resume.toLowerCase();
                 const commonSkills = ['javascript', 'react', 'node.js', 'nodejs', 'python', 'java', 'sql', 'html', 'css', 'git', 'aws', 'docker', 'mongodb', 'express', 'typescript', 'angular', 'vue', 'php', 'c++', 'c#', 'ruby', 'go', 'kotlin', 'swift', 'django', 'flask', 'spring', 'mysql', 'postgresql', 'redis', 'kubernetes'];
                 const foundSkills = commonSkills.filter(skill => 
-                    content.includes(skill)
+                    resumeContent.includes(skill)
                 );
                 // Ensure we have at least 3 skills
                 if (foundSkills.length === 0) {
