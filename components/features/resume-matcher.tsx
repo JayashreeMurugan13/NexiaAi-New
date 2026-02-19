@@ -194,22 +194,22 @@ Return JSON with both sets of skills for comparison.`;
                 // Extract skills from both resume and job description
                 const resumeContent = (resume || '').toLowerCase();
                 const jobContent = (jobDescription || '').toLowerCase();
-                const allSkills = ['c++', 'c#', 'c', 'java', 'python', 'javascript', 'typescript', 'react', 'node.js', 'nodejs', 'sql', 'html', 'css', 'git', 'aws', 'docker', 'mongodb', 'express', 'angular', 'vue', 'php', 'ruby', 'go', 'kotlin', 'swift', 'django', 'flask', 'spring', 'mysql', 'postgresql', 'redis', 'kubernetes', 'bootstrap', 'tailwind', 'figma', 'photoshop', 'illustrator', 'linux', 'windows', 'android', 'ios', 'flutter', 'dart', 'rust', 'scala', 'perl', 'matlab', 'r', 'assembly', 'objective-c'];
+                const allSkills = ['c++', 'c#', 'c', 'java', 'python', 'javascript', 'typescript', 'react', 'node.js', 'nodejs', 'sql', 'html', 'css', 'git', 'aws', 'docker', 'mongodb', 'express', 'angular', 'vue', 'php', 'ruby', 'go', 'kotlin', 'swift', 'django', 'flask', 'spring', 'mysql', 'postgresql', 'redis', 'kubernetes', 'bootstrap', 'tailwind', 'figma', 'photoshop', 'illustrator', 'linux', 'windows', 'android', 'ios', 'flutter', 'dart', 'rust', 'scala', 'perl', 'matlab', 'r', 'assembly', 'objective-c', 'tensorflow', 'pytorch', 'opencv', 'pandas', 'numpy', 'scipy', 'sklearn', 'keras', 'reactjs', 'vuejs', 'angularjs', 'nextjs', 'nuxtjs', 'laravel', 'codeigniter', 'symfony', 'rails', 'sinatra', 'fastapi', 'flask', 'tornado', 'aiohttp', 'graphql', 'rest', 'api', 'microservices', 'devops', 'ci/cd', 'jenkins', 'gitlab', 'github', 'bitbucket', 'jira', 'confluence', 'slack', 'teams', 'zoom', 'webrtc', 'websocket', 'ajax', 'json', 'xml', 'yaml', 'toml', 'csv', 'excel', 'powerbi', 'tableau', 'qlik', 'looker', 'grafana', 'kibana', 'elasticsearch', 'solr', 'lucene', 'spark', 'hadoop', 'kafka', 'rabbitmq', 'celery', 'redis', 'memcached', 'nginx', 'apache', 'tomcat', 'iis', 'cloudflare', 'cdn', 'ssl', 'https', 'oauth', 'jwt', 'saml', 'ldap', 'active directory', 'firebase', 'supabase', 'amplify', 'vercel', 'netlify', 'heroku', 'digitalocean', 'linode', 'vultr', 'gcp', 'azure', 'ibm cloud', 'oracle cloud'];
                 
-                // Find skills in resume
+                // Find ALL skills in resume (not limited to 5)
                 const resumeSkills = allSkills.filter(skill => {
-                    const skillVariants = [skill, skill.replace('.', ''), skill.replace('#', 'sharp'), skill.replace('++', 'plus')];
+                    const skillVariants = [skill, skill.replace('.', ''), skill.replace('#', 'sharp'), skill.replace('++', 'plus'), skill.replace('/', ''), skill.replace(' ', '')];
                     return skillVariants.some(variant => resumeContent.includes(variant));
                 });
                 
                 // Find skills required in job description
                 const jobSkills = allSkills.filter(skill => {
-                    const skillVariants = [skill, skill.replace('.', ''), skill.replace('#', 'sharp'), skill.replace('++', 'plus')];
+                    const skillVariants = [skill, skill.replace('.', ''), skill.replace('#', 'sharp'), skill.replace('++', 'plus'), skill.replace('/', ''), skill.replace(' ', '')];
                     return skillVariants.some(variant => jobContent.includes(variant));
                 });
                 
-                // Combine unique skills from both (prioritize job requirements)
-                const combinedSkills = [...new Set([...jobSkills, ...resumeSkills])];
+                // Combine ALL unique skills (prioritize resume skills, then add job skills)
+                const combinedSkills = [...new Set([...resumeSkills, ...jobSkills])];
                 
                 // If no skills found, add basic fallbacks
                 if (combinedSkills.length === 0) {
@@ -224,7 +224,8 @@ Return JSON with both sets of skills for comparison.`;
                     }
                 }
                 
-                skillsData = { skills: combinedSkills.slice(0, 5).map(s => s.charAt(0).toUpperCase() + s.slice(1)) };
+                // Return ALL skills found (not limited to 5)
+                skillsData = { skills: combinedSkills.map(s => s.charAt(0).toUpperCase() + s.slice(1)) };
             }
             
             // Set up for skill testing phase
