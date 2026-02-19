@@ -142,27 +142,27 @@ export function ResumeMatcher() {
         setLoading(true);
         setStep("analysis");
         
+        console.log('Resume content for analysis:', resume.substring(0, 500));
+        console.log('Job description content:', jobDescription.substring(0, 500));
+        
         try {
-            const systemPrompt = `Extract skills from the content and respond ONLY with valid JSON:
+            const systemPrompt = `Extract ALL technical skills from the content. Return as many skills as possible. Respond ONLY with valid JSON:
 {
-  "skills": ["skill1", "skill2", "skill3"]
+  "skills": ["skill1", "skill2", "skill3", "skill4", "skill5", "skill6", "skill7", "skill8", "skill9", "skill10"]
 }`;
             
             let userPrompt = '';
             if (resume.trim() && jobDescription.trim()) {
-                userPrompt = `Compare these two documents and extract skills:
+                userPrompt = `Extract EVERY technical skill mentioned in this resume. Include programming languages, frameworks, tools, databases, everything:
 
-RESUME SKILLS: Extract technical skills from this resume:
+RESUME CONTENT:
 ${resume}
 
-JOB REQUIREMENTS: Extract required skills from this job description:
-${jobDescription}
-
-Return JSON with both sets of skills for comparison.`;
+Find ALL skills, not just a few. Return comprehensive list.`;
             } else if (resume.trim()) {
-                userPrompt = `Extract all technical skills mentioned in this resume: ${resume}`;
+                userPrompt = `Extract ALL technical skills from this resume: ${resume}`;
             } else {
-                userPrompt = `Extract all required skills from this job description: ${jobDescription}`;
+                userPrompt = `Extract ALL required skills from this job description: ${jobDescription}`;
             }
             
             const response = await fetch("/api/chat", {
