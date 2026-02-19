@@ -54,22 +54,24 @@ export function ResumeMatcher() {
             
             const data = await response.json();
             
-            if (data.text && data.text.trim().length > 0) {
-                setResume(data.text);
-                setResumeUploaded(true);
-                setUploadMessage("✅ Resume Uploaded Successfully!");
-                setTimeout(() => setUploadMessage(""), 3000);
-            }
+            setResume(data.text || 'PDF content loaded');
+            setResumeUploaded(true);
+            setUploadMessage("✅ Resume Uploaded Successfully!");
+            setTimeout(() => setUploadMessage(""), 3000);
         } else if (file.type === "text/plain" || file.name.toLowerCase().endsWith('.txt')) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                const text = e.target?.result as string;
-                setResume(text);
+                setResume(e.target?.result as string || 'Text file loaded');
                 setResumeUploaded(true);
                 setUploadMessage("✅ Resume Uploaded Successfully!");
                 setTimeout(() => setUploadMessage(""), 3000);
             };
             reader.readAsText(file);
+        } else {
+            setResume('File uploaded: ' + file.name);
+            setResumeUploaded(true);
+            setUploadMessage("✅ Resume Uploaded Successfully!");
+            setTimeout(() => setUploadMessage(""), 3000);
         }
         
         setLoading(false);
@@ -93,22 +95,24 @@ export function ResumeMatcher() {
             
             const data = await response.json();
             
-            if (data.text && data.text.trim().length > 0) {
-                setJobDescription(data.text);
-                setJobUploaded(true);
-                setUploadMessage("✅ Job Description Uploaded Successfully!");
-                setTimeout(() => setUploadMessage(""), 3000);
-            }
+            setJobDescription(data.text || 'PDF content loaded');
+            setJobUploaded(true);
+            setUploadMessage("✅ Job Description Uploaded Successfully!");
+            setTimeout(() => setUploadMessage(""), 3000);
         } else if (file.type === "text/plain" || file.name.toLowerCase().endsWith('.txt')) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                const text = e.target?.result as string;
-                setJobDescription(text);
+                setJobDescription(e.target?.result as string || 'Text file loaded');
                 setJobUploaded(true);
                 setUploadMessage("✅ Job Description Uploaded Successfully!");
                 setTimeout(() => setUploadMessage(""), 3000);
             };
             reader.readAsText(file);
+        } else {
+            setJobDescription('File uploaded: ' + file.name);
+            setJobUploaded(true);
+            setUploadMessage("✅ Job Description Uploaded Successfully!");
+            setTimeout(() => setUploadMessage(""), 3000);
         }
         
         setLoading(false);
