@@ -66,7 +66,8 @@ export function ResumeMatcher() {
                     setResume(data.text);
                     setResumeUploaded(true);
                     setUploadMessage("✓ Resume uploaded successfully!");
-                    setTimeout(() => setUploadMessage(""), 3000);
+                    console.log('Resume uploaded successfully');
+                    setTimeout(() => setUploadMessage(""), 5000);
                 } else {
                     throw new Error('No text extracted from PDF');
                 }
@@ -85,7 +86,8 @@ export function ResumeMatcher() {
                 setResume(e.target?.result as string);
                 setResumeUploaded(true);
                 setUploadMessage("✓ Resume uploaded successfully!");
-                setTimeout(() => setUploadMessage(""), 3000);
+                console.log('Text file uploaded successfully');
+                setTimeout(() => setUploadMessage(""), 5000);
             };
             reader.readAsText(file);
         }
@@ -753,10 +755,14 @@ export function ResumeMatcher() {
                                         >
                                             {loading ? (
                                                 <Brain className="w-8 h-8 text-blue-400 animate-pulse" />
+                                            ) : resumeUploaded ? (
+                                                <CheckCircle className="w-8 h-8 text-green-400" />
                                             ) : (
                                                 <Upload className="w-8 h-8 text-blue-400" />
                                             )}
-                                            <span className="text-sm md:text-base">{loading ? "Uploading..." : resumeUploaded ? "✓ Resume Uploaded" : "Click to upload PDF"}</span>
+                                            <span className="text-sm md:text-base font-bold">
+                                                {loading ? "Uploading..." : resumeUploaded ? "✓ Resume Uploaded Successfully" : "Click to upload PDF"}
+                                            </span>
                                         </Button>
                                     </div>
                                     <textarea
