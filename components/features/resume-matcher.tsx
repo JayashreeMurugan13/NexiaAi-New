@@ -150,7 +150,15 @@ export function ResumeMatcher() {
             
             let userPrompt = '';
             if (resume.trim() && jobDescription.trim()) {
-                userPrompt = `Extract ONLY the technical skills mentioned in this RESUME (not from job description):\n\nRESUME: ${resume}`;
+                userPrompt = `Compare these two documents and extract skills:
+
+RESUME SKILLS: Extract technical skills from this resume:
+${resume}
+
+JOB REQUIREMENTS: Extract required skills from this job description:
+${jobDescription}
+
+Return JSON with both sets of skills for comparison.`;
             } else if (resume.trim()) {
                 userPrompt = `Extract all technical skills mentioned in this resume: ${resume}`;
             } else {
@@ -183,36 +191,40 @@ export function ResumeMatcher() {
                 skillsData = JSON.parse(jsonStr);
             } catch (parseError) {
                 console.log("JSON parse failed, extracting skills manually");
-                // Extract skills from actual resume content
+                // Extract skills from both resume and job description
                 const resumeContent = (resume || '').toLowerCase();
-                const commonSkills = ['c++', 'c#', 'c', 'java', 'python', 'javascript', 'typescript', 'react', 'node.js', 'nodejs', 'sql', 'html', 'css', 'git', 'aws', 'docker', 'mongodb', 'express', 'angular', 'vue', 'php', 'ruby', 'go', 'kotlin', 'swift', 'django', 'flask', 'spring', 'mysql', 'postgresql', 'redis', 'kubernetes', 'bootstrap', 'tailwind', 'figma', 'photoshop', 'illustrator', 'linux', 'windows', 'android', 'ios', 'flutter', 'dart', 'rust', 'scala', 'perl', 'matlab', 'r', 'assembly', 'objective-c'];
+                const jobContent = (jobDescription || '').toLowerCase();
+                const allSkills = ['c++', 'c#', 'c', 'java', 'python', 'javascript', 'typescript', 'react', 'node.js', 'nodejs', 'sql', 'html', 'css', 'git', 'aws', 'docker', 'mongodb', 'express', 'angular', 'vue', 'php', 'ruby', 'go', 'kotlin', 'swift', 'django', 'flask', 'spring', 'mysql', 'postgresql', 'redis', 'kubernetes', 'bootstrap', 'tailwind', 'figma', 'photoshop', 'illustrator', 'linux', 'windows', 'android', 'ios', 'flutter', 'dart', 'rust', 'scala', 'perl', 'matlab', 'r', 'assembly', 'objective-c'];
                 
-                const foundSkills = commonSkills.filter(skill => {
+                // Find skills in resume
+                const resumeSkills = allSkills.filter(skill => {
                     const skillVariants = [skill, skill.replace('.', ''), skill.replace('#', 'sharp'), skill.replace('++', 'plus')];
                     return skillVariants.some(variant => resumeContent.includes(variant));
                 });
                 
-                // If no skills found, check if resume content exists
-                if (foundSkills.length === 0) {
-                    if (resumeContent.includes('c++') || resumeContent.includes('cpp')) {
-                        foundSkills.push('C++');
+                // Find skills required in job description
+                const jobSkills = allSkills.filter(skill => {
+                    const skillVariants = [skill, skill.replace('.', ''), skill.replace('#', 'sharp'), skill.replace('++', 'plus')];
+                    return skillVariants.some(variant => jobContent.includes(variant));
+                });
+                
+                // Combine unique skills from both (prioritize job requirements)
+                const combinedSkills = [...new Set([...jobSkills, ...resumeSkills])];
+                
+                // If no skills found, add basic fallbacks
+                if (combinedSkills.length === 0) {
+                    if (resumeContent.includes('c++') || resumeContent.includes('cpp') || jobContent.includes('c++')) {
+                        combinedSkills.push('C++');
                     }
-                    if (resumeContent.includes('c#') || resumeContent.includes('csharp')) {
-                        foundSkills.push('C#');
+                    if (resumeContent.includes('java') || jobContent.includes('java')) {
+                        combinedSkills.push('Java');
                     }
-                    if (resumeContent.includes(' c ') || resumeContent.includes('programming in c')) {
-                        foundSkills.push('C');
-                    }
-                    // If still no skills and resume has content, add basic programming skills
-                    if (foundSkills.length === 0 && resumeContent.length > 50) {
-                        foundSkills.push('Programming', 'Problem Solving', 'Software Development');
-                    } else if (foundSkills.length === 0) {
-                        // Only if no resume content, use web skills
-                        foundSkills.push('HTML', 'CSS', 'JavaScript');
+                    if (combinedSkills.length === 0) {
+                        combinedSkills.push('Programming', 'Problem Solving');
                     }
                 }
                 
-                skillsData = { skills: foundSkills.slice(0, 5).map(s => s.charAt(0).toUpperCase() + s.slice(1)) };
+                skillsData = { skills: combinedSkills.slice(0, 5).map(s => s.charAt(0).toUpperCase() + s.slice(1)) };
             }
             
             // Set up for skill testing phase
