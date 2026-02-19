@@ -284,7 +284,9 @@ export function JobRecommendations() {
         let passesLocationFilter = true;
         const indianCities = ["bangalore", "coimbatore", "hyderabad", "chennai", "mumbai", "delhi", "pune", "kolkata", "ahmedabad", "jaipur", "lucknow", "kochi", "indore", "bhubaneswar", "thiruvananthapuram", "madurai", "salem", "tiruchirappalli", "erode", "vellore"];
         
-        if (indianCities.includes(locationFilter)) {
+        if (locationFilter === "all") {
+            passesLocationFilter = true;
+        } else if (indianCities.includes(locationFilter)) {
             passesLocationFilter = job.location.toLowerCase().includes(locationFilter);
         } else if (locationFilter === "us") {
             passesLocationFilter = job.location.includes("CA") || job.location.includes("NY") || 
