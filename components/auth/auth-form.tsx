@@ -63,15 +63,15 @@ export function AuthForm({ type }: AuthFormProps) {
     };
 
     const handleGoogleLogin = async () => {
+        setLoading(true);
         try {
             await supabase.auth.signInWithOAuth({
-                provider: "google",
+                provider: "google"
             });
         } catch (error) {
-            // Fallback to localStorage
-            const user = { email: "user@gmail.com", id: Date.now().toString() };
-            localStorage.setItem('nexia_current_user', JSON.stringify(user));
-            router.push("/chat");
+            console.error('Google login failed:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -138,6 +138,7 @@ export function AuthForm({ type }: AuthFormProps) {
             <Button
                 variant="outline"
                 onClick={handleGoogleLogin}
+                disabled={loading}
                 className="w-full py-6 border-white/10 hover:bg-white/5"
             >
                 <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">

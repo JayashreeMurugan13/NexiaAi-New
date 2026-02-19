@@ -52,10 +52,22 @@ export const supabase = {
             setCurrentUser(user);
             return { data: { user }, error: null };
         },
-        signInWithOAuth: async () => {
-            const googleUser = { id: 'google-' + Date.now(), email: 'google@nexia.ai', provider: 'google' };
-            setCurrentUser(googleUser);
-            return { data: { url: null }, error: null };
+        signInWithOAuth: async ({ provider }: any) => {
+            if (provider === 'google') {
+                const googleUser = { 
+                    id: 'google-' + Date.now(), 
+                    email: 'user@gmail.com', 
+                    name: 'Google User',
+                    provider: 'google' 
+                };
+                setCurrentUser(googleUser);
+                // Simulate redirect behavior
+                setTimeout(() => {
+                    window.location.href = '/chat';
+                }, 100);
+                return { data: { url: '/chat' }, error: null };
+            }
+            return { data: null, error: { message: 'Provider not supported' } };
         },
         signOut: async () => {
             setCurrentUser(null);

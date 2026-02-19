@@ -358,71 +358,42 @@ export function ChatInterface() {
 
     const startVoiceRecording = async () => {
         if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-            alert('Voice input not supported in your browser. Please use Chrome or Safari.');
             return;
         }
 
         try {
-            // For mobile devices, request permission more explicitly
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            
-            if (isMobile) {
-                // On mobile, show instruction first
-                const userConfirmed = confirm('🎤 To use voice input, please:\n\n1. Tap "Allow" when prompted for microphone access\n2. Speak clearly after the recording starts\n3. Tap the microphone button again to stop\n\nReady to start?');
-                if (!userConfirmed) return;
-            }
-            
-            // Request microphone permission first
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            // Stop the stream immediately as we only needed permission
-            stream.getTracks().forEach(track => track.stop());
-            
             const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
             const recognition = new SpeechRecognition();
             
-            // Mobile-optimized settings
             recognition.continuous = false;
-            recognition.interimResults = false;
+            recognition.interimResults = true;
             recognition.lang = 'en-US';
             recognition.maxAlternatives = 1;
-            
-            // Add mobile-specific settings
-            if (isMobile) {
-                recognition.continuous = true; // Better for mobile
-                recognition.interimResults = true; // Show interim results
-            }
 
             recognition.onstart = () => {
                 setIsRecording(true);
-                if (isMobile) {
-                    // Vibrate on mobile to indicate recording started
-                    if ('vibrate' in navigator) {
-                        navigator.vibrate(100);
-                    }
+                if ('vibrate' in navigator) {
+                    navigator.vibrate(100);
                 }
             };
             
             recognition.onend = () => {
                 setIsRecording(false);
-                if (isMobile && 'vibrate' in navigator) {
+                if ('vibrate' in navigator) {
                     navigator.vibrate(50);
                 }
             };
             
             recognition.onresult = (event: any) => {
                 let transcript = '';
-                
-                // Get the final result or the latest interim result
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     if (event.results[i].isFinal) {
                         transcript = event.results[i][0].transcript;
                         break;
-                    } else if (isMobile) {
-                        // On mobile, use interim results if no final result
+                    } else {
                         transcript = event.results[i][0].transcript;
                     }
                 }
-                
                 if (transcript.trim()) {
                     setInput(transcript.trim());
                 }
@@ -430,28 +401,6 @@ export function ChatInterface() {
             
             recognition.onerror = (event: any) => {
                 setIsRecording(false);
-                console.error('Speech recognition error:', event.error);
-                
-                let message = '';
-                switch (event.error) {
-                    case 'not-allowed':
-                        message = isMobile 
-                            ? '🎤 Microphone access denied.\n\nTo fix this:\n1. Go to your browser settings\n2. Find "Site Settings" or "Permissions"\n3. Allow microphone access for this site\n4. Refresh the page and try again'
-                            : '🎤 Microphone access denied. Please allow microphone permission in your browser settings.';
-                        break;
-                    case 'no-speech':
-                        message = '🎤 No speech detected. Please try speaking louder or check your microphone.';
-                        break;
-                    case 'audio-capture':
-                        message = '🎤 Microphone not found. Please check if your microphone is connected and working.';
-                        break;
-                    case 'network':
-                        message = '🎤 Network error. Please check your internet connection and try again.';
-                        break;
-                    default:
-                        message = `🎤 Voice input error: ${event.error}. Please try again.`;
-                }
-                alert(message);
             };
 
             recognitionRef.current = recognition;
@@ -459,21 +408,6 @@ export function ChatInterface() {
             
         } catch (error: any) {
             setIsRecording(false);
-            console.error('Microphone access error:', error);
-            
-            let message = '';
-            if (error.name === 'NotAllowedError') {
-                message = isMobile 
-                    ? '🎤 Microphone permission denied.\n\nTo enable:\n1. Tap the 🔒 lock icon in your browser address bar\n2. Allow microphone access\n3. Refresh the page'
-                    : '🎤 Microphone permission denied. Please allow microphone access and try again.';
-            } else if (error.name === 'NotFoundError') {
-                message = '🎤 No microphone found. Please connect a microphone and try again.';
-            } else {
-                message = isMobile 
-                    ? '🎤 Cannot access microphone.\n\nTips:\n• Use Chrome or Safari browser\n• Allow microphone permission when prompted\n• Check if another app is using the microphone'
-                    : '🎤 Cannot access microphone. Please check your microphone settings and try again.';
-            }
-            alert(message);
         }
     };
 
