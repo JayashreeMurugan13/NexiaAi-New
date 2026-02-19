@@ -362,6 +362,9 @@ export function ChatInterface() {
         }
 
         try {
+            // Request microphone permission first
+            await navigator.mediaDevices.getUserMedia({ audio: true });
+            
             const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
             const recognition = new SpeechRecognition();
             
@@ -857,6 +860,7 @@ export function ChatInterface() {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 title={isRecording ? "Tap to stop recording" : "Tap to start voice input"}
+                                onTouchStart={() => {}} // Enable touch events for mobile
                             >
                                 {isRecording && (
                                     <motion.div
