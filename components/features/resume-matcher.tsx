@@ -1031,31 +1031,35 @@ export function ResumeMatcher() {
                                     ))}
                                 </div>
 
-                                <h4 className="text-lg font-semibold text-white mb-4">Priority Skills to Develop:</h4>
-                                <div className="space-y-3">
-                                    {analysis.skillGaps.map((gap, index) => (
-                                        <div key={index} className="bg-zinc-900/50 rounded-lg p-4">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <h5 className="font-semibold text-white">{gap.skill}</h5>
-                                                <span className={`px-2 py-1 rounded text-xs ${
-                                                    gap.importance === 'High' ? 'bg-red-500/20 text-red-300' :
-                                                    gap.importance === 'Medium' ? 'bg-yellow-500/20 text-yellow-300' :
-                                                    'bg-green-500/20 text-green-300'
-                                                }`}>
-                                                    {gap.importance} Priority
-                                                </span>
-                                            </div>
-                                            <div className="text-sm text-zinc-400">
-                                                <p className="mb-2">Recommended Resources:</p>
-                                                <ul className="list-disc list-inside space-y-1">
-                                                    {gap.resources.map((resource, idx) => (
-                                                        <li key={idx}>{resource}</li>
-                                                    ))}
-                                                </ul>
-                                            </div>
+                                {analysis.skillGaps.length > 0 && (
+                                    <>
+                                        <h4 className="text-lg font-semibold text-white mb-4">Priority Skills to Develop:</h4>
+                                        <div className="space-y-3">
+                                            {analysis.skillGaps.map((gap, index) => (
+                                                <div key={index} className="bg-zinc-900/50 rounded-lg p-4">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <h5 className="font-semibold text-white">{gap.skill}</h5>
+                                                        <span className={`px-2 py-1 rounded text-xs ${
+                                                            gap.importance === 'High' ? 'bg-red-500/20 text-red-300' :
+                                                            gap.importance === 'Medium' ? 'bg-yellow-500/20 text-yellow-300' :
+                                                            'bg-green-500/20 text-green-300'
+                                                        }`}>
+                                                            {gap.importance} Priority
+                                                        </span>
+                                                    </div>
+                                                    <div className="text-sm text-zinc-400">
+                                                        <p className="mb-2">Recommended Resources:</p>
+                                                        <ul className="list-disc list-inside space-y-1">
+                                                            {gap.resources.map((resource, idx) => (
+                                                                <li key={idx}>{resource}</li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
+                                    </>
+                                )}
 
                                 <div className="flex gap-4 mt-6">
                                     <Button
