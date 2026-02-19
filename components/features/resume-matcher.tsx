@@ -186,12 +186,16 @@ export function ResumeMatcher() {
             } catch (parseError) {
                 console.log("JSON parse failed, extracting skills manually");
                 // Extract skills manually from text
-                const content = data.content.toLowerCase();
-                const commonSkills = ['javascript', 'react', 'node.js', 'python', 'java', 'sql', 'html', 'css', 'git', 'aws', 'docker', 'mongodb', 'express', 'typescript', 'angular', 'vue', 'php', 'c++', 'c#', 'ruby', 'go', 'kotlin', 'swift'];
+                const content = (resume + ' ' + jobDescription).toLowerCase();
+                const commonSkills = ['javascript', 'react', 'node.js', 'nodejs', 'python', 'java', 'sql', 'html', 'css', 'git', 'aws', 'docker', 'mongodb', 'express', 'typescript', 'angular', 'vue', 'php', 'c++', 'c#', 'ruby', 'go', 'kotlin', 'swift', 'django', 'flask', 'spring', 'mysql', 'postgresql', 'redis', 'kubernetes'];
                 const foundSkills = commonSkills.filter(skill => 
-                    resume.toLowerCase().includes(skill) || jobDescription.toLowerCase().includes(skill)
+                    content.includes(skill)
                 );
-                skillsData = { skills: foundSkills.slice(0, 5) }; // Limit to 5 skills
+                // Ensure we have at least 3 skills
+                if (foundSkills.length === 0) {
+                    foundSkills.push('JavaScript', 'React', 'Node.js');
+                }
+                skillsData = { skills: foundSkills.slice(0, 5).map(s => s.charAt(0).toUpperCase() + s.slice(1)) };
             }
             
             // Set up for skill testing phase
@@ -839,7 +843,7 @@ export function ResumeMatcher() {
                                     <Button
                                         onClick={() => {
                                             generateFinalAnalysis();
-                                            setStep("assessment");
+                                            setStep("results");
                                         }}
                                         disabled={completedAssessments.length === 0}
                                         className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 disabled:opacity-50"
