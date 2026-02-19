@@ -23,10 +23,10 @@ export async function POST(request: NextRequest) {
         
         const jobs = [remoteOKJobs, jSearchJobs, adzunaJobs, naukriJobs, linkedInJobs];
         
-        // Combine and deduplicate results - only real API jobs
-        const allJobs = jobs.flat().filter(job => job && job.source);
-        console.log('Total jobs found:', allJobs.length);
-        console.log('Job sources:', allJobs.map(job => job.source));
+        // Combine and deduplicate results - prioritize real jobs
+        const allJobs = jobs.flat().filter(job => job && job.source && job.title && job.company);
+        console.log('Total real jobs found:', allJobs.length);
+        console.log('Job sources:', [...new Set(allJobs.map(job => job.source))]);
         
         const uniqueJobs = removeDuplicates(allJobs);
         
@@ -54,29 +54,30 @@ export async function POST(request: NextRequest) {
 
 async function fetchFromRemoteOK(skills: string[]) {
     try {
-        const skillQuery = skills.join(',');
-        const response = await fetch(`https://remoteok.io/api?tags=${skillQuery}`, {
+        const response = await fetch(`https://remoteok.io/api`, {
             headers: {
-                'User-Agent': 'NexiaAI-JobMatcher/1.0'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             }
         });
         
         if (!response.ok) return [];
         
         const data = await response.json();
-        return data.slice(1, 11).map((job: any) => ({
+        const jobs = Array.isArray(data) ? data.slice(1, 21) : [];
+        
+        return jobs.map((job: any) => ({
             id: `remoteok-${job.id}`,
-            title: job.position,
-            company: job.company,
+            title: cleanHtmlContent(job.position || job.title),
+            company: cleanHtmlContent(job.company),
             location: 'Remote',
             salary: job.salary || 'Competitive',
             type: 'Remote',
-            skills: job.tags || [],
-            description: job.description?.substring(0, 200) + '...' || 'Remote opportunity',
-            posted: new Date(job.date * 1000).toLocaleDateString(),
+            skills: job.tags || extractCleanSkills(job.description, skills),
+            description: cleanHtmlContent(job.description)?.substring(0, 200) + '...' || 'Remote opportunity',
+            posted: job.date ? new Date(job.date * 1000).toLocaleDateString() : 'Recent',
             url: job.url || job.apply_url || `https://remoteok.io/remote-jobs/${job.slug || job.id}`,
             source: 'RemoteOK'
-        }));
+        })).filter(job => job.title && job.company);
     } catch (error) {
         console.error('RemoteOK API error:', error);
         return [];
