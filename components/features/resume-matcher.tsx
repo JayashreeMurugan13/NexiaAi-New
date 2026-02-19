@@ -53,7 +53,7 @@ export function ResumeMatcher() {
                 });
                 
                 if (!response.ok) {
-                    throw new Error('PDF parsing failed');
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
                 const data = await response.json();
@@ -66,8 +66,7 @@ export function ResumeMatcher() {
                     setResume(data.text);
                     setResumeUploaded(true);
                     setUploadMessage("✓ Resume uploaded successfully!");
-                    console.log('Resume uploaded successfully');
-                    setTimeout(() => setUploadMessage(""), 5000);
+                    setTimeout(() => setUploadMessage(""), 3000);
                 } else {
                     throw new Error('No text extracted from PDF');
                 }
@@ -75,8 +74,7 @@ export function ResumeMatcher() {
                 console.error('PDF upload error:', error);
                 setResume('');
                 setResumeUploaded(false);
-                setUploadMessage("✗ PDF upload failed");
-                alert('PDF upload failed on mobile. Please paste your resume text in the box below instead.');
+                setUploadMessage("✗ PDF upload failed - please paste text below");
                 setTimeout(() => setUploadMessage(""), 5000);
             } finally {
                 setLoading(false);
@@ -87,10 +85,12 @@ export function ResumeMatcher() {
                 setResume(e.target?.result as string);
                 setResumeUploaded(true);
                 setUploadMessage("✓ Resume uploaded successfully!");
-                console.log('Text file uploaded successfully');
-                setTimeout(() => setUploadMessage(""), 5000);
+                setTimeout(() => setUploadMessage(""), 3000);
             };
             reader.readAsText(file);
+        } else {
+            setUploadMessage("✗ Please upload PDF or TXT files only");
+            setTimeout(() => setUploadMessage(""), 3000);
         }
     };
 
@@ -747,6 +747,7 @@ export function ResumeMatcher() {
                                             accept="application/pdf,.pdf,.txt,text/plain"
                                             onChange={handleResumeUpload}
                                             className="hidden"
+                                            capture="environment" // Mobile camera access for scanning
                                         />
                                         <Button
                                             onClick={() => resumeFileInputRef.current?.click()}
@@ -756,6 +757,7 @@ export function ResumeMatcher() {
                                                     ? 'bg-green-600 hover:bg-green-500 border-green-500' 
                                                     : 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
                                             }`}
+                                            onTouchStart={() => {}} // Enable touch events
                                         >
                                             {loading ? (
                                                 <Brain className="w-8 h-8 text-blue-400 animate-pulse" />
@@ -795,6 +797,7 @@ export function ResumeMatcher() {
                                             accept="application/pdf,.pdf,.txt,text/plain"
                                             onChange={handleJobUpload}
                                             className="hidden"
+                                            capture="environment" // Mobile camera access for scanning
                                         />
                                         <Button
                                             onClick={() => jobFileInputRef.current?.click()}
@@ -804,6 +807,7 @@ export function ResumeMatcher() {
                                                     ? 'bg-green-600 hover:bg-green-500 border-green-500' 
                                                     : 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
                                             }`}
+                                            onTouchStart={() => {}} // Enable touch events
                                         >
                                             {loading ? (
                                                 <Brain className="w-8 h-8 text-blue-400 animate-pulse" />
