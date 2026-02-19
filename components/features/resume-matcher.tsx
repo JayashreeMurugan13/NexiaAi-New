@@ -26,6 +26,7 @@ export function ResumeMatcher() {
     const [jobDescription, setJobDescription] = useState("");
     const [resumeUploaded, setResumeUploaded] = useState(false);
     const [jobUploaded, setJobUploaded] = useState(false);
+    const [uploadMessage, setUploadMessage] = useState("");
     const [skillsToTest, setSkillsToTest] = useState<string[]>([]);
     const [testResults, setTestResults] = useState<{[skill: string]: boolean}>({});
     const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
@@ -64,8 +65,8 @@ export function ResumeMatcher() {
                 if (data.text && data.text.trim().length > 0) {
                     setResume(data.text);
                     setResumeUploaded(true);
-                    // Show success message
-                    alert('✓ Resume uploaded successfully!');
+                    setUploadMessage("✓ Resume uploaded successfully!");
+                    setTimeout(() => setUploadMessage(""), 3000);
                 } else {
                     throw new Error('No text extracted from PDF');
                 }
@@ -73,6 +74,8 @@ export function ResumeMatcher() {
                 console.error('PDF upload error:', error);
                 setResume('');
                 setResumeUploaded(false);
+                setUploadMessage("✗ Failed to upload PDF. Please try again.");
+                setTimeout(() => setUploadMessage(""), 3000);
             } finally {
                 setLoading(false);
             }
@@ -81,8 +84,8 @@ export function ResumeMatcher() {
             reader.onload = (e) => {
                 setResume(e.target?.result as string);
                 setResumeUploaded(true);
-                // Show success message
-                alert('✓ Resume uploaded successfully!');
+                setUploadMessage("✓ Resume uploaded successfully!");
+                setTimeout(() => setUploadMessage(""), 3000);
             };
             reader.readAsText(file);
         }
@@ -695,6 +698,22 @@ export function ResumeMatcher() {
                         AI Resume Matcher
                     </h1>
                     <p className="text-sm md:text-base text-zinc-400">Analyze your resume, assess skills, and get personalized recommendations</p>
+                    
+                    {/* Upload Success/Error Message */}
+                    {uploadMessage && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            className={`mt-4 p-3 rounded-lg text-sm font-medium ${
+                                uploadMessage.includes('✓') 
+                                    ? 'bg-green-500/20 text-green-300 border border-green-500/30' 
+                                    : 'bg-red-500/20 text-red-300 border border-red-500/30'
+                            }`}
+                        >
+                            {uploadMessage}
+                        </motion.div>
+                    )}
                 </motion.div>
 
                 <AnimatePresence mode="wait">
