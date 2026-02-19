@@ -146,27 +146,18 @@ export function ResumeMatcher() {
         console.log('Job description content:', jobDescription.substring(0, 500));
         
         try {
-            // Skip AI extraction and go directly to manual extraction for better results
-            console.log('Forcing manual skill extraction for comprehensive results');
-            throw new Error('Force manual extraction');
-            
-            const systemPrompt = `Extract ALL technical skills from the content. Return as many skills as possible. Respond ONLY with valid JSON:
+            const systemPrompt = `Extract skills from the content and respond ONLY with valid JSON:
 {
-  "skills": ["skill1", "skill2", "skill3", "skill4", "skill5", "skill6", "skill7", "skill8", "skill9", "skill10"]
+  "skills": ["skill1", "skill2", "skill3"]
 }`;
             
             let userPrompt = '';
             if (resume.trim() && jobDescription.trim()) {
-                userPrompt = `Extract EVERY technical skill mentioned in this resume. Include programming languages, frameworks, tools, databases, everything:
-
-RESUME CONTENT:
-${resume}
-
-Find ALL skills, not just a few. Return comprehensive list.`;
+                userPrompt = `Extract ONLY the technical skills mentioned in this RESUME (not from job description):\n\nRESUME: ${resume}`;
             } else if (resume.trim()) {
-                userPrompt = `Extract ALL technical skills from this resume: ${resume}`;
+                userPrompt = `Extract all technical skills mentioned in this resume: ${resume}`;
             } else {
-                userPrompt = `Extract ALL required skills from this job description: ${jobDescription}`;
+                userPrompt = `Extract all required skills from this job description: ${jobDescription}`;
             }
             
             const response = await fetch("/api/chat", {
@@ -195,28 +186,68 @@ Find ALL skills, not just a few. Return comprehensive list.`;
                 skillsData = JSON.parse(jsonStr);
             } catch (parseError) {
                 console.log("JSON parse failed, extracting skills manually");
-                // Extract skills from both resume and job description
+                console.log("Resume content length:", resume.length);
+                console.log("Resume content sample:", resume.substring(0, 300));
+                
+                // Extract skills from actual resume content
                 const resumeContent = (resume || '').toLowerCase();
                 const jobContent = (jobDescription || '').toLowerCase();
-                const allSkills = ['c++', 'c#', 'c', 'java', 'python', 'javascript', 'typescript', 'react', 'node.js', 'nodejs', 'sql', 'html', 'css', 'git', 'aws', 'docker', 'mongodb', 'express', 'angular', 'vue', 'php', 'ruby', 'go', 'kotlin', 'swift', 'django', 'flask', 'spring', 'mysql', 'postgresql', 'redis', 'kubernetes', 'bootstrap', 'tailwind', 'figma', 'photoshop', 'illustrator', 'linux', 'windows', 'android', 'ios', 'flutter', 'dart', 'rust', 'scala', 'perl', 'matlab', 'r', 'assembly', 'objective-c', 'tensorflow', 'pytorch', 'opencv', 'pandas', 'numpy', 'scipy', 'sklearn', 'keras', 'reactjs', 'vuejs', 'angularjs', 'nextjs', 'nuxtjs', 'laravel', 'codeigniter', 'symfony', 'rails', 'sinatra', 'fastapi', 'flask', 'tornado', 'aiohttp', 'graphql', 'rest', 'api', 'microservices', 'devops', 'ci/cd', 'jenkins', 'gitlab', 'github', 'bitbucket', 'jira', 'confluence', 'slack', 'teams', 'zoom', 'webrtc', 'websocket', 'ajax', 'json', 'xml', 'yaml', 'toml', 'csv', 'excel', 'powerbi', 'tableau', 'qlik', 'looker', 'grafana', 'kibana', 'elasticsearch', 'solr', 'lucene', 'spark', 'hadoop', 'kafka', 'rabbitmq', 'celery', 'redis', 'memcached', 'nginx', 'apache', 'tomcat', 'iis', 'cloudflare', 'cdn', 'ssl', 'https', 'oauth', 'jwt', 'saml', 'ldap', 'active directory', 'firebase', 'supabase', 'amplify', 'vercel', 'netlify', 'heroku', 'digitalocean', 'linode', 'vultr', 'gcp', 'azure', 'ibm cloud', 'oracle cloud'];
                 
-                // Find ALL skills in resume (not limited to 5)
+                console.log("Searching for skills in resume content...");
+                
+                const allSkills = ['c++', 'c#', 'c', 'java', 'python', 'javascript', 'typescript', 'react', 'node.js', 'nodejs', 'sql', 'html', 'css', 'git', 'aws', 'docker', 'mongodb', 'express', 'angular', 'vue', 'php', 'ruby', 'go', 'kotlin', 'swift', 'django', 'flask', 'spring', 'mysql', 'postgresql', 'redis', 'kubernetes', 'bootstrap', 'tailwind', 'figma', 'photoshop', 'illustrator', 'linux', 'windows', 'android', 'ios', 'flutter', 'dart', 'rust', 'scala', 'perl', 'matlab', 'r', 'assembly', 'objective-c', 'tensorflow', 'pytorch', 'opencv', 'pandas', 'numpy', 'scipy', 'sklearn', 'keras', 'reactjs', 'vuejs', 'angularjs', 'nextjs', 'nuxtjs', 'laravel', 'codeigniter', 'symfony', 'rails', 'sinatra', 'fastapi', 'tornado', 'aiohttp', 'graphql', 'rest', 'api', 'microservices', 'devops', 'ci/cd', 'jenkins', 'gitlab', 'github', 'bitbucket', 'jira', 'confluence', 'slack', 'teams', 'zoom', 'webrtc', 'websocket', 'ajax', 'json', 'xml', 'yaml', 'toml', 'csv', 'excel', 'powerbi', 'tableau', 'qlik', 'looker', 'grafana', 'kibana', 'elasticsearch', 'solr', 'lucene', 'spark', 'hadoop', 'kafka', 'rabbitmq', 'celery', 'memcached', 'nginx', 'apache', 'tomcat', 'iis', 'cloudflare', 'cdn', 'ssl', 'https', 'oauth', 'jwt', 'saml', 'ldap', 'active directory', 'firebase', 'supabase', 'amplify', 'vercel', 'netlify', 'heroku', 'digitalocean', 'linode', 'vultr', 'gcp', 'azure', 'ibm cloud', 'oracle cloud', 'machine learning', 'artificial intelligence', 'deep learning', 'neural networks', 'computer vision', 'natural language processing', 'data science', 'big data', 'blockchain', 'cryptocurrency', 'web development', 'mobile development', 'game development', 'embedded systems', 'iot', 'robotics', 'cybersecurity', 'penetration testing', 'ethical hacking', 'network security', 'information security'];
+                
+                // Find ALL skills in resume (comprehensive search)
                 const resumeSkills = allSkills.filter(skill => {
-                    const skillVariants = [skill, skill.replace('.', ''), skill.replace('#', 'sharp'), skill.replace('++', 'plus'), skill.replace('/', ''), skill.replace(' ', '')];
-                    return skillVariants.some(variant => resumeContent.includes(variant));
+                    const skillVariants = [
+                        skill, 
+                        skill.replace('.', ''), 
+                        skill.replace('#', 'sharp'), 
+                        skill.replace('++', 'plus'), 
+                        skill.replace('/', ''), 
+                        skill.replace(' ', ''),
+                        skill.replace('-', ''),
+                        skill.toUpperCase(),
+                        skill.charAt(0).toUpperCase() + skill.slice(1)
+                    ];
+                    const found = skillVariants.some(variant => resumeContent.includes(variant));
+                    if (found) {
+                        console.log(`Found skill: ${skill}`);
+                    }
+                    return found;
                 });
+                
+                console.log(`Total skills found in resume: ${resumeSkills.length}`);
+                console.log('Resume skills:', resumeSkills);
                 
                 // Find skills required in job description
                 const jobSkills = allSkills.filter(skill => {
-                    const skillVariants = [skill, skill.replace('.', ''), skill.replace('#', 'sharp'), skill.replace('++', 'plus'), skill.replace('/', ''), skill.replace(' ', '')];
+                    const skillVariants = [
+                        skill, 
+                        skill.replace('.', ''), 
+                        skill.replace('#', 'sharp'), 
+                        skill.replace('++', 'plus'), 
+                        skill.replace('/', ''), 
+                        skill.replace(' ', ''),
+                        skill.replace('-', ''),
+                        skill.toUpperCase(),
+                        skill.charAt(0).toUpperCase() + skill.slice(1)
+                    ];
                     return skillVariants.some(variant => jobContent.includes(variant));
                 });
+                
+                console.log(`Total skills found in job: ${jobSkills.length}`);
+                console.log('Job skills:', jobSkills);
                 
                 // Combine ALL unique skills (prioritize resume skills, then add job skills)
                 const combinedSkills = [...new Set([...resumeSkills, ...jobSkills])];
                 
+                console.log(`Combined skills: ${combinedSkills.length}`);
+                console.log('All skills for testing:', combinedSkills);
+                
                 // If no skills found, add basic fallbacks
                 if (combinedSkills.length === 0) {
+                    console.log('No skills found, adding fallbacks');
                     if (resumeContent.includes('c++') || resumeContent.includes('cpp') || jobContent.includes('c++')) {
                         combinedSkills.push('C++');
                     }
@@ -228,8 +259,10 @@ Find ALL skills, not just a few. Return comprehensive list.`;
                     }
                 }
                 
-                // Return ALL skills found (not limited to 5)
-                skillsData = { skills: combinedSkills.map(s => s.charAt(0).toUpperCase() + s.slice(1)) };
+                // Return ALL skills found (not limited)
+                const finalSkills = combinedSkills.map(s => s.charAt(0).toUpperCase() + s.slice(1));
+                console.log('Final skills for assessment:', finalSkills);
+                skillsData = { skills: finalSkills };
             }
             
             // Set up for skill testing phase
