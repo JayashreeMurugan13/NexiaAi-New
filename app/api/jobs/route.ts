@@ -101,13 +101,13 @@ async function fetchFromJSearch(skills: string[], location: string) {
         const data = await response.json();
         return data.data?.slice(0, 10).map((job: any) => ({
             id: `jsearch-${job.job_id}`,
-            title: job.job_title,
-            company: job.employer_name,
+            title: cleanHtmlContent(job.job_title),
+            company: cleanHtmlContent(job.employer_name),
             location: job.job_city || searchLocation,
-            salary: job.job_salary || 'Not specified',
+            salary: job.job_salary || 'Competitive',
             type: job.job_employment_type || 'Full-time',
-            skills: extractSkillsFromDescription(job.job_description, skills),
-            description: job.job_description?.substring(0, 200) + '...' || '',
+            skills: extractCleanSkills(job.job_description, skills),
+            description: cleanHtmlContent(job.job_description)?.substring(0, 200) + '...' || '',
             posted: job.job_posted_at_datetime_utc || new Date().toISOString(),
             url: job.job_apply_link || job.job_google_link || `https://www.google.com/search?q=${encodeURIComponent(job.job_title + ' ' + job.employer_name)}`,
             source: 'JSearch'
@@ -133,15 +133,15 @@ async function fetchFromAdzuna(skills: string[], location: string) {
         const data = await response.json();
         return data.results?.map((job: any) => ({
             id: `adzuna-${job.id}`,
-            title: job.title,
-            company: job.company.display_name,
+            title: cleanHtmlContent(job.title),
+            company: cleanHtmlContent(job.company.display_name),
             location: job.location.display_name,
             salary: job.salary_min && job.salary_max ? 
                 `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()}` : 
                 'Competitive',
             type: job.contract_type || 'Full-time',
-            skills: extractSkillsFromDescription(job.description, skills),
-            description: job.description?.substring(0, 200) + '...' || '',
+            skills: extractCleanSkills(job.description, skills),
+            description: cleanHtmlContent(job.description)?.substring(0, 200) + '...' || '',
             posted: job.created,
             url: job.redirect_url || `https://www.adzuna.com/details/${job.id}`,
             source: 'Adzuna'
@@ -328,13 +328,27 @@ function generateMockJobs(skills: string[]) {
     }).sort((a, b) => b.matchScore - a.matchScore);
 }
 
-function extractSkillsFromDescription(description: string, userSkills: string[]) {
+function cleanHtmlContent(text: string): string {
+    if (!text) return '';
+    return text
+        .replace(/<[^>]*>/g, '') // Remove HTML tags
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&nbsp;/g, ' ')
+        .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+        .trim();
+}
+
+function extractCleanSkills(description: string, userSkills: string[]): string[] {
     if (!description) return [];
     
-    const descLower = description.toLowerCase();
-    return userSkills.filter(skill => 
-        descLower.includes(skill.toLowerCase())
-    );
+    const cleanDesc = cleanHtmlContent(description).toLowerCase();
+    const allSkills = ['javascript', 'typescript', 'react', 'node', 'python', 'java', 'sql', 'html', 'css', 'aws', 'docker', 'git', 'mongodb', 'express', 'angular', 'vue', 'php', 'c++', 'c#', 'ruby', 'go', 'kotlin', 'swift', 'django', 'flask', 'spring', 'mysql', 'postgresql', 'redis', 'kubernetes', 'devops', 'linux', 'ui', 'ux', 'design', 'figma', 'photoshop'];
+    
+    return allSkills.filter(skill => cleanDesc.includes(skill));
 }
 
 function calculateMatchScore(jobSkills: string[], userSkills: string[]) {
