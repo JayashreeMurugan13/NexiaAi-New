@@ -358,46 +358,121 @@ export function ChatInterface() {
 
     const startVoiceRecording = async () => {
         if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-            alert('Voice input not supported in your browser');
+            alert('Voice input not supported in your browser. Please use Chrome or Safari.');
             return;
         }
 
         try {
+            // For mobile devices, request permission more explicitly
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            if (isMobile) {
+                // On mobile, show instruction first
+                const userConfirmed = confirm('🎤 To use voice input, please:\n\n1. Tap "Allow" when prompted for microphone access\n2. Speak clearly after the recording starts\n3. Tap the microphone button again to stop\n\nReady to start?');
+                if (!userConfirmed) return;
+            }
+            
             // Request microphone permission first
-            await navigator.mediaDevices.getUserMedia({ audio: true });
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // Stop the stream immediately as we only needed permission
+            stream.getTracks().forEach(track => track.stop());
             
             const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
             const recognition = new SpeechRecognition();
+            
+            // Mobile-optimized settings
             recognition.continuous = false;
             recognition.interimResults = false;
             recognition.lang = 'en-US';
+            recognition.maxAlternatives = 1;
+            
+            // Add mobile-specific settings
+            if (isMobile) {
+                recognition.continuous = true; // Better for mobile
+                recognition.interimResults = true; // Show interim results
+            }
 
-            recognition.onstart = () => setIsRecording(true);
-            recognition.onend = () => setIsRecording(false);
-            recognition.onresult = (event: any) => {
-                const transcript = event.results[0][0].transcript;
-                setInput(transcript);
+            recognition.onstart = () => {
+                setIsRecording(true);
+                if (isMobile) {
+                    // Vibrate on mobile to indicate recording started
+                    if ('vibrate' in navigator) {
+                        navigator.vibrate(100);
+                    }
+                }
             };
+            
+            recognition.onend = () => {
+                setIsRecording(false);
+                if (isMobile && 'vibrate' in navigator) {
+                    navigator.vibrate(50);
+                }
+            };
+            
+            recognition.onresult = (event: any) => {
+                let transcript = '';
+                
+                // Get the final result or the latest interim result
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        transcript = event.results[i][0].transcript;
+                        break;
+                    } else if (isMobile) {
+                        // On mobile, use interim results if no final result
+                        transcript = event.results[i][0].transcript;
+                    }
+                }
+                
+                if (transcript.trim()) {
+                    setInput(transcript.trim());
+                }
+            };
+            
             recognition.onerror = (event: any) => {
                 setIsRecording(false);
-                if (event.error === 'not-allowed') {
-                    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                    const message = isMobile 
-                        ? '🎤 Microphone access denied. Please go to your browser settings and allow microphone access for this site.'
-                        : '🎤 Microphone access denied. Please allow microphone permission in your browser settings to use voice input.';
-                    alert(message);
-                } else {
-                    console.error('Speech recognition error:', event.error);
+                console.error('Speech recognition error:', event.error);
+                
+                let message = '';
+                switch (event.error) {
+                    case 'not-allowed':
+                        message = isMobile 
+                            ? '🎤 Microphone access denied.\n\nTo fix this:\n1. Go to your browser settings\n2. Find "Site Settings" or "Permissions"\n3. Allow microphone access for this site\n4. Refresh the page and try again'
+                            : '🎤 Microphone access denied. Please allow microphone permission in your browser settings.';
+                        break;
+                    case 'no-speech':
+                        message = '🎤 No speech detected. Please try speaking louder or check your microphone.';
+                        break;
+                    case 'audio-capture':
+                        message = '🎤 Microphone not found. Please check if your microphone is connected and working.';
+                        break;
+                    case 'network':
+                        message = '🎤 Network error. Please check your internet connection and try again.';
+                        break;
+                    default:
+                        message = `🎤 Voice input error: ${event.error}. Please try again.`;
                 }
+                alert(message);
             };
 
             recognitionRef.current = recognition;
             recognition.start();
-        } catch (error) {
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            const message = isMobile 
-                ? '🎤 Tap "Allow" when your browser asks for microphone permission to use voice input.'
-                : '🎤 Please allow microphone access to use voice input. Click the microphone icon in your browser\'s address bar and select "Allow".';
+            
+        } catch (error: any) {
+            setIsRecording(false);
+            console.error('Microphone access error:', error);
+            
+            let message = '';
+            if (error.name === 'NotAllowedError') {
+                message = isMobile 
+                    ? '🎤 Microphone permission denied.\n\nTo enable:\n1. Tap the 🔒 lock icon in your browser address bar\n2. Allow microphone access\n3. Refresh the page'
+                    : '🎤 Microphone permission denied. Please allow microphone access and try again.';
+            } else if (error.name === 'NotFoundError') {
+                message = '🎤 No microphone found. Please connect a microphone and try again.';
+            } else {
+                message = isMobile 
+                    ? '🎤 Cannot access microphone.\n\nTips:\n• Use Chrome or Safari browser\n• Allow microphone permission when prompted\n• Check if another app is using the microphone'
+                    : '🎤 Cannot access microphone. Please check your microphone settings and try again.';
+            }
             alert(message);
         }
     };
@@ -842,14 +917,21 @@ export function ChatInterface() {
                                 onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
                                 className={`p-2 md:p-3 rounded-xl transition-all shadow-lg ${
                                     isRecording 
-                                        ? 'bg-red-600 hover:bg-red-500 animate-pulse' 
-                                        : 'bg-zinc-800 hover:bg-zinc-700'
-                                } text-white`}
+                                        ? 'bg-red-600 hover:bg-red-500 animate-pulse shadow-red-500/50' 
+                                        : 'bg-zinc-800 hover:bg-zinc-700 hover:shadow-blue-500/30'
+                                } text-white relative overflow-hidden`}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                title={isRecording ? "Stop recording" : "Click to speak (microphone permission required)"}
+                                title={isRecording ? "Tap to stop recording" : "Tap to start voice input"}
                             >
-                                <Mic className="w-4 h-4 md:w-5 md:h-5" />
+                                {isRecording && (
+                                    <motion.div
+                                        className="absolute inset-0 bg-red-400/20"
+                                        animate={{ opacity: [0.2, 0.6, 0.2] }}
+                                        transition={{ duration: 1, repeat: Infinity }}
+                                    />
+                                )}
+                                <Mic className="w-4 h-4 md:w-5 md:h-5 relative z-10" />
                             </motion.button>
                             <motion.button
                                 onClick={sendMessage}
