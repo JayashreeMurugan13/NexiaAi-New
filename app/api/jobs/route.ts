@@ -91,7 +91,7 @@ async function fetchFromJSearch(skills: string[], location: string) {
         const response = await fetch(`https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(query)}&page=1&num_pages=1&country=IN`, {
             method: 'GET',
             headers: {
-                'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'demo-key',
+                'X-RapidAPI-Key': process.env.RAPIDAPI_TOKEN || 'demo-key',
                 'X-RapidAPI-Host': 'jsearch.p.rapidapi.com'
             }
         });
@@ -122,7 +122,7 @@ async function fetchFromAdzuna(skills: string[], location: string) {
     try {
         const query = skills.join(' ');
         const appId = process.env.ADZUNA_APP_ID || 'demo';
-        const appKey = process.env.ADZUNA_APP_KEY || 'demo';
+        const appKey = process.env.ADZUNA_APP_TOKEN || 'demo';
         
         const response = await fetch(
             `https://api.adzuna.com/v1/api/jobs/us/search/1?app_id=${appId}&app_key=${appKey}&what=${encodeURIComponent(query)}&where=${encodeURIComponent(location)}&results_per_page=10`
@@ -367,7 +367,7 @@ async function fetchFromNaukri(skills: string[], location: string) {
         const response = await fetch(`https://naukri-jobs-scraper.p.rapidapi.com/jobs?query=${encodeURIComponent(query)}&location=${encodeURIComponent(location)}&limit=10`, {
             method: 'GET',
             headers: {
-                'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'demo-key',
+                'X-RapidAPI-Key': process.env.RAPIDAPI_TOKEN || 'demo-key',
                 'X-RapidAPI-Host': 'naukri-jobs-scraper.p.rapidapi.com'
             }
         });
@@ -401,7 +401,7 @@ async function fetchFromLinkedIn(skills: string[], location: string) {
         const response = await fetch(`https://linkedin-jobs-search.p.rapidapi.com/jobs?keywords=${encodeURIComponent(query)}&location=${encodeURIComponent(location)}&datePosted=anyTime&sort=mostRelevant`, {
             method: 'GET',
             headers: {
-                'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'demo-key',
+                'X-RapidAPI-Key': process.env.RAPIDAPI_TOKEN || 'demo-key',
                 'X-RapidAPI-Host': 'linkedin-jobs-search.p.rapidapi.com'
             }
         });
