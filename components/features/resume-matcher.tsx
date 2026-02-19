@@ -183,17 +183,17 @@ export function ResumeMatcher() {
                 skillsData = JSON.parse(jsonStr);
             } catch (parseError) {
                 console.log("JSON parse failed, extracting skills manually");
-                // Extract skills ONLY from resume
+                // Extract skills from resume content
                 const resumeContent = resume.toLowerCase();
-                const commonSkills = ['javascript', 'react', 'node.js', 'nodejs', 'python', 'java', 'sql', 'html', 'css', 'git', 'aws', 'docker', 'mongodb', 'express', 'typescript', 'angular', 'vue', 'php', 'c++', 'c#', 'ruby', 'go', 'kotlin', 'swift', 'django', 'flask', 'spring', 'mysql', 'postgresql', 'redis', 'kubernetes'];
+                const commonSkills = ['javascript', 'react', 'node.js', 'nodejs', 'python', 'java', 'sql', 'html', 'css', 'git', 'aws', 'docker', 'mongodb', 'express', 'typescript', 'angular', 'vue', 'php', 'c++', 'c#', 'ruby', 'go', 'kotlin', 'swift', 'django', 'flask', 'spring', 'mysql', 'postgresql', 'redis', 'kubernetes', 'bootstrap', 'tailwind', 'figma', 'photoshop', 'illustrator'];
                 const foundSkills = commonSkills.filter(skill => 
-                    resumeContent.includes(skill)
+                    resumeContent.includes(skill) || resumeContent.includes(skill.replace('.', ''))
                 );
-                // Ensure we have at least 3 skills
+                // If no skills found in resume, use basic web skills
                 if (foundSkills.length === 0) {
-                    foundSkills.push('JavaScript', 'React', 'Node.js');
+                    foundSkills.push('html', 'css', 'javascript');
                 }
-                skillsData = { skills: foundSkills.slice(0, 5).map(s => s.charAt(0).toUpperCase() + s.slice(1)) };
+                skillsData = { skills: foundSkills.slice(0, 5).map(s => s.charAt(0).toUpperCase() + s.slice(1).replace('.js', '.js')) };
             }
             
             // Set up for skill testing phase
