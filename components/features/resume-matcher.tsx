@@ -788,10 +788,41 @@ export function ResumeMatcher() {
                                         <Briefcase className="w-5 h-5 text-cyan-400" />
                                         Job Description
                                     </h3>
+                                    <div className="relative">
+                                        <input
+                                            ref={jobFileInputRef}
+                                            type="file"
+                                            accept="application/pdf,.pdf,.txt,text/plain"
+                                            onChange={handleJobUpload}
+                                            className="hidden"
+                                        />
+                                        <Button
+                                            onClick={() => jobFileInputRef.current?.click()}
+                                            disabled={loading}
+                                            className={`w-full border p-6 md:p-8 rounded-2xl flex flex-col items-center gap-3 touch-manipulation transition-all ${
+                                                jobUploaded 
+                                                    ? 'bg-green-600 hover:bg-green-500 border-green-500' 
+                                                    : 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
+                                            }`}
+                                        >
+                                            {loading ? (
+                                                <Brain className="w-8 h-8 text-blue-400 animate-pulse" />
+                                            ) : jobUploaded ? (
+                                                <CheckCircle className="w-10 h-10 text-white" />
+                                            ) : (
+                                                <Upload className="w-8 h-8 text-cyan-400" />
+                                            )}
+                                            <span className={`text-base md:text-lg font-bold ${
+                                                jobUploaded ? 'text-white' : 'text-zinc-300'
+                                            }`}>
+                                                {loading ? "Uploading..." : jobUploaded ? "✓ JOB DESCRIPTION UPLOADED" : "Click to upload PDF"}
+                                            </span>
+                                        </Button>
+                                    </div>
                                     <textarea
                                         value={jobDescription}
                                         onChange={(e) => setJobDescription(e.target.value)}
-                                        placeholder="Paste the job description here..."
+                                        placeholder="Or paste the job description here..."
                                         rows={8}
                                         className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 text-zinc-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 resize-none"
                                     />
