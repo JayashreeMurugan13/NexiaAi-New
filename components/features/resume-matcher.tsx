@@ -146,6 +146,10 @@ export function ResumeMatcher() {
         console.log('Job description content:', jobDescription.substring(0, 500));
         
         try {
+            // Skip AI extraction and go directly to manual extraction for better results
+            console.log('Forcing manual skill extraction for comprehensive results');
+            throw new Error('Force manual extraction');
+            
             const systemPrompt = `Extract ALL technical skills from the content. Return as many skills as possible. Respond ONLY with valid JSON:
 {
   "skills": ["skill1", "skill2", "skill3", "skill4", "skill5", "skill6", "skill7", "skill8", "skill9", "skill10"]
