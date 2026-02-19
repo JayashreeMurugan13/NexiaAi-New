@@ -44,18 +44,18 @@ export function StudyBuddy() {
             
             switch (subject) {
                 case "math":
-                    systemPrompt = "You are a math tutor. Provide clear, step-by-step solutions. Break down complex problems into simple steps. Use examples and show all work. Keep explanations concise but complete.";
+                    systemPrompt = "You are a math tutor. Provide clear, step-by-step solutions. Use **bold** for headings. Break down complex problems into simple steps. Use examples and show all work.";
                     break;
                 case "programming":
-                    systemPrompt = "You are a programming mentor. Provide clear, practical coding solutions with examples. Explain concepts simply, show code snippets, and give best practices. Keep responses focused and actionable.";
+                    systemPrompt = "You are a programming mentor. Provide clear, practical coding solutions. Use **bold** for headings and key concepts. Explain concepts simply, show code snippets, and give best practices.";
                     break;
                 case "placements":
                     systemPrompt = isPlacementQuestion
-                        ? "You are a placement preparation expert. Generate questions and answers in Q&A format. For HR questions, provide sample answers and tips. For technical questions, give clear explanations with examples. Format as: Q: [question] A: [answer]"
-                        : "You are a helpful tutor. Answer the user's question directly and clearly without Q&A format.";
+                        ? "You are a placement preparation expert. Generate questions and answers in Q&A format. Use **bold** for headings. For HR questions, provide sample answers and tips. For technical questions, give clear explanations with examples."
+                        : "You are a helpful tutor. Answer directly and clearly. Use **bold** for important headings and key points. Format with proper structure.";
                     break;
                 default:
-                    systemPrompt = "You are a helpful tutor. Provide clear, concise explanations that are easy to understand. Break down complex topics into simple points. Keep responses short but comprehensive.";
+                    systemPrompt = "You are a helpful tutor. Provide clear, concise explanations. Use **bold** for headings and important terms. Break down complex topics into simple points with proper formatting.";
             }
             
             const userPrompt = (subject === "placements" && isPlacementQuestion)
@@ -209,9 +209,37 @@ export function StudyBuddy() {
                                                 </span>
                                             </div>
                                             <div className="bg-blue-900/20 rounded-xl p-3 border border-blue-500/20">
-                                                <p className="text-blue-100 text-sm md:text-base leading-relaxed whitespace-pre-wrap">
-                                                    {chat.answer}
-                                                </p>
+                                                <div className="text-blue-100 text-sm md:text-base leading-relaxed whitespace-pre-wrap prose prose-invert prose-sm md:prose-base max-w-none">
+                                                    {chat.answer.split('\n').map((line, i) => {
+                                                        // Bold text between ** **
+                                                        if (line.includes('**')) {
+                                                            const parts = line.split('**');
+                                                            return (
+                                                                <p key={i} className="mb-2">
+                                                                    {parts.map((part, j) => 
+                                                                        j % 2 === 1 ? <strong key={j} className="font-bold text-blue-200">{part}</strong> : part
+                                                                    )}
+                                                                </p>
+                                                            );
+                                                        }
+                                                        // Headings with :
+                                                        if (line.includes(':') && line.length < 100) {
+                                                            const [heading, ...rest] = line.split(':');
+                                                            return (
+                                                                <p key={i} className="mb-2">
+                                                                    <strong className="font-bold text-blue-200">{heading}:</strong>
+                                                                    {rest.join(':')}
+                                                                </p>
+                                                            );
+                                                        }
+                                                        // Bullet points
+                                                        if (line.trim().startsWith('-') || line.trim().startsWith('•')) {
+                                                            return <li key={i} className="ml-4 mb-1">{line.replace(/^[-•]\s*/, '')}</li>;
+                                                        }
+                                                        // Regular lines
+                                                        return line.trim() ? <p key={i} className="mb-2">{line}</p> : <br key={i} />;
+                                                    })}
+                                                </div>
                                             </div>
                                         </div>
                                     </motion.div>
