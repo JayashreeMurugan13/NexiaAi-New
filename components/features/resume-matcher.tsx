@@ -75,8 +75,9 @@ export function ResumeMatcher() {
                 console.error('PDF upload error:', error);
                 setResume('');
                 setResumeUploaded(false);
-                setUploadMessage("✗ Failed to upload PDF. Please try again.");
-                setTimeout(() => setUploadMessage(""), 3000);
+                setUploadMessage("✗ PDF upload failed");
+                alert('PDF upload failed on mobile. Please paste your resume text in the box below instead.');
+                setTimeout(() => setUploadMessage(""), 5000);
             } finally {
                 setLoading(false);
             }
@@ -746,7 +747,6 @@ export function ResumeMatcher() {
                                             accept="application/pdf,.pdf,.txt,text/plain"
                                             onChange={handleResumeUpload}
                                             className="hidden"
-                                            capture="environment"
                                         />
                                         <Button
                                             onClick={() => resumeFileInputRef.current?.click()}
