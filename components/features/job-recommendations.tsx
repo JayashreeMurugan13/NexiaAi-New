@@ -255,13 +255,22 @@ export function JobRecommendations() {
             );
             const matchScore = Math.round((matchingSkills.length / job.skills.length) * 100);
             
+            // Prioritize Indian jobs
+            const isIndianJob = job.location.includes("India");
+            
             return {
                 id: `job-${i}`,
                 ...job,
                 matchScore,
-                posted: `${Math.floor(Math.random() * 7) + 1} days ago`
+                posted: `${Math.floor(Math.random() * 7) + 1} days ago`,
+                priority: isIndianJob ? 1 : 2 // Indian jobs get higher priority
             };
-        }).sort((a, b) => b.matchScore - a.matchScore);
+        }).sort((a, b) => {
+            // First sort by priority (Indian jobs first)
+            if (a.priority !== b.priority) return a.priority - b.priority;
+            // Then sort by match score
+            return b.matchScore - a.matchScore;
+        });
     };
 
     const filteredJobs = jobs.filter(job => {
