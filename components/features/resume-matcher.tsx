@@ -41,114 +41,78 @@ export function ResumeMatcher() {
         const file = event.target.files?.[0];
         if (!file) return;
 
+        setLoading(true);
+        
         if (file.type === "application/pdf" || file.name.toLowerCase().endsWith('.pdf')) {
-            setLoading(true);
             const formData = new FormData();
             formData.append('file', file);
             
-            try {
-                const response = await fetch('/api/parse-pdf', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-                
-                if (data.text && data.text.trim().length > 0) {
-                    setResume(data.text);
-                    setResumeUploaded(true);
-                    setUploadMessage("✅ Resume Uploaded Successfully!");
-                    setTimeout(() => setUploadMessage(""), 3000);
-                } else {
-                    throw new Error('No text extracted from PDF');
-                }
-            } catch (error) {
-                console.error('PDF upload error:', error);
-                setResume('');
-                setResumeUploaded(false);
-                setUploadMessage("❌ Resume Upload Failed - Please Try Again");
-                setTimeout(() => setUploadMessage(""), 5000);
-            } finally {
-                setLoading(false);
+            const response = await fetch('/api/parse-pdf', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.text && data.text.trim().length > 0) {
+                setResume(data.text);
+                setResumeUploaded(true);
+                setUploadMessage("✅ Resume Uploaded Successfully!");
+                setTimeout(() => setUploadMessage(""), 3000);
             }
         } else if (file.type === "text/plain" || file.name.toLowerCase().endsWith('.txt')) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                setResume(e.target?.result as string);
+                const text = e.target?.result as string;
+                setResume(text);
                 setResumeUploaded(true);
                 setUploadMessage("✅ Resume Uploaded Successfully!");
                 setTimeout(() => setUploadMessage(""), 3000);
             };
             reader.readAsText(file);
-        } else {
-            setUploadMessage("❌ Please Upload PDF or TXT Files Only");
-            setTimeout(() => setUploadMessage(""), 3000);
         }
+        
+        setLoading(false);
+        if (event.target) event.target.value = '';
     };
 
     const handleJobUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
+        setLoading(true);
+        
         if (file.type === "application/pdf" || file.name.toLowerCase().endsWith('.pdf')) {
-            setLoading(true);
             const formData = new FormData();
             formData.append('file', file);
             
-            try {
-                const response = await fetch('/api/parse-pdf', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-                
-                if (data.text && data.text.trim().length > 0) {
-                    setJobDescription(data.text);
-                    setJobUploaded(true);
-                    setUploadMessage("✅ Job Description Uploaded Successfully!");
-                    setTimeout(() => setUploadMessage(""), 3000);
-                } else {
-                    throw new Error('No text extracted from PDF');
-                }
-            } catch (error) {
-                console.error('PDF upload error:', error);
-                setJobDescription('');
-                setJobUploaded(false);
-                setUploadMessage("❌ Job Description Upload Failed");
+            const response = await fetch('/api/parse-pdf', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.text && data.text.trim().length > 0) {
+                setJobDescription(data.text);
+                setJobUploaded(true);
+                setUploadMessage("✅ Job Description Uploaded Successfully!");
                 setTimeout(() => setUploadMessage(""), 3000);
-            } finally {
-                setLoading(false);
             }
         } else if (file.type === "text/plain" || file.name.toLowerCase().endsWith('.txt')) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                setJobDescription(e.target?.result as string);
+                const text = e.target?.result as string;
+                setJobDescription(text);
                 setJobUploaded(true);
                 setUploadMessage("✅ Job Description Uploaded Successfully!");
                 setTimeout(() => setUploadMessage(""), 3000);
             };
             reader.readAsText(file);
-        } else {
-            setUploadMessage("❌ Please upload PDF or TXT files only");
-            setTimeout(() => setUploadMessage(""), 3000);
         }
+        
+        setLoading(false);
+        if (event.target) event.target.value = '';
     };
 
     const analyzeMatch = async () => {
@@ -756,7 +720,6 @@ export function ResumeMatcher() {
                                             accept="application/pdf,.pdf,.txt,text/plain"
                                             onChange={handleResumeUpload}
                                             className="hidden"
-                                            capture="environment" // Mobile camera access for scanning
                                         />
                                         <Button
                                             onClick={() => resumeFileInputRef.current?.click()}
@@ -806,7 +769,6 @@ export function ResumeMatcher() {
                                             accept="application/pdf,.pdf,.txt,text/plain"
                                             onChange={handleJobUpload}
                                             className="hidden"
-                                            capture="environment" // Mobile camera access for scanning
                                         />
                                         <Button
                                             onClick={() => jobFileInputRef.current?.click()}
