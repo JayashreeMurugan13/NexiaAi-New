@@ -685,6 +685,24 @@ export function ResumeMatcher() {
 
     return (
         <div className="flex-1 flex flex-col h-full bg-zinc-950 p-4 md:p-8 overflow-y-auto">
+            {/* Fixed Mobile Success Message */}
+            <AnimatePresence>
+                {uploadMessage && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -50 }}
+                        className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 px-6 py-4 rounded-xl shadow-2xl font-bold text-base md:text-lg ${
+                            uploadMessage.includes('✓') 
+                                ? 'bg-green-500 text-white' 
+                                : 'bg-red-500 text-white'
+                        }`}
+                    >
+                        {uploadMessage}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            
             <div className="max-w-4xl mx-auto w-full">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -702,22 +720,6 @@ export function ResumeMatcher() {
                         AI Resume Matcher
                     </h1>
                     <p className="text-sm md:text-base text-zinc-400">Analyze your resume, assess skills, and get personalized recommendations</p>
-                    
-                    {/* Upload Success/Error Message */}
-                    {uploadMessage && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0 }}
-                            className={`mt-4 p-3 rounded-lg text-sm font-medium ${
-                                uploadMessage.includes('✓') 
-                                    ? 'bg-green-500/20 text-green-300 border border-green-500/30' 
-                                    : 'bg-red-500/20 text-red-300 border border-red-500/30'
-                            }`}
-                        >
-                            {uploadMessage}
-                        </motion.div>
-                    )}
                 </motion.div>
 
                 <AnimatePresence mode="wait">
