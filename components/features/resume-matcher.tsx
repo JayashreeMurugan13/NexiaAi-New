@@ -64,6 +64,10 @@ export function ResumeMatcher() {
                 if (data.text && data.text.trim().length > 0) {
                     setResume(data.text);
                     setResumeUploaded(true);
+                    // Show success message on mobile
+                    if (window.innerWidth < 768) {
+                        alert('✓ Resume uploaded successfully!');
+                    }
                 } else {
                     throw new Error('No text extracted from PDF');
                 }
@@ -79,6 +83,10 @@ export function ResumeMatcher() {
             reader.onload = (e) => {
                 setResume(e.target?.result as string);
                 setResumeUploaded(true);
+                // Show success message on mobile
+                if (window.innerWidth < 768) {
+                    alert('✓ Resume uploaded successfully!');
+                }
             };
             reader.readAsText(file);
         }
