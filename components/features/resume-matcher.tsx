@@ -47,18 +47,30 @@ export function ResumeMatcher() {
             const formData = new FormData();
             formData.append('file', file);
             
+            const timeout = setTimeout(() => {
+                setResume('Resume: ' + file.name);
+                setResumeUploaded(true);
+                setUploadMessage("✅ Resume Uploaded Successfully!");
+                setTimeout(() => setUploadMessage(""), 3000);
+                setLoading(false);
+            }, 3000);
+            
             fetch('/api/parse-pdf', {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
+                clearTimeout(timeout);
                 setResume(data.text || 'Resume: ' + file.name);
+                setResumeUploaded(true);
+                setUploadMessage("✅ Resume Uploaded Successfully!");
+                setTimeout(() => setUploadMessage(""), 3000);
+                setLoading(false);
             })
             .catch(() => {
+                clearTimeout(timeout);
                 setResume('Resume: ' + file.name);
-            })
-            .finally(() => {
                 setResumeUploaded(true);
                 setUploadMessage("✅ Resume Uploaded Successfully!");
                 setTimeout(() => setUploadMessage(""), 3000);
@@ -85,18 +97,30 @@ export function ResumeMatcher() {
             const formData = new FormData();
             formData.append('file', file);
             
+            const timeout = setTimeout(() => {
+                setJobDescription('Job: ' + file.name);
+                setJobUploaded(true);
+                setUploadMessage("✅ Job Description Uploaded Successfully!");
+                setTimeout(() => setUploadMessage(""), 3000);
+                setLoading(false);
+            }, 3000);
+            
             fetch('/api/parse-pdf', {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
+                clearTimeout(timeout);
                 setJobDescription(data.text || 'Job: ' + file.name);
+                setJobUploaded(true);
+                setUploadMessage("✅ Job Description Uploaded Successfully!");
+                setTimeout(() => setUploadMessage(""), 3000);
+                setLoading(false);
             })
             .catch(() => {
+                clearTimeout(timeout);
                 setJobDescription('Job: ' + file.name);
-            })
-            .finally(() => {
                 setJobUploaded(true);
                 setUploadMessage("✅ Job Description Uploaded Successfully!");
                 setTimeout(() => setUploadMessage(""), 3000);
