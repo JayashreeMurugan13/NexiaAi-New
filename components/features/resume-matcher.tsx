@@ -751,17 +751,23 @@ export function ResumeMatcher() {
                                         <Button
                                             onClick={() => resumeFileInputRef.current?.click()}
                                             disabled={loading}
-                                            className="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 p-6 md:p-8 rounded-2xl flex flex-col items-center gap-3 touch-manipulation"
+                                            className={`w-full border p-6 md:p-8 rounded-2xl flex flex-col items-center gap-3 touch-manipulation transition-all ${
+                                                resumeUploaded 
+                                                    ? 'bg-green-600 hover:bg-green-500 border-green-500' 
+                                                    : 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
+                                            }`}
                                         >
                                             {loading ? (
                                                 <Brain className="w-8 h-8 text-blue-400 animate-pulse" />
                                             ) : resumeUploaded ? (
-                                                <CheckCircle className="w-8 h-8 text-green-400" />
+                                                <CheckCircle className="w-10 h-10 text-white" />
                                             ) : (
                                                 <Upload className="w-8 h-8 text-blue-400" />
                                             )}
-                                            <span className="text-sm md:text-base font-bold">
-                                                {loading ? "Uploading..." : resumeUploaded ? "✓ Resume Uploaded Successfully" : "Click to upload PDF"}
+                                            <span className={`text-base md:text-lg font-bold ${
+                                                resumeUploaded ? 'text-white' : 'text-zinc-300'
+                                            }`}>
+                                                {loading ? "Uploading..." : resumeUploaded ? "✓ RESUME UPLOADED" : "Click to upload PDF"}
                                             </span>
                                         </Button>
                                     </div>
