@@ -36,6 +36,10 @@ export function StudyBuddy() {
         setLoading(true);
         
         try {
+            const isPlacementQuestion = question.toLowerCase().includes('placement') || 
+                                       question.toLowerCase().includes('interview') ||
+                                       question.toLowerCase().includes('hr question');
+            
             let systemPrompt = "";
             
             switch (subject) {
@@ -46,15 +50,17 @@ export function StudyBuddy() {
                     systemPrompt = "You are a programming mentor. Provide clear, practical coding solutions with examples. Explain concepts simply, show code snippets, and give best practices. Keep responses focused and actionable.";
                     break;
                 case "placements":
-                    systemPrompt = "You are a placement preparation expert. For HR questions, provide sample answers and tips. For technical questions, give clear explanations with examples. Cover both HR behavioral questions and technical interview topics. Keep responses practical and interview-focused.";
+                    systemPrompt = isPlacementQuestion
+                        ? "You are a placement preparation expert. Generate questions and answers in Q&A format. For HR questions, provide sample answers and tips. For technical questions, give clear explanations with examples. Format as: Q: [question] A: [answer]"
+                        : "You are a helpful tutor. Answer the user's question directly and clearly without Q&A format.";
                     break;
                 default:
                     systemPrompt = "You are a helpful tutor. Provide clear, concise explanations that are easy to understand. Break down complex topics into simple points. Keep responses short but comprehensive.";
             }
             
-            const userPrompt = subject === "placements" 
-                ? `${question}\n\nIf this is an HR question, provide sample answers and tips. If technical, explain with examples. Focus on interview preparation.`
-                : `${question}\n\nProvide a clear, concise explanation that's easy to understand.`;
+            const userPrompt = (subject === "placements" && isPlacementQuestion)
+                ? `${question}\n\nGenerate questions and answers in Q&A format for placement preparation.`
+                : `${question}\n\nProvide a clear, concise explanation.`;
             
             const response = await fetch("/api/chat", {
                 method: "POST",
@@ -63,8 +69,7 @@ export function StudyBuddy() {
                     messages: [
                         { role: "system", content: systemPrompt },
                         { role: "user", content: userPrompt }
-                    ],
-                    formatQA: true
+                    ]
                 })
             });
             
@@ -140,7 +145,7 @@ export function StudyBuddy() {
                             value={question}
                             onChange={(e) => setQuestion(e.target.value)}
                             placeholder={subject === "placements" 
-                                ? "Ask HR or technical questions! e.g., 'Tell me about yourself' or 'Explain OOP concepts'"
+                                ? "Ask any question! Add 'placement' or 'interview' for Q&A format. e.g., 'Generate placement questions on OOP'"
                                 : "Ask me anything! e.g., 'Explain photosynthesis' or 'How do I solve quadratic equations?'"
                             }
                             rows={4}
