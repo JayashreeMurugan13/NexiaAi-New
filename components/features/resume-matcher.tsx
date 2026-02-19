@@ -183,17 +183,36 @@ export function ResumeMatcher() {
                 skillsData = JSON.parse(jsonStr);
             } catch (parseError) {
                 console.log("JSON parse failed, extracting skills manually");
-                // Extract skills from resume content
-                const resumeContent = resume.toLowerCase();
-                const commonSkills = ['javascript', 'react', 'node.js', 'nodejs', 'python', 'java', 'sql', 'html', 'css', 'git', 'aws', 'docker', 'mongodb', 'express', 'typescript', 'angular', 'vue', 'php', 'c++', 'c#', 'ruby', 'go', 'kotlin', 'swift', 'django', 'flask', 'spring', 'mysql', 'postgresql', 'redis', 'kubernetes', 'bootstrap', 'tailwind', 'figma', 'photoshop', 'illustrator'];
-                const foundSkills = commonSkills.filter(skill => 
-                    resumeContent.includes(skill) || resumeContent.includes(skill.replace('.', ''))
-                );
-                // If no skills found in resume, use basic web skills
+                // Extract skills from actual resume content
+                const resumeContent = (resume || '').toLowerCase();
+                const commonSkills = ['c++', 'c#', 'c', 'java', 'python', 'javascript', 'typescript', 'react', 'node.js', 'nodejs', 'sql', 'html', 'css', 'git', 'aws', 'docker', 'mongodb', 'express', 'angular', 'vue', 'php', 'ruby', 'go', 'kotlin', 'swift', 'django', 'flask', 'spring', 'mysql', 'postgresql', 'redis', 'kubernetes', 'bootstrap', 'tailwind', 'figma', 'photoshop', 'illustrator', 'linux', 'windows', 'android', 'ios', 'flutter', 'dart', 'rust', 'scala', 'perl', 'matlab', 'r', 'assembly', 'objective-c'];
+                
+                const foundSkills = commonSkills.filter(skill => {
+                    const skillVariants = [skill, skill.replace('.', ''), skill.replace('#', 'sharp'), skill.replace('++', 'plus')];
+                    return skillVariants.some(variant => resumeContent.includes(variant));
+                });
+                
+                // If no skills found, check if resume content exists
                 if (foundSkills.length === 0) {
-                    foundSkills.push('html', 'css', 'javascript');
+                    if (resumeContent.includes('c++') || resumeContent.includes('cpp')) {
+                        foundSkills.push('C++');
+                    }
+                    if (resumeContent.includes('c#') || resumeContent.includes('csharp')) {
+                        foundSkills.push('C#');
+                    }
+                    if (resumeContent.includes(' c ') || resumeContent.includes('programming in c')) {
+                        foundSkills.push('C');
+                    }
+                    // If still no skills and resume has content, add basic programming skills
+                    if (foundSkills.length === 0 && resumeContent.length > 50) {
+                        foundSkills.push('Programming', 'Problem Solving', 'Software Development');
+                    } else if (foundSkills.length === 0) {
+                        // Only if no resume content, use web skills
+                        foundSkills.push('HTML', 'CSS', 'JavaScript');
+                    }
                 }
-                skillsData = { skills: foundSkills.slice(0, 5).map(s => s.charAt(0).toUpperCase() + s.slice(1).replace('.js', '.js')) };
+                
+                skillsData = { skills: foundSkills.slice(0, 5).map(s => s.charAt(0).toUpperCase() + s.slice(1)) };
             }
             
             // Set up for skill testing phase
