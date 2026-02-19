@@ -24,7 +24,7 @@ export function JobRecommendations() {
     const [userSkills, setUserSkills] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const [filter, setFilter] = useState("all");
-    const [locationFilter, setLocationFilter] = useState("all");
+    const [locationFilter, setLocationFilter] = useState("bangalore");
     const [showIndiaDropdown, setShowIndiaDropdown] = useState(false);
 
     useEffect(() => {
@@ -33,16 +33,15 @@ export function JobRecommendations() {
         const skills = skillHistory.map((s: any) => s.skill);
         setUserSkills(skills);
         
-        if (skills.length > 0) {
-            generateJobRecommendations(skills);
-        }
+        // Always generate job recommendations, even without skills
+        generateJobRecommendations(skills.length > 0 ? skills : ['JavaScript', 'React', 'Python']);
     }, []);
 
     const generateJobRecommendations = async (skills: string[]) => {
         setLoading(true);
         
         try {
-            // Fetch real jobs from API
+            // Fetch only real jobs from APIs
             const response = await fetch('/api/jobs', {
                 method: 'POST',
                 headers: {
@@ -50,22 +49,26 @@ export function JobRecommendations() {
                 },
                 body: JSON.stringify({
                     skills,
-                    location: 'remote'
+                    location: 'India'
                 })
             });
             
             const data = await response.json();
             
             if (data.success && data.jobs && data.jobs.length > 0) {
-                setJobs(data.jobs);
+                // Filter out mock jobs - only keep real API jobs
+                const realJobs = data.jobs.filter(job => 
+                    job.source === 'JSearch' || 
+                    job.source === 'Adzuna' || 
+                    job.source === 'RemoteOK'
+                );
+                setJobs(realJobs);
             } else {
-                // Use enhanced realistic job data
-                setJobs(generateEnhancedMockJobs(skills));
+                setJobs([]);
             }
         } catch (error) {
             console.error('Failed to fetch jobs:', error);
-            // Use enhanced realistic job data
-            setJobs(generateEnhancedMockJobs(skills));
+            setJobs([]);
         } finally {
             setLoading(false);
         }
@@ -270,7 +273,7 @@ export function JobRecommendations() {
             if (a.priority !== b.priority) return a.priority - b.priority;
             // Then sort by match score
             return b.matchScore - a.matchScore;
-        });
+        }).slice(0, 20); // Limit to top 20 jobs
     };
 
     const filteredJobs = jobs.filter(job => {
@@ -282,12 +285,14 @@ export function JobRecommendations() {
         
         // Location filter
         let passesLocationFilter = true;
-        const indianCities = ["bangalore", "coimbatore", "hyderabad", "chennai", "mumbai", "delhi", "pune", "kolkata", "ahmedabad", "jaipur", "lucknow", "kochi", "indore", "bhubaneswar", "thiruvananthapuram", "madurai", "salem", "tiruchirappalli", "erode", "vellore"];
+        const indianCities = ["bangalore", "coimbatore", "hyderabad", "chennai", "mumbai", "delhi", "pune", "kolkata", "ahmedabad", "jaipur", "lucknow", "kochi", "indore", "bhubaneswar", "thiruvananthapuram", "madurai", "salem", "tiruchirappalli", "erode", "vellore", "kanyakumari", "tirunelveli", "thanjavur"];
         
         if (locationFilter === "all") {
             passesLocationFilter = true;
         } else if (indianCities.includes(locationFilter)) {
-            passesLocationFilter = job.location.toLowerCase().includes(locationFilter);
+            // For Indian cities, show jobs that have "India" in location OR the specific city
+            passesLocationFilter = job.location.toLowerCase().includes("india") || 
+                                 job.location.toLowerCase().includes(locationFilter);
         } else if (locationFilter === "us") {
             passesLocationFilter = job.location.includes("CA") || job.location.includes("NY") || 
                                  job.location.includes("WA") || job.location.includes("TX") ||
@@ -316,6 +321,41 @@ export function JobRecommendations() {
 
                 {/* Filters */}
                 <div className="space-y-4 mb-6">
+                    {/* Quick Actions */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                        <Button
+                            onClick={() => {
+                                setLocationFilter('bangalore');
+                                generateJobRecommendations(userSkills.length > 0 ? userSkills : ['JavaScript', 'React']);
+                            }}
+                            className="bg-green-600 hover:bg-green-500"
+                            size="sm"
+                        >
+                            🇮🇳 Show Indian Jobs
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setLocationFilter('remote');
+                                generateJobRecommendations(userSkills.length > 0 ? userSkills : ['JavaScript', 'React']);
+                            }}
+                            variant="outline"
+                            className="border-zinc-600 text-zinc-300 hover:bg-zinc-800"
+                            size="sm"
+                        >
+                            🌐 Remote Jobs
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                generateJobRecommendations(userSkills.length > 0 ? userSkills : ['JavaScript', 'React']);
+                            }}
+                            variant="outline"
+                            className="border-zinc-600 text-zinc-300 hover:bg-zinc-800"
+                            size="sm"
+                        >
+                            🔄 Refresh Jobs
+                        </Button>
+                    </div>
+                    
                     <div className="flex flex-wrap gap-2">
                         <span className="text-zinc-400 text-sm font-medium">Job Type:</span>
                         {[
@@ -412,7 +452,10 @@ export function JobRecommendations() {
                                             { key: "tiruchirappalli", label: "Tiruchirappalli" },
                                             { key: "erode", label: "Erode" },
                                             { key: "vellore", label: "Vellore" },
-                                            { key: "thiruvananthapuram", label: "Thiruvananthapuram" }
+                                            { key: "thiruvananthapuram", label: "Thiruvananthapuram" },
+                                            { key: "kanyakumari", label: "Kanyakumari" },
+                                            { key: "tirunelveli", label: "Tirunelveli" },
+                                            { key: "thanjavur", label: "Thanjavur" }
                                         ].map((city) => (
                                             <button
                                                 key={city.key}
@@ -579,8 +622,8 @@ export function JobRecommendations() {
                 {!loading && filteredJobs.length === 0 && (
                     <div className="text-center py-12">
                         <Briefcase className="w-16 h-16 mx-auto mb-4 text-zinc-500" />
-                        <p className="text-xl text-zinc-400">No jobs found matching your criteria</p>
-                        <p className="text-zinc-500">Try adjusting your filters or complete skill assessments</p>
+                        <p className="text-xl text-zinc-400">No real jobs found</p>
+                        <p className="text-zinc-500">Try different skills or check your API keys configuration</p>
                     </div>
                 )}
             </div>

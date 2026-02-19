@@ -4,15 +4,30 @@ export async function POST(request: NextRequest) {
     try {
         const { skills, location = 'remote' } = await request.json();
         
+        console.log('Job API called with skills:', skills, 'location:', location);
+        
         // Use multiple job APIs for real job data
-        const jobs = await Promise.all([
+        const [remoteOKJobs, jSearchJobs, adzunaJobs, naukriJobs, linkedInJobs] = await Promise.all([
             fetchFromRemoteOK(skills),
             fetchFromJSearch(skills, location),
-            fetchFromAdzuna(skills, location)
+            fetchFromAdzuna(skills, location),
+            fetchFromNaukri(skills, location),
+            fetchFromLinkedIn(skills, location)
         ]);
         
-        // Combine and deduplicate results
-        const allJobs = jobs.flat().filter(Boolean);
+        console.log('RemoteOK jobs:', remoteOKJobs.length);
+        console.log('JSearch jobs:', jSearchJobs.length);
+        console.log('Adzuna jobs:', adzunaJobs.length);
+        console.log('Naukri jobs:', naukriJobs.length);
+        console.log('LinkedIn jobs:', linkedInJobs.length);
+        
+        const jobs = [remoteOKJobs, jSearchJobs, adzunaJobs, naukriJobs, linkedInJobs];
+        
+        // Combine and deduplicate results - only real API jobs
+        const allJobs = jobs.flat().filter(job => job && job.source);
+        console.log('Total jobs found:', allJobs.length);
+        console.log('Job sources:', allJobs.map(job => job.source));
+        
         const uniqueJobs = removeDuplicates(allJobs);
         
         // Calculate match scores based on user skills
@@ -20,6 +35,8 @@ export async function POST(request: NextRequest) {
             ...job,
             matchScore: calculateMatchScore(job.skills || [], skills)
         })).sort((a, b) => b.matchScore - a.matchScore);
+        
+        console.log('Jobs with scores:', jobsWithScores.length);
         
         return NextResponse.json({ 
             jobs: jobsWithScores.slice(0, 20), // Return top 20 matches
@@ -57,7 +74,7 @@ async function fetchFromRemoteOK(skills: string[]) {
             skills: job.tags || [],
             description: job.description?.substring(0, 200) + '...' || 'Remote opportunity',
             posted: new Date(job.date * 1000).toLocaleDateString(),
-            url: job.url || `https://remoteok.io/remote-jobs/${job.id}`,
+            url: job.url || job.apply_url || `https://remoteok.io/remote-jobs/${job.slug || job.id}`,
             source: 'RemoteOK'
         }));
     } catch (error) {
@@ -69,34 +86,35 @@ async function fetchFromRemoteOK(skills: string[]) {
 async function fetchFromJSearch(skills: string[], location: string) {
     try {
         const query = skills.join(' OR ');
-        const response = await fetch('https://jsearch.p.rapidapi.com/search', {
+        const searchLocation = location.toLowerCase().includes('india') ? 'India' : location;
+        
+        const response = await fetch(`https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(query)}&page=1&num_pages=1&country=IN`, {
             method: 'GET',
             headers: {
                 'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'demo-key',
                 'X-RapidAPI-Host': 'jsearch.p.rapidapi.com'
-            },
-            // Note: This requires RapidAPI key - fallback to mock data if not available
+            }
         });
         
-        if (!response.ok) return generateMockJobs(skills);
+        if (!response.ok) return [];
         
         const data = await response.json();
         return data.data?.slice(0, 10).map((job: any) => ({
             id: `jsearch-${job.job_id}`,
             title: job.job_title,
             company: job.employer_name,
-            location: job.job_city || location,
+            location: job.job_city || searchLocation,
             salary: job.job_salary || 'Not specified',
             type: job.job_employment_type || 'Full-time',
             skills: extractSkillsFromDescription(job.job_description, skills),
             description: job.job_description?.substring(0, 200) + '...' || '',
             posted: job.job_posted_at_datetime_utc || new Date().toISOString(),
-            url: job.job_apply_link || job.job_google_link,
+            url: job.job_apply_link || job.job_google_link || `https://www.google.com/search?q=${encodeURIComponent(job.job_title + ' ' + job.employer_name)}`,
             source: 'JSearch'
         })) || [];
     } catch (error) {
         console.error('JSearch API error:', error);
-        return generateMockJobs(skills);
+        return [];
     }
 }
 
@@ -110,7 +128,7 @@ async function fetchFromAdzuna(skills: string[], location: string) {
             `https://api.adzuna.com/v1/api/jobs/us/search/1?app_id=${appId}&app_key=${appKey}&what=${encodeURIComponent(query)}&where=${encodeURIComponent(location)}&results_per_page=10`
         );
         
-        if (!response.ok) return generateMockJobs(skills);
+        if (!response.ok) return [];
         
         const data = await response.json();
         return data.results?.map((job: any) => ({
@@ -125,13 +143,86 @@ async function fetchFromAdzuna(skills: string[], location: string) {
             skills: extractSkillsFromDescription(job.description, skills),
             description: job.description?.substring(0, 200) + '...' || '',
             posted: job.created,
-            url: job.redirect_url,
+            url: job.redirect_url || `https://www.adzuna.com/details/${job.id}`,
             source: 'Adzuna'
         })) || [];
     } catch (error) {
         console.error('Adzuna API error:', error);
-        return generateMockJobs(skills);
+        return [];
     }
+}
+
+function generateIndianMockJobs(skills: string[]) {
+    const indianJobTemplates = [
+        {
+            title: "Full Stack Developer",
+            company: "TechMahindra",
+            location: "Bangalore, India",
+            salary: "₹8,00,000 - ₹15,00,000",
+            type: "Full-time",
+            skills: ["JavaScript", "React", "Node.js", "MongoDB"],
+            description: "Join our Bangalore team as a Full Stack Developer. Work on enterprise applications using MERN stack.",
+            url: "https://www.naukri.com/jobs-in-bangalore-full-stack-developer"
+        },
+        {
+            title: "React Developer",
+            company: "Infosys Limited",
+            location: "Coimbatore, India",
+            salary: "₹6,00,000 - ₹12,00,000",
+            type: "Full-time",
+            skills: ["React", "JavaScript", "TypeScript", "Redux"],
+            description: "React Developer position in Coimbatore. Build modern web applications for global clients using React ecosystem.",
+            url: "https://www.naukri.com/jobs-in-coimbatore-react-developer"
+        },
+        {
+            title: "Frontend Developer",
+            company: "Zoho Corporation",
+            location: "Coimbatore, India",
+            salary: "₹5,50,000 - ₹10,00,000",
+            type: "Full-time",
+            skills: ["JavaScript", "React", "HTML", "CSS"],
+            description: "Frontend Developer at Zoho Coimbatore. Build user interfaces for our suite of business applications.",
+            url: "https://www.naukri.com/jobs-in-coimbatore-frontend-developer"
+        },
+        {
+            title: "Software Engineer",
+            company: "Wipro Technologies",
+            location: "Hyderabad, India",
+            salary: "₹7,50,000 - ₹14,00,000",
+            type: "Full-time",
+            skills: ["Java", "Python", "JavaScript", "AWS"],
+            description: "Software Engineer role in Hyderabad. Work on cloud-native applications and microservices architecture.",
+            url: "https://www.naukri.com/jobs-in-hyderabad-software-engineer"
+        },
+        {
+            title: "Python Developer",
+            company: "Accenture India",
+            location: "Chennai, India",
+            salary: "₹6,50,000 - ₹11,50,000",
+            type: "Full-time",
+            skills: ["Python", "Django", "SQL", "AWS"],
+            description: "Python Developer role in Chennai. Develop scalable web applications and data processing systems.",
+            url: "https://www.naukri.com/jobs-in-chennai-python-developer"
+        }
+    ];
+    
+    return indianJobTemplates.map((job, i) => {
+        const matchingSkills = job.skills.filter(skill => 
+            skills.some(userSkill => 
+                userSkill.toLowerCase().includes(skill.toLowerCase()) ||
+                skill.toLowerCase().includes(userSkill.toLowerCase())
+            )
+        );
+        const matchScore = Math.round((matchingSkills.length / job.skills.length) * 100);
+        
+        return {
+            id: `indian-job-${i}`,
+            ...job,
+            matchScore,
+            posted: `${Math.floor(Math.random() * 7) + 1} days ago`,
+            source: 'Naukri.com'
+        };
+    }).sort((a, b) => b.matchScore - a.matchScore);
 }
 
 function generateMockJobs(skills: string[]) {
@@ -267,4 +358,72 @@ function removeDuplicates(jobs: any[]) {
         seen.add(key);
         return true;
     });
+}
+
+async function fetchFromNaukri(skills: string[], location: string) {
+    try {
+        // Using RapidAPI's Naukri scraper
+        const query = skills.join(' ');
+        const response = await fetch(`https://naukri-jobs-scraper.p.rapidapi.com/jobs?query=${encodeURIComponent(query)}&location=${encodeURIComponent(location)}&limit=10`, {
+            method: 'GET',
+            headers: {
+                'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'demo-key',
+                'X-RapidAPI-Host': 'naukri-jobs-scraper.p.rapidapi.com'
+            }
+        });
+        
+        if (!response.ok) return [];
+        
+        const data = await response.json();
+        return data.jobs?.slice(0, 10).map((job: any) => ({
+            id: `naukri-${job.id || Math.random()}`,
+            title: job.title,
+            company: job.company,
+            location: job.location || 'India',
+            salary: job.salary || 'Not specified',
+            type: job.jobType || 'Full-time',
+            skills: extractSkillsFromDescription(job.description, skills),
+            description: job.description?.substring(0, 200) + '...' || '',
+            posted: job.postedDate || new Date().toISOString(),
+            url: job.jobUrl || `https://www.naukri.com/jobs-in-${location.toLowerCase()}-${skills[0].toLowerCase()}`,
+            source: 'Naukri'
+        })) || [];
+    } catch (error) {
+        console.error('Naukri API error:', error);
+        return [];
+    }
+}
+
+async function fetchFromLinkedIn(skills: string[], location: string) {
+    try {
+        // Using RapidAPI's LinkedIn Jobs API
+        const query = skills.join(' ');
+        const response = await fetch(`https://linkedin-jobs-search.p.rapidapi.com/jobs?keywords=${encodeURIComponent(query)}&location=${encodeURIComponent(location)}&datePosted=anyTime&sort=mostRelevant`, {
+            method: 'GET',
+            headers: {
+                'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'demo-key',
+                'X-RapidAPI-Host': 'linkedin-jobs-search.p.rapidapi.com'
+            }
+        });
+        
+        if (!response.ok) return [];
+        
+        const data = await response.json();
+        return data.data?.slice(0, 10).map((job: any) => ({
+            id: `linkedin-${job.jobId || Math.random()}`,
+            title: job.title,
+            company: job.company,
+            location: job.location || location,
+            salary: job.salary || 'Not specified',
+            type: job.type || 'Full-time',
+            skills: extractSkillsFromDescription(job.description, skills),
+            description: job.description?.substring(0, 200) + '...' || '',
+            posted: job.postedTime || new Date().toISOString(),
+            url: job.jobUrl || `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(query)}&location=${encodeURIComponent(location)}`,
+            source: 'LinkedIn'
+        })) || [];
+    } catch (error) {
+        console.error('LinkedIn API error:', error);
+        return [];
+    }
 }
