@@ -17,16 +17,41 @@ export async function POST(req: NextRequest) {
         const buffer = Buffer.from(arrayBuffer);
         
         if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-            const pdfParse = (await import('pdf-parse')).default;
-            const data = await pdfParse(buffer);
-            
-            return NextResponse.json({ 
-                text: data.text || '',
-                success: true
-            });
+            try {
+                const pdfParse = (await import('pdf-parse')).default;
+                
+                // Enhanced PDF parsing options for mobile compatibility
+                const options = {
+                    max: 0, // Parse all pages
+                    version: 'default',
+                    normalizeWhitespace: true,
+                    disableCombineTextItems: false
+                };
+                
+                const data = await pdfParse(buffer, options);
+                let text = data.text || '';
+                
+                // Clean and normalize text
+                text = text
+                    .replace(/\r\n/g, '\n')
+                    .replace(/\r/g, '\n')
+                    .replace(/\n{3,}/g, '\n\n')
+                    .trim();
+                
+                console.log(`PDF processed: ${data.numpages} pages, ${text.length} chars`);
+                
+                return NextResponse.json({ 
+                    text: text,
+                    success: true,
+                    pages: data.numpages
+                });
+            } catch (pdfError) {
+                console.error('PDF parsing failed:', pdfError);
+                return NextResponse.json({ text: '', success: false });
+            }
         } 
-        else if (file.type === 'text/plain') {
-            const text = new TextDecoder().decode(arrayBuffer);
+        else if (file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt')) {
+            const text = new TextDecoder('utf-8').decode(arrayBuffer).trim();
             return NextResponse.json({ 
                 text: text,
                 success: true
@@ -36,6 +61,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ text: '', success: false });
         
     } catch (error) {
+        console.error('API error:', error);
         return NextResponse.json({ text: '', success: false });
     }
 }
