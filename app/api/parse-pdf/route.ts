@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60;
+export const maxDuration = 30;
 
 export async function POST(req: NextRequest) {
     try {
@@ -13,50 +13,56 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ 
                 text: 'No file provided',
                 success: false
-            }, { status: 400 });
+            });
         }
 
-        console.log('Processing file:', file.name, 'Size:', file.size, 'Type:', file.type);
+        console.log('Processing:', file.name, file.size, 'bytes');
         
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
         
         if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-            const pdfParse = (await import('pdf-parse')).default;
-            
-            const data = await pdfParse(buffer);
-            const text = data.text?.trim() || '';
-            
-            console.log('PDF parsed - Pages:', data.numpages, 'Text length:', text.length);
-            
-            return NextResponse.json({ 
-                text: text,
-                success: true,
-                pages: data.numpages
-            });
+            try {
+                const pdfParse = (await import('pdf-parse')).default;
+                const data = await pdfParse(buffer);
+                
+                console.log('PDF parsed:', data.numpages, 'pages, text length:', data.text?.length || 0);
+                
+                return NextResponse.json({ 
+                    text: data.text || '',
+                    success: true,
+                    pages: data.numpages
+                });
+            } catch (pdfError) {
+                console.error('PDF error:', pdfError);
+                return NextResponse.json({ 
+                    text: '',
+                    success: false,
+                    error: 'PDF parsing failed'
+                });
+            }
         } 
         else if (file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt')) {
-            const text = new TextDecoder('utf-8').decode(arrayBuffer).trim();
-            
+            const text = new TextDecoder('utf-8').decode(arrayBuffer);
             return NextResponse.json({ 
-                text: text,
+                text: text.trim(),
                 success: true
             });
         } 
         else {
             return NextResponse.json({ 
-                text: `File ${file.name} uploaded`,
+                text: '',
                 success: false,
-                message: 'Unsupported file type'
+                error: 'Unsupported file type'
             });
         }
         
     } catch (error) {
-        console.error('PDF parsing error:', error);
+        console.error('API error:', error);
         return NextResponse.json({ 
-            text: 'Processing failed',
+            text: '',
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error'
-        }, { status: 500 });
+            error: 'Server error'
+        });
     }
 }

@@ -42,7 +42,7 @@ export function ResumeMatcher() {
         if (!file) return;
 
         setLoading(true);
-        setUploadMessage("📄 Processing resume...");
+        setUploadMessage("📄 Extracting content...");
         
         try {
             const formData = new FormData();
@@ -54,25 +54,28 @@ export function ResumeMatcher() {
             });
             
             const data = await response.json();
+            console.log('PDF result:', data);
             
-            if (data.text) {
-                setResume(data.text);
+            if (data.success && data.text && data.text.trim().length > 0) {
+                // Successfully extracted content
+                setResume(data.text.trim());
                 setResumeUploaded(true);
-                setUploadMessage("✅ Resume uploaded successfully!");
+                setUploadMessage("✅ Content extracted successfully!");
             } else {
-                setResume('');
-                setResumeUploaded(false);
-                setUploadMessage("⚠️ Processing failed. Please try again.");
+                // Extraction failed - show file info and let user paste manually
+                setResume(`File: ${file.name}\n\nPlease paste your resume content here for analysis.`);
+                setResumeUploaded(true);
+                setUploadMessage("📄 File uploaded - please paste content manually.");
             }
             
         } catch (error) {
             console.error('Upload error:', error);
-            setResume('');
-            setResumeUploaded(false);
-            setUploadMessage("⚠️ Upload failed. Please try again.");
+            setResume(`File: ${file.name}\n\nPlease paste your resume content here for analysis.`);
+            setResumeUploaded(true);
+            setUploadMessage("📄 File uploaded - please paste content manually.");
         } finally {
             setLoading(false);
-            setTimeout(() => setUploadMessage(""), 3000);
+            setTimeout(() => setUploadMessage(""), 4000);
             if (event.target) event.target.value = '';
         }
     };
@@ -82,7 +85,7 @@ export function ResumeMatcher() {
         if (!file) return;
 
         setLoading(true);
-        setUploadMessage("📄 Processing job description...");
+        setUploadMessage("📄 Extracting content...");
         
         try {
             const formData = new FormData();
@@ -94,25 +97,28 @@ export function ResumeMatcher() {
             });
             
             const data = await response.json();
+            console.log('Job PDF result:', data);
             
-            if (data.text) {
-                setJobDescription(data.text);
+            if (data.success && data.text && data.text.trim().length > 0) {
+                // Successfully extracted content
+                setJobDescription(data.text.trim());
                 setJobUploaded(true);
-                setUploadMessage("✅ Job description uploaded successfully!");
+                setUploadMessage("✅ Content extracted successfully!");
             } else {
-                setJobDescription('');
-                setJobUploaded(false);
-                setUploadMessage("⚠️ Processing failed. Please try again.");
+                // Extraction failed - show file info and let user paste manually
+                setJobDescription(`File: ${file.name}\n\nPlease paste job description content here for analysis.`);
+                setJobUploaded(true);
+                setUploadMessage("📄 File uploaded - please paste content manually.");
             }
             
         } catch (error) {
-            console.error('Upload error:', error);
-            setJobDescription('');
-            setJobUploaded(false);
-            setUploadMessage("⚠️ Upload failed. Please try again.");
+            console.error('Job upload error:', error);
+            setJobDescription(`File: ${file.name}\n\nPlease paste job description content here for analysis.`);
+            setJobUploaded(true);
+            setUploadMessage("📄 File uploaded - please paste content manually.");
         } finally {
             setLoading(false);
-            setTimeout(() => setUploadMessage(""), 3000);
+            setTimeout(() => setUploadMessage(""), 4000);
             if (event.target) event.target.value = '';
         }
     };
