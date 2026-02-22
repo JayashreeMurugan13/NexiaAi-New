@@ -43,17 +43,21 @@ export function ResumeMatcher() {
 
         setLoading(true);
         
+        // Handle different file types
         if (file.type === "application/pdf" || file.name.toLowerCase().endsWith('.pdf')) {
+            // Try PDF parsing with better mobile fallback
             const formData = new FormData();
             formData.append('file', file);
             
             const timeout = setTimeout(() => {
-                setResume('Resume: ' + file.name);
+                // Mobile fallback - show file name and prompt user to paste content
+                const fallbackContent = `PDF File: ${file.name}\n\nNote: Please copy and paste your resume content in the text area below for better analysis.`;
+                setResume(fallbackContent);
                 setResumeUploaded(true);
-                setUploadMessage("✅ Resume Uploaded Successfully!");
-                setTimeout(() => setUploadMessage(""), 3000);
+                setUploadMessage("📄 PDF uploaded! Please paste content below for better analysis.");
+                setTimeout(() => setUploadMessage(""), 5000);
                 setLoading(false);
-            }, 3000);
+            }, 2000); // Shorter timeout for mobile
             
             fetch('/api/parse-pdf', {
                 method: 'POST',
@@ -62,25 +66,46 @@ export function ResumeMatcher() {
             .then(response => response.json())
             .then(data => {
                 clearTimeout(timeout);
-                setResume(data.text || 'Resume: ' + file.name);
+                if (data.text && data.text.length > 50) {
+                    setResume(data.text);
+                    setUploadMessage("✅ Resume content extracted successfully!");
+                } else {
+                    const fallbackContent = `PDF File: ${file.name}\n\nNote: Please copy and paste your resume content in the text area below for better analysis.`;
+                    setResume(fallbackContent);
+                    setUploadMessage("📄 PDF uploaded! Please paste content below for analysis.");
+                }
                 setResumeUploaded(true);
-                setUploadMessage("✅ Resume Uploaded Successfully!");
-                setTimeout(() => setUploadMessage(""), 3000);
+                setTimeout(() => setUploadMessage(""), 4000);
                 setLoading(false);
             })
             .catch(() => {
                 clearTimeout(timeout);
-                setResume('Resume: ' + file.name);
+                const fallbackContent = `PDF File: ${file.name}\n\nNote: Please copy and paste your resume content in the text area below for better analysis.`;
+                setResume(fallbackContent);
                 setResumeUploaded(true);
-                setUploadMessage("✅ Resume Uploaded Successfully!");
-                setTimeout(() => setUploadMessage(""), 3000);
+                setUploadMessage("📄 PDF uploaded! Please paste content below for analysis.");
+                setTimeout(() => setUploadMessage(""), 4000);
                 setLoading(false);
             });
+        } else if (file.type === "text/plain" || file.name.toLowerCase().endsWith('.txt')) {
+            // Handle text files
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const content = e.target?.result as string;
+                setResume(content || `Text File: ${file.name}`);
+                setResumeUploaded(true);
+                setUploadMessage("✅ Text file uploaded successfully!");
+                setTimeout(() => setUploadMessage(""), 3000);
+                setLoading(false);
+            };
+            reader.readAsText(file);
         } else {
-            setResume('Resume: ' + file.name);
+            // Handle other file types
+            const fallbackContent = `File: ${file.name}\n\nNote: Please copy and paste your resume content in the text area below for analysis.`;
+            setResume(fallbackContent);
             setResumeUploaded(true);
-            setUploadMessage("✅ Resume Uploaded Successfully!");
-            setTimeout(() => setUploadMessage(""), 3000);
+            setUploadMessage("📄 File uploaded! Please paste content below for analysis.");
+            setTimeout(() => setUploadMessage(""), 4000);
             setLoading(false);
         }
         
@@ -93,17 +118,21 @@ export function ResumeMatcher() {
 
         setLoading(true);
         
+        // Handle different file types for job description
         if (file.type === "application/pdf" || file.name.toLowerCase().endsWith('.pdf')) {
+            // Try PDF parsing with better mobile fallback
             const formData = new FormData();
             formData.append('file', file);
             
             const timeout = setTimeout(() => {
-                setJobDescription('Job: ' + file.name);
+                // Mobile fallback - show file name and prompt user to paste content
+                const fallbackContent = `PDF File: ${file.name}\n\nNote: Please copy and paste the job description content in the text area below for better analysis.`;
+                setJobDescription(fallbackContent);
                 setJobUploaded(true);
-                setUploadMessage("✅ Job Description Uploaded Successfully!");
-                setTimeout(() => setUploadMessage(""), 3000);
+                setUploadMessage("📄 Job PDF uploaded! Please paste content below for analysis.");
+                setTimeout(() => setUploadMessage(""), 5000);
                 setLoading(false);
-            }, 3000);
+            }, 2000); // Shorter timeout for mobile
             
             fetch('/api/parse-pdf', {
                 method: 'POST',
@@ -112,25 +141,46 @@ export function ResumeMatcher() {
             .then(response => response.json())
             .then(data => {
                 clearTimeout(timeout);
-                setJobDescription(data.text || 'Job: ' + file.name);
+                if (data.text && data.text.length > 50) {
+                    setJobDescription(data.text);
+                    setUploadMessage("✅ Job description extracted successfully!");
+                } else {
+                    const fallbackContent = `PDF File: ${file.name}\n\nNote: Please copy and paste the job description content in the text area below for better analysis.`;
+                    setJobDescription(fallbackContent);
+                    setUploadMessage("📄 Job PDF uploaded! Please paste content below.");
+                }
                 setJobUploaded(true);
-                setUploadMessage("✅ Job Description Uploaded Successfully!");
-                setTimeout(() => setUploadMessage(""), 3000);
+                setTimeout(() => setUploadMessage(""), 4000);
                 setLoading(false);
             })
             .catch(() => {
                 clearTimeout(timeout);
-                setJobDescription('Job: ' + file.name);
+                const fallbackContent = `PDF File: ${file.name}\n\nNote: Please copy and paste the job description content in the text area below for better analysis.`;
+                setJobDescription(fallbackContent);
                 setJobUploaded(true);
-                setUploadMessage("✅ Job Description Uploaded Successfully!");
-                setTimeout(() => setUploadMessage(""), 3000);
+                setUploadMessage("📄 Job PDF uploaded! Please paste content below.");
+                setTimeout(() => setUploadMessage(""), 4000);
                 setLoading(false);
             });
+        } else if (file.type === "text/plain" || file.name.toLowerCase().endsWith('.txt')) {
+            // Handle text files
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const content = e.target?.result as string;
+                setJobDescription(content || `Text File: ${file.name}`);
+                setJobUploaded(true);
+                setUploadMessage("✅ Job description uploaded successfully!");
+                setTimeout(() => setUploadMessage(""), 3000);
+                setLoading(false);
+            };
+            reader.readAsText(file);
         } else {
-            setJobDescription('Job: ' + file.name);
+            // Handle other file types
+            const fallbackContent = `File: ${file.name}\n\nNote: Please copy and paste the job description content in the text area below for analysis.`;
+            setJobDescription(fallbackContent);
             setJobUploaded(true);
-            setUploadMessage("✅ Job Description Uploaded Successfully!");
-            setTimeout(() => setUploadMessage(""), 3000);
+            setUploadMessage("📄 File uploaded! Please paste content below for analysis.");
+            setTimeout(() => setUploadMessage(""), 4000);
             setLoading(false);
         }
         
@@ -194,73 +244,111 @@ export function ResumeMatcher() {
                 const jobContent = (jobDescription || '').toLowerCase();
                 
                 console.log("Searching for skills in resume content...");
+                console.log("Resume content:", resumeContent.substring(0, 200));
+                console.log("Job content:", jobContent.substring(0, 200));
                 
-                const allSkills = ['c++', 'c#', 'c', 'java', 'python', 'javascript', 'typescript', 'react', 'node.js', 'nodejs', 'sql', 'html', 'css', 'git', 'aws', 'docker', 'mongodb', 'express', 'angular', 'vue', 'php', 'ruby', 'go', 'kotlin', 'swift', 'django', 'flask', 'spring', 'mysql', 'postgresql', 'redis', 'kubernetes', 'bootstrap', 'tailwind', 'figma', 'photoshop', 'illustrator', 'linux', 'windows', 'android', 'ios', 'flutter', 'dart', 'rust', 'scala', 'perl', 'matlab', 'r', 'assembly', 'objective-c', 'tensorflow', 'pytorch', 'opencv', 'pandas', 'numpy', 'scipy', 'sklearn', 'keras', 'reactjs', 'vuejs', 'angularjs', 'nextjs', 'nuxtjs', 'laravel', 'codeigniter', 'symfony', 'rails', 'sinatra', 'fastapi', 'tornado', 'aiohttp', 'graphql', 'rest', 'api', 'microservices', 'devops', 'ci/cd', 'jenkins', 'gitlab', 'github', 'bitbucket', 'jira', 'confluence', 'slack', 'teams', 'zoom', 'webrtc', 'websocket', 'ajax', 'json', 'xml', 'yaml', 'toml', 'csv', 'excel', 'powerbi', 'tableau', 'qlik', 'looker', 'grafana', 'kibana', 'elasticsearch', 'solr', 'lucene', 'spark', 'hadoop', 'kafka', 'rabbitmq', 'celery', 'memcached', 'nginx', 'apache', 'tomcat', 'iis', 'cloudflare', 'cdn', 'ssl', 'https', 'oauth', 'jwt', 'saml', 'ldap', 'active directory', 'firebase', 'supabase', 'amplify', 'vercel', 'netlify', 'heroku', 'digitalocean', 'linode', 'vultr', 'gcp', 'azure', 'ibm cloud', 'oracle cloud', 'machine learning', 'artificial intelligence', 'deep learning', 'neural networks', 'computer vision', 'natural language processing', 'data science', 'big data', 'blockchain', 'cryptocurrency', 'web development', 'mobile development', 'game development', 'embedded systems', 'iot', 'robotics', 'cybersecurity', 'penetration testing', 'ethical hacking', 'network security', 'information security'];
+                // Comprehensive skill list with mobile-friendly detection
+                const allSkills = [
+                    // Programming Languages
+                    'javascript', 'python', 'java', 'c++', 'c#', 'c', 'typescript', 'php', 'ruby', 'go', 'kotlin', 'swift', 'rust', 'scala', 'dart', 'perl', 'matlab', 'r', 'assembly', 'objective-c', 'vb.net', 'cobol', 'fortran', 'haskell', 'clojure', 'erlang', 'elixir', 'lua', 'shell', 'bash', 'powershell',
+                    
+                    // Web Technologies
+                    'html', 'css', 'react', 'angular', 'vue', 'node.js', 'nodejs', 'express', 'django', 'flask', 'spring', 'laravel', 'codeigniter', 'symfony', 'rails', 'sinatra', 'fastapi', 'tornado', 'aiohttp', 'nextjs', 'nuxtjs', 'gatsby', 'svelte', 'ember', 'backbone', 'jquery', 'bootstrap', 'tailwind', 'sass', 'less', 'webpack', 'vite', 'parcel', 'rollup',
+                    
+                    // Databases
+                    'sql', 'mysql', 'postgresql', 'mongodb', 'redis', 'sqlite', 'oracle', 'mssql', 'cassandra', 'dynamodb', 'elasticsearch', 'solr', 'lucene', 'neo4j', 'couchdb', 'firebase', 'supabase',
+                    
+                    // Cloud & DevOps
+                    'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'jenkins', 'gitlab', 'github', 'bitbucket', 'terraform', 'ansible', 'chef', 'puppet', 'vagrant', 'ci/cd', 'devops', 'nginx', 'apache', 'tomcat', 'iis', 'cloudflare', 'heroku', 'vercel', 'netlify', 'digitalocean', 'linode', 'vultr',
+                    
+                    // Mobile Development
+                    'android', 'ios', 'flutter', 'react native', 'xamarin', 'ionic', 'cordova', 'phonegap', 'unity', 'unreal engine',
+                    
+                    // Data Science & AI
+                    'machine learning', 'artificial intelligence', 'deep learning', 'neural networks', 'computer vision', 'natural language processing', 'data science', 'big data', 'tensorflow', 'pytorch', 'opencv', 'pandas', 'numpy', 'scipy', 'sklearn', 'keras', 'spark', 'hadoop', 'kafka', 'tableau', 'powerbi', 'qlik', 'looker', 'grafana', 'kibana',
+                    
+                    // Other Technologies
+                    'git', 'graphql', 'rest', 'api', 'microservices', 'blockchain', 'cryptocurrency', 'websocket', 'ajax', 'json', 'xml', 'yaml', 'toml', 'csv', 'ssl', 'https', 'oauth', 'jwt', 'saml', 'ldap', 'active directory', 'linux', 'windows', 'macos', 'ubuntu', 'centos', 'debian', 'figma', 'photoshop', 'illustrator', 'sketch', 'adobe xd', 'jira', 'confluence', 'slack', 'teams', 'zoom', 'trello', 'asana', 'notion'
+                ];
                 
-                // Find ALL skills in resume (comprehensive search)
-                const resumeSkills = allSkills.filter(skill => {
-                    const skillVariants = [
-                        skill, 
-                        skill.replace('.', ''), 
-                        skill.replace('#', 'sharp'), 
-                        skill.replace('++', 'plus'), 
-                        skill.replace('/', ''), 
-                        skill.replace(' ', ''),
-                        skill.replace('-', ''),
-                        skill.toUpperCase(),
-                        skill.charAt(0).toUpperCase() + skill.slice(1)
-                    ];
-                    const found = skillVariants.some(variant => resumeContent.includes(variant));
-                    if (found) {
-                        console.log(`Found skill: ${skill}`);
-                    }
-                    return found;
-                });
+                // Enhanced skill detection with better mobile support
+                const findSkillsInText = (text: string) => {
+                    return allSkills.filter(skill => {
+                        const skillVariants = [
+                            skill.toLowerCase(),
+                            skill.replace('.', '').toLowerCase(),
+                            skill.replace('#', 'sharp').toLowerCase(),
+                            skill.replace('++', 'plus').toLowerCase(),
+                            skill.replace('/', '').toLowerCase(),
+                            skill.replace(' ', '').toLowerCase(),
+                            skill.replace('-', '').toLowerCase(),
+                            skill.toUpperCase(),
+                            skill.charAt(0).toUpperCase() + skill.slice(1).toLowerCase(),
+                            // Additional variants for better detection
+                            skill.replace('js', 'javascript').toLowerCase(),
+                            skill.replace('ts', 'typescript').toLowerCase(),
+                            skill.replace('py', 'python').toLowerCase()
+                        ];
+                        
+                        const found = skillVariants.some(variant => {
+                            // Use word boundaries for better matching
+                            const regex = new RegExp(`\\b${variant.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+                            return regex.test(text) || text.includes(variant);
+                        });
+                        
+                        if (found) {
+                            console.log(`Found skill: ${skill} in text`);
+                        }
+                        return found;
+                    });
+                };
                 
-                console.log(`Total skills found in resume: ${resumeSkills.length}`);
-                console.log('Resume skills:', resumeSkills);
+                // Find skills in both resume and job description
+                const resumeSkills = findSkillsInText(resumeContent);
+                const jobSkills = findSkillsInText(jobContent);
                 
-                // Find skills required in job description
-                const jobSkills = allSkills.filter(skill => {
-                    const skillVariants = [
-                        skill, 
-                        skill.replace('.', ''), 
-                        skill.replace('#', 'sharp'), 
-                        skill.replace('++', 'plus'), 
-                        skill.replace('/', ''), 
-                        skill.replace(' ', ''),
-                        skill.replace('-', ''),
-                        skill.toUpperCase(),
-                        skill.charAt(0).toUpperCase() + skill.slice(1)
-                    ];
-                    return skillVariants.some(variant => jobContent.includes(variant));
-                });
+                console.log(`Resume skills found: ${resumeSkills.length}`, resumeSkills);
+                console.log(`Job skills found: ${jobSkills.length}`, jobSkills);
                 
-                console.log(`Total skills found in job: ${jobSkills.length}`);
-                console.log('Job skills:', jobSkills);
+                // Combine and prioritize skills
+                let combinedSkills = [...new Set([...resumeSkills, ...jobSkills])];
                 
-                // Combine ALL unique skills (prioritize resume skills, then add job skills)
-                const combinedSkills = [...new Set([...resumeSkills, ...jobSkills])];
-                
-                console.log(`Combined skills: ${combinedSkills.length}`);
-                console.log('All skills for testing:', combinedSkills);
-                
-                // If no skills found, add basic fallbacks
+                // If still no skills found, use intelligent fallbacks based on content
                 if (combinedSkills.length === 0) {
-                    console.log('No skills found, adding fallbacks');
-                    if (resumeContent.includes('c++') || resumeContent.includes('cpp') || jobContent.includes('c++')) {
-                        combinedSkills.push('C++');
+                    console.log('No skills detected, using intelligent fallbacks');
+                    const contentToAnalyze = (resumeContent + ' ' + jobContent).toLowerCase();
+                    
+                    // Check for common programming terms
+                    const fallbackSkills = [];
+                    if (contentToAnalyze.includes('program') || contentToAnalyze.includes('develop') || contentToAnalyze.includes('code')) {
+                        fallbackSkills.push('Programming', 'Problem Solving');
                     }
-                    if (resumeContent.includes('java') || jobContent.includes('java')) {
-                        combinedSkills.push('Java');
+                    if (contentToAnalyze.includes('web') || contentToAnalyze.includes('website') || contentToAnalyze.includes('frontend') || contentToAnalyze.includes('backend')) {
+                        fallbackSkills.push('HTML', 'CSS', 'JavaScript');
                     }
-                    if (combinedSkills.length === 0) {
-                        combinedSkills.push('Programming', 'Problem Solving');
+                    if (contentToAnalyze.includes('data') || contentToAnalyze.includes('analysis') || contentToAnalyze.includes('analytics')) {
+                        fallbackSkills.push('SQL', 'Python', 'Data Analysis');
                     }
+                    if (contentToAnalyze.includes('mobile') || contentToAnalyze.includes('app') || contentToAnalyze.includes('android') || contentToAnalyze.includes('ios')) {
+                        fallbackSkills.push('Mobile Development', 'Java', 'Swift');
+                    }
+                    if (contentToAnalyze.includes('cloud') || contentToAnalyze.includes('aws') || contentToAnalyze.includes('azure')) {
+                        fallbackSkills.push('Cloud Computing', 'AWS', 'DevOps');
+                    }
+                    
+                    // If still nothing, add basic tech skills
+                    if (fallbackSkills.length === 0) {
+                        fallbackSkills.push('HTML', 'CSS', 'JavaScript', 'Python', 'SQL', 'Git', 'Problem Solving', 'Communication', 'Teamwork');
+                    }
+                    
+                    combinedSkills = fallbackSkills;
                 }
                 
-                // Return ALL skills found (not limited)
-                const finalSkills = combinedSkills.map(s => s.charAt(0).toUpperCase() + s.slice(1));
+                // Ensure we have a good variety of skills (limit to 15 for mobile performance)
+                const finalSkills = combinedSkills
+                    .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+                    .slice(0, 15);
+                    
                 console.log('Final skills for assessment:', finalSkills);
                 skillsData = { skills: finalSkills };
             }
@@ -842,9 +930,10 @@ export function ResumeMatcher() {
                                             setResume(e.target.value);
                                             if (e.target.value.trim()) setResumeUploaded(true);
                                         }}
-                                        placeholder="Or paste your resume content here..."
+                                        placeholder="Paste your resume content here for better skill analysis...\n\nInclude: Skills, Experience, Education, Projects, Technologies used, etc."
                                         rows={8}
-                                        className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none text-sm"
+                                        className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none text-sm leading-relaxed"
+                                        style={{ minHeight: '200px', fontSize: '14px', lineHeight: '1.5' }}
                                     />
                                 </div>
 
@@ -887,10 +976,14 @@ export function ResumeMatcher() {
                                     </div>
                                     <textarea
                                         value={jobDescription}
-                                        onChange={(e) => setJobDescription(e.target.value)}
-                                        placeholder="Or paste the job description here..."
+                                        onChange={(e) => {
+                                            setJobDescription(e.target.value);
+                                            if (e.target.value.trim()) setJobUploaded(true);
+                                        }}
+                                        placeholder="Paste the job description here...\n\nInclude: Required skills, responsibilities, qualifications, preferred technologies, etc."
                                         rows={8}
-                                        className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 text-zinc-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 resize-none"
+                                        className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 text-zinc-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 resize-none text-sm leading-relaxed"
+                                        style={{ minHeight: '200px', fontSize: '14px', lineHeight: '1.5' }}
                                     />
                                 </div>
                             </div>
