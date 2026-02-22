@@ -8,104 +8,114 @@ export async function POST(req: NextRequest) {
     try {
         const contentType = req.headers.get('content-type');
         
-        // Handle JSON requests
         if (contentType?.includes('application/json')) {
             const { text } = await req.json();
-            return NextResponse.json({ text: text || 'Text content loaded' });
+            return NextResponse.json({ text: text || 'Text content loaded', success: true });
         }
         
-        // Handle file uploads
         const formData = await req.formData();
         const file = formData.get('file') as File;
         
         if (!file) {
             return NextResponse.json({ 
                 text: 'No file provided',
-                error: 'File is required' 
+                success: false
             }, { status: 400 });
         }
 
         console.log('Processing file:', file.name, 'Type:', file.type, 'Size:', file.size);
         
-        // Convert file to buffer
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
         
-        // Handle PDF files
         if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
             try {
+                // Import pdf-parse dynamically for better compatibility
                 const pdfParse = (await import('pdf-parse')).default;
+                
+                // Parse PDF with mobile-friendly options
                 const data = await pdfParse(buffer, {
                     max: 0, // Parse all pages
-                    version: 'default'
+                    version: 'default',
+                    // Add mobile-specific options
+                    normalizeWhitespace: true,
+                    disableCombineTextItems: false
                 });
                 
-                const extractedText = data.text?.trim();
-                console.log('PDF extracted text length:', extractedText?.length || 0);
-                console.log('PDF text sample:', extractedText?.substring(0, 200));
+                let extractedText = data.text?.trim() || '';
                 
-                if (extractedText && extractedText.length > 10) {
+                // Clean up the extracted text
+                extractedText = extractedText
+                    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+                    .replace(/\n\s*\n/g, '\n') // Remove empty lines
+                    .trim();
+                
+                console.log('PDF extraction result:');
+                console.log('- Pages:', data.numpages);
+                console.log('- Text length:', extractedText.length);
+                console.log('- First 200 chars:', extractedText.substring(0, 200));
+                
+                if (extractedText && extractedText.length > 20) {
                     return NextResponse.json({ 
                         text: extractedText,
                         success: true,
-                        pages: data.numpages
+                        pages: data.numpages,
+                        length: extractedText.length
                     });
                 } else {
+                    console.log('PDF parsing returned empty or minimal text');
                     return NextResponse.json({ 
-                        text: `PDF file ${file.name} uploaded but text extraction failed. Please paste content manually.`,
+                        text: `PDF file "${file.name}" was uploaded but appears to be empty or contains only images. Please paste your resume content manually.`,
                         success: false,
-                        error: 'No text extracted from PDF'
+                        error: 'Empty PDF or image-only PDF'
                     });
                 }
             } catch (pdfError) {
                 console.error('PDF parsing error:', pdfError);
                 return NextResponse.json({ 
-                    text: `PDF file ${file.name} uploaded but parsing failed. Please paste content manually.`,
+                    text: `PDF file "${file.name}" could not be processed. Please paste your resume content manually.`,
                     success: false,
-                    error: 'PDF parsing failed'
+                    error: 'PDF parsing failed: ' + (pdfError as Error).message
                 });
             }
         } 
-        // Handle text files
         else if (file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt')) {
             try {
-                const text = new TextDecoder('utf-8').decode(arrayBuffer);
-                console.log('Text file content length:', text.length);
+                const text = new TextDecoder('utf-8').decode(arrayBuffer).trim();
+                console.log('Text file processed, length:', text.length);
                 
-                if (text && text.trim().length > 0) {
+                if (text && text.length > 0) {
                     return NextResponse.json({ 
-                        text: text.trim(),
+                        text: text,
                         success: true
                     });
                 } else {
                     return NextResponse.json({ 
-                        text: `Text file ${file.name} is empty. Please paste content manually.`,
+                        text: `Text file "${file.name}" is empty.`,
                         success: false
                     });
                 }
             } catch (textError) {
-                console.error('Text file parsing error:', textError);
+                console.error('Text file error:', textError);
                 return NextResponse.json({ 
-                    text: `Text file ${file.name} uploaded but parsing failed.`,
+                    text: `Text file "${file.name}" could not be read.`,
                     success: false,
                     error: 'Text parsing failed'
                 });
             }
         } 
-        // Handle other file types
         else {
             return NextResponse.json({ 
-                text: `File ${file.name} uploaded successfully. Please paste the content manually for analysis.`,
+                text: `File "${file.name}" is not a supported format. Please upload a PDF or text file, or paste your content manually.`,
                 success: false,
-                fileType: file.type,
-                message: 'Unsupported file type - manual input required'
+                fileType: file.type
             });
         }
         
     } catch (error) {
         console.error('File upload error:', error);
         return NextResponse.json({ 
-            text: 'File upload failed. Please try again or paste content manually.',
+            text: 'File upload failed. Please try again.',
             success: false,
             error: error instanceof Error ? error.message : 'Unknown error'
         }, { status: 500 });

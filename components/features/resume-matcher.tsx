@@ -56,29 +56,33 @@ export function ResumeMatcher() {
             const data = await response.json();
             console.log('PDF extraction result:', data);
             
-            // Check if we got actual content (not just filename)
-            if (data.success && data.text && data.text.length > 100 && !data.text.includes('Please paste')) {
-                // Successfully extracted meaningful content
+            // Always set the text from API response
+            if (data.text) {
                 setResume(data.text);
                 setResumeUploaded(true);
-                setUploadMessage("✅ PDF content extracted successfully!");
-                console.log('PDF content extracted, length:', data.text.length);
+                
+                if (data.success) {
+                    setUploadMessage("✅ PDF content extracted successfully!");
+                    console.log('PDF extracted successfully, length:', data.text.length);
+                } else {
+                    setUploadMessage("📄 PDF uploaded - please verify content or edit as needed.");
+                    console.log('PDF processed with issues, showing available content');
+                }
             } else {
-                // PDF parsing failed or minimal content - force manual input
-                setResume('');
-                setResumeUploaded(false);
-                setUploadMessage("📄 PDF uploaded! Please paste your resume content in the text area below for analysis.");
-                console.log('PDF extraction failed, requiring manual input');
+                // Fallback if no text at all
+                setResume(`File: ${file.name}\n\nPlease paste your resume content here:`);
+                setResumeUploaded(true);
+                setUploadMessage("📄 PDF uploaded - please paste content for analysis.");
             }
             
         } catch (error) {
             console.error('PDF upload error:', error);
-            setResume('');
-            setResumeUploaded(false);
-            setUploadMessage("⚠️ Upload failed! Please paste your resume content in the text area below.");
+            setResume(`File: ${file.name}\n\nPlease paste your resume content here:`);
+            setResumeUploaded(true);
+            setUploadMessage("⚠️ Upload failed - please paste content for analysis.");
         } finally {
             setLoading(false);
-            setTimeout(() => setUploadMessage(""), 5000);
+            setTimeout(() => setUploadMessage(""), 4000);
             if (event.target) event.target.value = '';
         }
     };
@@ -102,29 +106,33 @@ export function ResumeMatcher() {
             const data = await response.json();
             console.log('Job PDF extraction result:', data);
             
-            // Check if we got actual content (not just filename)
-            if (data.success && data.text && data.text.length > 100 && !data.text.includes('Please paste')) {
-                // Successfully extracted meaningful content
+            // Always set the text from API response
+            if (data.text) {
                 setJobDescription(data.text);
                 setJobUploaded(true);
-                setUploadMessage("✅ Job description extracted successfully!");
-                console.log('Job PDF content extracted, length:', data.text.length);
+                
+                if (data.success) {
+                    setUploadMessage("✅ Job description extracted successfully!");
+                    console.log('Job PDF extracted successfully, length:', data.text.length);
+                } else {
+                    setUploadMessage("📄 PDF uploaded - please verify content or edit as needed.");
+                    console.log('Job PDF processed with issues, showing available content');
+                }
             } else {
-                // PDF parsing failed or minimal content - force manual input
-                setJobDescription('');
-                setJobUploaded(false);
-                setUploadMessage("📄 PDF uploaded! Please paste the job description content in the text area below.");
-                console.log('Job PDF extraction failed, requiring manual input');
+                // Fallback if no text at all
+                setJobDescription(`File: ${file.name}\n\nPlease paste job description content here:`);
+                setJobUploaded(true);
+                setUploadMessage("📄 PDF uploaded - please paste content for analysis.");
             }
             
         } catch (error) {
             console.error('Job PDF upload error:', error);
-            setJobDescription('');
-            setJobUploaded(false);
-            setUploadMessage("⚠️ Upload failed! Please paste the job description content in the text area below.");
+            setJobDescription(`File: ${file.name}\n\nPlease paste job description content here:`);
+            setJobUploaded(true);
+            setUploadMessage("⚠️ Upload failed - please paste content for analysis.");
         } finally {
             setLoading(false);
-            setTimeout(() => setUploadMessage(""), 5000);
+            setTimeout(() => setUploadMessage(""), 4000);
             if (event.target) event.target.value = '';
         }
     };
