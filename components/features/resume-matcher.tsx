@@ -42,74 +42,52 @@ export function ResumeMatcher() {
         if (!file) return;
 
         setLoading(true);
+        setUploadMessage("📄 Processing resume...");
         
-        // Handle different file types
-        if (file.type === "application/pdf" || file.name.toLowerCase().endsWith('.pdf')) {
-            // Try PDF parsing with better mobile fallback
+        try {
             const formData = new FormData();
             formData.append('file', file);
             
-            const timeout = setTimeout(() => {
-                // Mobile fallback - show file name and prompt user to paste content
-                const fallbackContent = `PDF File: ${file.name}\n\nNote: Please copy and paste your resume content in the text area below for better analysis.`;
-                setResume(fallbackContent);
-                setResumeUploaded(true);
-                setUploadMessage("📄 PDF uploaded! Please paste content below for better analysis.");
-                setTimeout(() => setUploadMessage(""), 5000);
-                setLoading(false);
-            }, 2000); // Shorter timeout for mobile
-            
-            fetch('/api/parse-pdf', {
+            const response = await fetch('/api/parse-pdf', {
                 method: 'POST',
                 body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                clearTimeout(timeout);
-                if (data.text && data.text.length > 50) {
-                    setResume(data.text);
-                    setUploadMessage("✅ Resume content extracted successfully!");
-                } else {
-                    const fallbackContent = `PDF File: ${file.name}\n\nNote: Please copy and paste your resume content in the text area below for better analysis.`;
-                    setResume(fallbackContent);
-                    setUploadMessage("📄 PDF uploaded! Please paste content below for analysis.");
-                }
-                setResumeUploaded(true);
-                setTimeout(() => setUploadMessage(""), 4000);
-                setLoading(false);
-            })
-            .catch(() => {
-                clearTimeout(timeout);
-                const fallbackContent = `PDF File: ${file.name}\n\nNote: Please copy and paste your resume content in the text area below for better analysis.`;
-                setResume(fallbackContent);
-                setResumeUploaded(true);
-                setUploadMessage("📄 PDF uploaded! Please paste content below for analysis.");
-                setTimeout(() => setUploadMessage(""), 4000);
-                setLoading(false);
             });
-        } else if (file.type === "text/plain" || file.name.toLowerCase().endsWith('.txt')) {
-            // Handle text files
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const content = e.target?.result as string;
-                setResume(content || `Text File: ${file.name}`);
+            
+            const data = await response.json();
+            console.log('Upload response:', data);
+            
+            if (data.success && data.text && data.text.length > 50) {
+                // Successfully extracted content
+                setResume(data.text);
                 setResumeUploaded(true);
-                setUploadMessage("✅ Text file uploaded successfully!");
-                setTimeout(() => setUploadMessage(""), 3000);
-                setLoading(false);
-            };
-            reader.readAsText(file);
-        } else {
-            // Handle other file types
-            const fallbackContent = `File: ${file.name}\n\nNote: Please copy and paste your resume content in the text area below for analysis.`;
-            setResume(fallbackContent);
+                setUploadMessage("✅ Resume content extracted successfully!");
+                console.log('Resume extracted successfully, length:', data.text.length);
+            } else if (data.text) {
+                // File uploaded but extraction failed or minimal content
+                setResume(data.text);
+                setResumeUploaded(true);
+                if (data.success === false) {
+                    setUploadMessage("📄 File uploaded! Please paste content below for better analysis.");
+                } else {
+                    setUploadMessage("✅ File processed successfully!");
+                }
+            } else {
+                // Fallback
+                setResume(`File: ${file.name}\n\nPlease paste your resume content below:`);
+                setResumeUploaded(true);
+                setUploadMessage("📄 File uploaded! Please paste content below.");
+            }
+            
+        } catch (error) {
+            console.error('Upload error:', error);
+            setResume(`File: ${file.name}\n\nPlease paste your resume content below:`);
             setResumeUploaded(true);
-            setUploadMessage("📄 File uploaded! Please paste content below for analysis.");
-            setTimeout(() => setUploadMessage(""), 4000);
+            setUploadMessage("⚠️ Upload failed! Please paste content below.");
+        } finally {
             setLoading(false);
+            setTimeout(() => setUploadMessage(""), 4000);
+            if (event.target) event.target.value = '';
         }
-        
-        if (event.target) event.target.value = '';
     };
 
     const handleJobUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -117,74 +95,52 @@ export function ResumeMatcher() {
         if (!file) return;
 
         setLoading(true);
+        setUploadMessage("📄 Processing job description...");
         
-        // Handle different file types for job description
-        if (file.type === "application/pdf" || file.name.toLowerCase().endsWith('.pdf')) {
-            // Try PDF parsing with better mobile fallback
+        try {
             const formData = new FormData();
             formData.append('file', file);
             
-            const timeout = setTimeout(() => {
-                // Mobile fallback - show file name and prompt user to paste content
-                const fallbackContent = `PDF File: ${file.name}\n\nNote: Please copy and paste the job description content in the text area below for better analysis.`;
-                setJobDescription(fallbackContent);
-                setJobUploaded(true);
-                setUploadMessage("📄 Job PDF uploaded! Please paste content below for analysis.");
-                setTimeout(() => setUploadMessage(""), 5000);
-                setLoading(false);
-            }, 2000); // Shorter timeout for mobile
-            
-            fetch('/api/parse-pdf', {
+            const response = await fetch('/api/parse-pdf', {
                 method: 'POST',
                 body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                clearTimeout(timeout);
-                if (data.text && data.text.length > 50) {
-                    setJobDescription(data.text);
-                    setUploadMessage("✅ Job description extracted successfully!");
-                } else {
-                    const fallbackContent = `PDF File: ${file.name}\n\nNote: Please copy and paste the job description content in the text area below for better analysis.`;
-                    setJobDescription(fallbackContent);
-                    setUploadMessage("📄 Job PDF uploaded! Please paste content below.");
-                }
-                setJobUploaded(true);
-                setTimeout(() => setUploadMessage(""), 4000);
-                setLoading(false);
-            })
-            .catch(() => {
-                clearTimeout(timeout);
-                const fallbackContent = `PDF File: ${file.name}\n\nNote: Please copy and paste the job description content in the text area below for better analysis.`;
-                setJobDescription(fallbackContent);
-                setJobUploaded(true);
-                setUploadMessage("📄 Job PDF uploaded! Please paste content below.");
-                setTimeout(() => setUploadMessage(""), 4000);
-                setLoading(false);
             });
-        } else if (file.type === "text/plain" || file.name.toLowerCase().endsWith('.txt')) {
-            // Handle text files
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const content = e.target?.result as string;
-                setJobDescription(content || `Text File: ${file.name}`);
+            
+            const data = await response.json();
+            console.log('Job upload response:', data);
+            
+            if (data.success && data.text && data.text.length > 50) {
+                // Successfully extracted content
+                setJobDescription(data.text);
                 setJobUploaded(true);
-                setUploadMessage("✅ Job description uploaded successfully!");
-                setTimeout(() => setUploadMessage(""), 3000);
-                setLoading(false);
-            };
-            reader.readAsText(file);
-        } else {
-            // Handle other file types
-            const fallbackContent = `File: ${file.name}\n\nNote: Please copy and paste the job description content in the text area below for analysis.`;
-            setJobDescription(fallbackContent);
+                setUploadMessage("✅ Job description extracted successfully!");
+                console.log('Job description extracted successfully, length:', data.text.length);
+            } else if (data.text) {
+                // File uploaded but extraction failed or minimal content
+                setJobDescription(data.text);
+                setJobUploaded(true);
+                if (data.success === false) {
+                    setUploadMessage("📄 File uploaded! Please paste content below for better analysis.");
+                } else {
+                    setUploadMessage("✅ File processed successfully!");
+                }
+            } else {
+                // Fallback
+                setJobDescription(`File: ${file.name}\n\nPlease paste job description content below:`);
+                setJobUploaded(true);
+                setUploadMessage("📄 File uploaded! Please paste content below.");
+            }
+            
+        } catch (error) {
+            console.error('Job upload error:', error);
+            setJobDescription(`File: ${file.name}\n\nPlease paste job description content below:`);
             setJobUploaded(true);
-            setUploadMessage("📄 File uploaded! Please paste content below for analysis.");
-            setTimeout(() => setUploadMessage(""), 4000);
+            setUploadMessage("⚠️ Upload failed! Please paste content below.");
+        } finally {
             setLoading(false);
+            setTimeout(() => setUploadMessage(""), 4000);
+            if (event.target) event.target.value = '';
         }
-        
-        if (event.target) event.target.value = '';
     };
 
     const analyzeMatch = async () => {
@@ -235,122 +191,81 @@ export function ResumeMatcher() {
                 }
                 skillsData = JSON.parse(jsonStr);
             } catch (parseError) {
-                console.log("JSON parse failed, extracting skills manually");
-                console.log("Resume content length:", resume.length);
-                console.log("Resume content sample:", resume.substring(0, 300));
+                console.log("JSON parse failed, using enhanced skill extraction");
                 
-                // Extract skills from actual resume content
+                // Enhanced skill extraction from actual content
                 const resumeContent = (resume || '').toLowerCase();
                 const jobContent = (jobDescription || '').toLowerCase();
+                const combinedContent = resumeContent + ' ' + jobContent;
                 
-                console.log("Searching for skills in resume content...");
-                console.log("Resume content:", resumeContent.substring(0, 200));
-                console.log("Job content:", jobContent.substring(0, 200));
+                console.log("Analyzing content for skills...");
+                console.log("Content sample:", combinedContent.substring(0, 300));
                 
-                // Comprehensive skill list with mobile-friendly detection
-                const allSkills = [
-                    // Programming Languages
-                    'javascript', 'python', 'java', 'c++', 'c#', 'c', 'typescript', 'php', 'ruby', 'go', 'kotlin', 'swift', 'rust', 'scala', 'dart', 'perl', 'matlab', 'r', 'assembly', 'objective-c', 'vb.net', 'cobol', 'fortran', 'haskell', 'clojure', 'erlang', 'elixir', 'lua', 'shell', 'bash', 'powershell',
-                    
-                    // Web Technologies
-                    'html', 'css', 'react', 'angular', 'vue', 'node.js', 'nodejs', 'express', 'django', 'flask', 'spring', 'laravel', 'codeigniter', 'symfony', 'rails', 'sinatra', 'fastapi', 'tornado', 'aiohttp', 'nextjs', 'nuxtjs', 'gatsby', 'svelte', 'ember', 'backbone', 'jquery', 'bootstrap', 'tailwind', 'sass', 'less', 'webpack', 'vite', 'parcel', 'rollup',
-                    
-                    // Databases
-                    'sql', 'mysql', 'postgresql', 'mongodb', 'redis', 'sqlite', 'oracle', 'mssql', 'cassandra', 'dynamodb', 'elasticsearch', 'solr', 'lucene', 'neo4j', 'couchdb', 'firebase', 'supabase',
-                    
-                    // Cloud & DevOps
-                    'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'jenkins', 'gitlab', 'github', 'bitbucket', 'terraform', 'ansible', 'chef', 'puppet', 'vagrant', 'ci/cd', 'devops', 'nginx', 'apache', 'tomcat', 'iis', 'cloudflare', 'heroku', 'vercel', 'netlify', 'digitalocean', 'linode', 'vultr',
-                    
-                    // Mobile Development
-                    'android', 'ios', 'flutter', 'react native', 'xamarin', 'ionic', 'cordova', 'phonegap', 'unity', 'unreal engine',
-                    
-                    // Data Science & AI
-                    'machine learning', 'artificial intelligence', 'deep learning', 'neural networks', 'computer vision', 'natural language processing', 'data science', 'big data', 'tensorflow', 'pytorch', 'opencv', 'pandas', 'numpy', 'scipy', 'sklearn', 'keras', 'spark', 'hadoop', 'kafka', 'tableau', 'powerbi', 'qlik', 'looker', 'grafana', 'kibana',
-                    
-                    // Other Technologies
-                    'git', 'graphql', 'rest', 'api', 'microservices', 'blockchain', 'cryptocurrency', 'websocket', 'ajax', 'json', 'xml', 'yaml', 'toml', 'csv', 'ssl', 'https', 'oauth', 'jwt', 'saml', 'ldap', 'active directory', 'linux', 'windows', 'macos', 'ubuntu', 'centos', 'debian', 'figma', 'photoshop', 'illustrator', 'sketch', 'adobe xd', 'jira', 'confluence', 'slack', 'teams', 'zoom', 'trello', 'asana', 'notion'
-                ];
-                
-                // Enhanced skill detection with better mobile support
-                const findSkillsInText = (text: string) => {
-                    return allSkills.filter(skill => {
-                        const skillVariants = [
-                            skill.toLowerCase(),
-                            skill.replace('.', '').toLowerCase(),
-                            skill.replace('#', 'sharp').toLowerCase(),
-                            skill.replace('++', 'plus').toLowerCase(),
-                            skill.replace('/', '').toLowerCase(),
-                            skill.replace(' ', '').toLowerCase(),
-                            skill.replace('-', '').toLowerCase(),
-                            skill.toUpperCase(),
-                            skill.charAt(0).toUpperCase() + skill.slice(1).toLowerCase(),
-                            // Additional variants for better detection
-                            skill.replace('js', 'javascript').toLowerCase(),
-                            skill.replace('ts', 'typescript').toLowerCase(),
-                            skill.replace('py', 'python').toLowerCase()
-                        ];
-                        
-                        const found = skillVariants.some(variant => {
-                            // Use word boundaries for better matching
-                            const regex = new RegExp(`\\b${variant.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-                            return regex.test(text) || text.includes(variant);
-                        });
-                        
-                        if (found) {
-                            console.log(`Found skill: ${skill} in text`);
-                        }
-                        return found;
-                    });
+                // Comprehensive skill categories
+                const skillCategories = {
+                    programming: ['javascript', 'python', 'java', 'c++', 'c#', 'typescript', 'php', 'ruby', 'go', 'kotlin', 'swift', 'rust', 'scala', 'dart', 'c'],
+                    web: ['html', 'css', 'react', 'angular', 'vue', 'node.js', 'nodejs', 'express', 'django', 'flask', 'spring', 'laravel', 'nextjs', 'bootstrap', 'tailwind'],
+                    database: ['sql', 'mysql', 'postgresql', 'mongodb', 'redis', 'sqlite', 'oracle', 'firebase'],
+                    cloud: ['aws', 'azure', 'gcp', 'docker', 'kubernetes', 'jenkins', 'terraform', 'heroku'],
+                    mobile: ['android', 'ios', 'flutter', 'react native', 'xamarin', 'ionic'],
+                    data: ['machine learning', 'ai', 'data science', 'tensorflow', 'pytorch', 'pandas', 'numpy'],
+                    tools: ['git', 'github', 'jira', 'figma', 'photoshop', 'linux', 'windows']
                 };
                 
-                // Find skills in both resume and job description
-                const resumeSkills = findSkillsInText(resumeContent);
-                const jobSkills = findSkillsInText(jobContent);
+                const detectedSkills = [];
                 
-                console.log(`Resume skills found: ${resumeSkills.length}`, resumeSkills);
-                console.log(`Job skills found: ${jobSkills.length}`, jobSkills);
-                
-                // Combine and prioritize skills
-                let combinedSkills = [...new Set([...resumeSkills, ...jobSkills])];
-                
-                // If still no skills found, use intelligent fallbacks based on content
-                if (combinedSkills.length === 0) {
-                    console.log('No skills detected, using intelligent fallbacks');
-                    const contentToAnalyze = (resumeContent + ' ' + jobContent).toLowerCase();
-                    
-                    // Check for common programming terms
-                    const fallbackSkills = [];
-                    if (contentToAnalyze.includes('program') || contentToAnalyze.includes('develop') || contentToAnalyze.includes('code')) {
-                        fallbackSkills.push('Programming', 'Problem Solving');
+                // Smart skill detection with multiple variants
+                for (const [category, skills] of Object.entries(skillCategories)) {
+                    for (const skill of skills) {
+                        const variants = [
+                            skill,
+                            skill.replace('.', ''),
+                            skill.replace('#', 'sharp'),
+                            skill.replace('++', 'plus'),
+                            skill.replace(' ', ''),
+                            skill.replace('-', ''),
+                            skill.toUpperCase(),
+                            skill.charAt(0).toUpperCase() + skill.slice(1)
+                        ];
+                        
+                        const found = variants.some(variant => {
+                            const regex = new RegExp(`\\b${variant.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+                            return regex.test(combinedContent) || combinedContent.includes(variant.toLowerCase());
+                        });
+                        
+                        if (found && !detectedSkills.includes(skill.charAt(0).toUpperCase() + skill.slice(1))) {
+                            detectedSkills.push(skill.charAt(0).toUpperCase() + skill.slice(1));
+                            console.log(`✓ Found skill: ${skill}`);
+                        }
                     }
-                    if (contentToAnalyze.includes('web') || contentToAnalyze.includes('website') || contentToAnalyze.includes('frontend') || contentToAnalyze.includes('backend')) {
-                        fallbackSkills.push('HTML', 'CSS', 'JavaScript');
-                    }
-                    if (contentToAnalyze.includes('data') || contentToAnalyze.includes('analysis') || contentToAnalyze.includes('analytics')) {
-                        fallbackSkills.push('SQL', 'Python', 'Data Analysis');
-                    }
-                    if (contentToAnalyze.includes('mobile') || contentToAnalyze.includes('app') || contentToAnalyze.includes('android') || contentToAnalyze.includes('ios')) {
-                        fallbackSkills.push('Mobile Development', 'Java', 'Swift');
-                    }
-                    if (contentToAnalyze.includes('cloud') || contentToAnalyze.includes('aws') || contentToAnalyze.includes('azure')) {
-                        fallbackSkills.push('Cloud Computing', 'AWS', 'DevOps');
-                    }
-                    
-                    // If still nothing, add basic tech skills
-                    if (fallbackSkills.length === 0) {
-                        fallbackSkills.push('HTML', 'CSS', 'JavaScript', 'Python', 'SQL', 'Git', 'Problem Solving', 'Communication', 'Teamwork');
-                    }
-                    
-                    combinedSkills = fallbackSkills;
                 }
                 
-                // Ensure we have a good variety of skills (limit to 15 for mobile performance)
-                const finalSkills = combinedSkills
-                    .map(s => s.charAt(0).toUpperCase() + s.slice(1))
-                    .slice(0, 15);
-                    
-                console.log('Final skills for assessment:', finalSkills);
-                skillsData = { skills: finalSkills };
+                // Add context-based skills if content suggests them
+                if (combinedContent.includes('develop') || combinedContent.includes('program') || combinedContent.includes('code')) {
+                    ['JavaScript', 'Python'].forEach(skill => {
+                        if (!detectedSkills.includes(skill)) detectedSkills.push(skill);
+                    });
+                }
+                
+                if (combinedContent.includes('web') || combinedContent.includes('frontend') || combinedContent.includes('ui')) {
+                    ['HTML', 'CSS', 'JavaScript'].forEach(skill => {
+                        if (!detectedSkills.includes(skill)) detectedSkills.push(skill);
+                    });
+                }
+                
+                if (combinedContent.includes('data') || combinedContent.includes('analysis')) {
+                    ['SQL', 'Python', 'Excel'].forEach(skill => {
+                        if (!detectedSkills.includes(skill)) detectedSkills.push(skill);
+                    });
+                }
+                
+                // Ensure minimum skills for testing
+                if (detectedSkills.length === 0) {
+                    detectedSkills.push('HTML', 'CSS', 'JavaScript', 'Python', 'SQL');
+                }
+                
+                console.log(`Final detected skills (${detectedSkills.length}):`, detectedSkills);
+                skillsData = { skills: detectedSkills.slice(0, 10) }; // Limit for performance
             }
             
             // Set up for skill testing phase
