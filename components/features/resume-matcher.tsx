@@ -113,12 +113,12 @@ export function ResumeMatcher() {
         
         try {
             // Extract skills from RESUME for testing
-            const systemPrompt = `Extract ALL technical skills from the content. Return ONLY valid JSON:
+            const systemPrompt = `Extract ONLY technical skills (programming languages, frameworks, databases, tools). Return ONLY valid JSON:
 {
   "skills": ["skill1", "skill2", "skill3"]
 }`;
             
-            const userPrompt = `Extract ALL technical skills, programming languages, frameworks, and tools from this RESUME:\n\n${resume}`;
+            const userPrompt = `Extract ONLY technical skills like programming languages (Python, Java, JavaScript), frameworks (React, Django), databases (MySQL, MongoDB), and tools (Git, Docker) from this RESUME. Do NOT include soft skills, job titles, or company names:\n\n${resume}`;
             
             const response = await fetch("/api/chat", {
                 method: "POST",
@@ -510,8 +510,8 @@ export function ResumeMatcher() {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         messages: [
-                            { role: "system", content: "Extract skills and return JSON: {\"skills\": [\"skill1\"]}" },
-                            { role: "user", content: `Extract ALL technical skills from this job description:\n\n${jobDescription}` }
+                            { role: "system", content: "Extract ONLY technical skills. Return JSON: {\"skills\": [\"skill1\"]}" },
+                            { role: "user", content: `Extract ONLY technical skills (programming languages, frameworks, databases, tools) from this job description. Do NOT include soft skills or job requirements:\n\n${jobDescription}` }
                         ]
                     })
                 });
