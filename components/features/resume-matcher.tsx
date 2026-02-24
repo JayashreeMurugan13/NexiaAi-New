@@ -119,7 +119,8 @@ export function ResumeMatcher() {
             
             let userPrompt = '';
             if (resume.trim() && jobDescription.trim()) {
-                userPrompt = `Extract ONLY the technical skills mentioned in this RESUME (not from job description):\n\nRESUME: ${resume}`;
+                // Extract ALL skills from job description for testing
+                userPrompt = `Extract ALL technical skills required in this JOB DESCRIPTION:\n\nJOB DESCRIPTION: ${jobDescription}`;
             } else if (resume.trim()) {
                 userPrompt = `Extract all technical skills mentioned in this resume: ${resume}`;
             } else {
