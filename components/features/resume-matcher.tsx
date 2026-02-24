@@ -112,18 +112,13 @@ export function ResumeMatcher() {
         console.log('Job description content:', jobDescription.substring(0, 500));
         
         try {
-            // If we have job description, prioritize extracting skills from it
-            const contentToAnalyze = jobDescription.trim() ? jobDescription : resume;
-            const sourceType = jobDescription.trim() ? 'job description' : 'resume';
-            
-            console.log(`Extracting skills from ${sourceType}`);
-            
+            // Extract skills from RESUME for testing
             const systemPrompt = `Extract ALL technical skills from the content. Return ONLY valid JSON:
 {
   "skills": ["skill1", "skill2", "skill3"]
 }`;
             
-            const userPrompt = `Extract ALL technical skills, programming languages, frameworks, and tools from this ${sourceType}:\n\n${contentToAnalyze}`;
+            const userPrompt = `Extract ALL technical skills, programming languages, frameworks, and tools from this RESUME:\n\n${resume}`;
             
             const response = await fetch("/api/chat", {
                 method: "POST",
@@ -148,7 +143,7 @@ export function ResumeMatcher() {
                     jsonStr = jsonStr.split('```')[1].split('```')[0].trim();
                 }
                 skillsData = JSON.parse(jsonStr);
-                console.log('Extracted skills:', skillsData.skills);
+                console.log('Extracted resume skills:', skillsData.skills);
             } catch (parseError) {
                 console.log("JSON parse failed, using enhanced skill extraction");
                 
@@ -506,6 +501,45 @@ export function ResumeMatcher() {
         const missingSkills = skillsToTest.filter(skill => !testResults[skill]);
         const matchPercentage = Math.round((matchedSkills.length / skillsToTest.length) * 100);
         
+        // Extract job description skills for recommendations
+        let jobSkills: string[] = [];
+        if (jobDescription.trim()) {
+            try {
+                const response = await fetch("/api/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        messages: [
+                            { role: "system", content: "Extract skills and return JSON: {\"skills\": [\"skill1\"]}" },
+                            { role: "user", content: `Extract ALL technical skills from this job description:\n\n${jobDescription}` }
+                        ]
+                    })
+                });
+                const data = await response.json();
+                let jsonStr = data.content.trim();
+                if (jsonStr.includes('```json')) {
+                    jsonStr = jsonStr.split('```json')[1].split('```')[0].trim();
+                }
+                const parsed = JSON.parse(jsonStr);
+                jobSkills = parsed.skills || [];
+            } catch (error) {
+                console.log('Could not extract job skills');
+            }
+        }
+        
+        // Find skills in job description that are NOT in resume
+        const resumeSkillsLower = skillsToTest.map(s => s.toLowerCase());
+        const additionalJobSkills = jobSkills.filter(skill => 
+            !resumeSkillsLower.includes(skill.toLowerCase())
+        );
+        
+        // Combine: failed test skills + job skills not in resume
+        const allSkillGaps = [...new Set([...missingSkills, ...additionalJobSkills])];
+        
+        console.log('Failed test skills:', missingSkills);
+        console.log('Additional job skills not in resume:', additionalJobSkills);
+        console.log('All skill gaps:', allSkillGaps);
+        
         try {
             const systemPrompt = `You are an HR expert. Based on resume, job description, and skill test results, provide job-specific recommendations. Respond with JSON:
 {
@@ -619,7 +653,7 @@ export function ResumeMatcher() {
                 missingSkills,
                 matchPercentage,
                 recommendations: [...recommendations, `Job Fitness: ${jobFitness}`, ...nextSteps],
-                skillGaps: missingSkills.map(skill => {
+                skillGaps: allSkillGaps.map(skill => {
                     // Analyze job description for specific requirements
                     const jobLower = jobDescription.toLowerCase();
                     const resumeLower = resume.toLowerCase();
