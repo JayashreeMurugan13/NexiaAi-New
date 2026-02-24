@@ -112,20 +112,18 @@ export function ResumeMatcher() {
         console.log('Job description content:', jobDescription.substring(0, 500));
         
         try {
-            const systemPrompt = `Extract skills from the content and respond ONLY with valid JSON:
+            // If we have job description, prioritize extracting skills from it
+            const contentToAnalyze = jobDescription.trim() ? jobDescription : resume;
+            const sourceType = jobDescription.trim() ? 'job description' : 'resume';
+            
+            console.log(`Extracting skills from ${sourceType}`);
+            
+            const systemPrompt = `Extract ALL technical skills from the content. Return ONLY valid JSON:
 {
   "skills": ["skill1", "skill2", "skill3"]
 }`;
             
-            let userPrompt = '';
-            if (resume.trim() && jobDescription.trim()) {
-                // Extract ALL skills from job description for testing
-                userPrompt = `Extract ALL technical skills required in this JOB DESCRIPTION:\n\nJOB DESCRIPTION: ${jobDescription}`;
-            } else if (resume.trim()) {
-                userPrompt = `Extract all technical skills mentioned in this resume: ${resume}`;
-            } else {
-                userPrompt = `Extract all required skills from this job description: ${jobDescription}`;
-            }
+            const userPrompt = `Extract ALL technical skills, programming languages, frameworks, and tools from this ${sourceType}:\n\n${contentToAnalyze}`;
             
             const response = await fetch("/api/chat", {
                 method: "POST",
@@ -141,7 +139,6 @@ export function ResumeMatcher() {
             const data = await response.json();
             console.log("AI Response:", data.content);
             
-            // Try to parse skills, fallback if fails
             let skillsData;
             try {
                 let jsonStr = data.content.trim();
@@ -151,6 +148,7 @@ export function ResumeMatcher() {
                     jsonStr = jsonStr.split('```')[1].split('```')[0].trim();
                 }
                 skillsData = JSON.parse(jsonStr);
+                console.log('Extracted skills:', skillsData.skills);
             } catch (parseError) {
                 console.log("JSON parse failed, using enhanced skill extraction");
                 
