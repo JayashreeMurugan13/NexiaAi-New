@@ -157,8 +157,9 @@ export function ResumeMatcher() {
                 // Only detect skills that are explicitly mentioned
                 const skillCategories = {
                     programming: ['javascript', 'python', 'java', 'c++', 'c#', 'typescript', 'php', 'c'],
-                    web: ['html', 'css', 'react', 'angular', 'vue', 'node.js', 'nodejs', 'express', 'django', 'flask', 'nextjs'],
-                    database: ['sql', 'mysql', 'postgresql', 'mongodb', 'firebase'],
+                    web: ['html', 'css', 'react', 'angular', 'vue', 'node.js', 'nodejs', 'express', 'django', 'flask', 'nextjs', 'mern'],
+                    database: ['sql', 'mysql', 'postgresql', 'mongodb', 'firebase', 'dbms'],
+                    concepts: ['dsa', 'oops', 'oop', 'data structures', 'algorithms'],
                     cloud: ['aws', 'docker', 'kubernetes'],
                     tools: ['git', 'github']
                 };
@@ -526,6 +527,57 @@ export function ResumeMatcher() {
                             question: "Which clause is used to filter records in SQL?",
                             options: ["A) FILTER", "B) WHERE", "C) HAVING", "D) CONDITION"],
                             correct: 1
+                        }
+                    ],
+                    "DSA": [
+                        {
+                            question: "What is the time complexity of binary search?",
+                            options: ["A) O(n)", "B) O(log n)", "C) O(n²)", "D) O(1)"],
+                            correct: 1
+                        },
+                        {
+                            question: "Which data structure uses LIFO (Last In First Out)?",
+                            options: ["A) Queue", "B) Stack", "C) Array", "D) Tree"],
+                            correct: 1
+                        },
+                        {
+                            question: "What is the best sorting algorithm for large datasets?",
+                            options: ["A) Bubble Sort", "B) Selection Sort", "C) Quick Sort", "D) Insertion Sort"],
+                            correct: 2
+                        }
+                    ],
+                    "OOPS": [
+                        {
+                            question: "What is encapsulation in OOP?",
+                            options: ["A) Hiding implementation details", "B) Creating multiple classes", "C) Deleting objects", "D) Copying data"],
+                            correct: 0
+                        },
+                        {
+                            question: "What is inheritance?",
+                            options: ["A) Creating new objects", "B) Reusing code from parent class", "C) Deleting classes", "D) Hiding methods"],
+                            correct: 1
+                        },
+                        {
+                            question: "What is polymorphism?",
+                            options: ["A) Multiple forms of same method", "B) Single class only", "C) No inheritance", "D) Static methods only"],
+                            correct: 0
+                        }
+                    ],
+                    "DBMS": [
+                        {
+                            question: "What does DBMS stand for?",
+                            options: ["A) Database Management System", "B) Data Backup Management System", "C) Digital Base Management System", "D) Database Monitoring System"],
+                            correct: 0
+                        },
+                        {
+                            question: "What is normalization in DBMS?",
+                            options: ["A) Organizing data to reduce redundancy", "B) Deleting data", "C) Backing up database", "D) Creating indexes"],
+                            correct: 0
+                        },
+                        {
+                            question: "What is a primary key?",
+                            options: ["A) Unique identifier for records", "B) Foreign key reference", "C) Index column", "D) Backup key"],
+                            correct: 0
                         }
                     ]
                 };
