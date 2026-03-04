@@ -147,28 +147,25 @@ export function ResumeMatcher() {
             } catch (parseError) {
                 console.log("JSON parse failed, using enhanced skill extraction");
                 
-                // Enhanced skill extraction from actual content
+                // STRICT skill extraction - only detect what's actually in the content
                 const resumeContent = (resume || '').toLowerCase();
-                const jobContent = (jobDescription || '').toLowerCase();
-                const combinedContent = resumeContent + ' ' + jobContent;
+                const combinedContent = resumeContent;
                 
-                console.log("Analyzing content for skills...");
+                console.log("Analyzing resume content for skills...");
                 console.log("Content sample:", combinedContent.substring(0, 300));
                 
-                // Comprehensive skill categories
+                // Only detect skills that are explicitly mentioned
                 const skillCategories = {
-                    programming: ['javascript', 'python', 'java', 'c++', 'c#', 'typescript', 'php', 'ruby', 'go', 'kotlin', 'swift', 'rust', 'scala', 'dart', 'c'],
-                    web: ['html', 'css', 'react', 'angular', 'vue', 'node.js', 'nodejs', 'express', 'django', 'flask', 'spring', 'laravel', 'nextjs', 'bootstrap', 'tailwind'],
-                    database: ['sql', 'mysql', 'postgresql', 'mongodb', 'redis', 'sqlite', 'oracle', 'firebase'],
-                    cloud: ['aws', 'azure', 'gcp', 'docker', 'kubernetes', 'jenkins', 'terraform', 'heroku'],
-                    mobile: ['android', 'ios', 'flutter', 'react native', 'xamarin', 'ionic'],
-                    data: ['machine learning', 'ai', 'data science', 'tensorflow', 'pytorch', 'pandas', 'numpy'],
-                    tools: ['git', 'github', 'jira', 'figma', 'photoshop', 'linux', 'windows']
+                    programming: ['javascript', 'python', 'java', 'c++', 'c#', 'typescript', 'php', 'c'],
+                    web: ['html', 'css', 'react', 'angular', 'vue', 'node.js', 'nodejs', 'express', 'django', 'flask', 'nextjs'],
+                    database: ['sql', 'mysql', 'postgresql', 'mongodb', 'firebase'],
+                    cloud: ['aws', 'docker', 'kubernetes'],
+                    tools: ['git', 'github']
                 };
                 
                 const detectedSkills = [];
                 
-                // Smart skill detection with multiple variants
+                // Strict detection - must be explicitly mentioned
                 for (const [category, skills] of Object.entries(skillCategories)) {
                     for (const skill of skills) {
                         const variants = [
@@ -177,14 +174,12 @@ export function ResumeMatcher() {
                             skill.replace('#', 'sharp'),
                             skill.replace('++', 'plus'),
                             skill.replace(' ', ''),
-                            skill.replace('-', ''),
-                            skill.toUpperCase(),
-                            skill.charAt(0).toUpperCase() + skill.slice(1)
+                            skill.replace('-', '')
                         ];
                         
                         const found = variants.some(variant => {
                             const regex = new RegExp(`\\b${variant.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-                            return regex.test(combinedContent) || combinedContent.includes(variant.toLowerCase());
+                            return regex.test(combinedContent);
                         });
                         
                         if (found && !detectedSkills.includes(skill.charAt(0).toUpperCase() + skill.slice(1))) {
@@ -194,32 +189,18 @@ export function ResumeMatcher() {
                     }
                 }
                 
-                // Add context-based skills if content suggests them
-                if (combinedContent.includes('develop') || combinedContent.includes('program') || combinedContent.includes('code')) {
-                    ['JavaScript', 'Python'].forEach(skill => {
-                        if (!detectedSkills.includes(skill)) detectedSkills.push(skill);
-                    });
-                }
-                
-                if (combinedContent.includes('web') || combinedContent.includes('frontend') || combinedContent.includes('ui')) {
-                    ['HTML', 'CSS', 'JavaScript'].forEach(skill => {
-                        if (!detectedSkills.includes(skill)) detectedSkills.push(skill);
-                    });
-                }
-                
-                if (combinedContent.includes('data') || combinedContent.includes('analysis')) {
-                    ['SQL', 'Python', 'Excel'].forEach(skill => {
-                        if (!detectedSkills.includes(skill)) detectedSkills.push(skill);
-                    });
-                }
-                
-                // Ensure minimum skills for testing
+                // NO fallback skills - only what's detected
                 if (detectedSkills.length === 0) {
-                    detectedSkills.push('HTML', 'CSS', 'JavaScript', 'Python', 'SQL');
+                    console.log('No skills detected in resume');
+                    setSkillsToTest([]);
+                    setStep("upload");
+                    alert('No technical skills found in your resume. Please add skills like Python, JavaScript, React, etc.');
+                    setLoading(false);
+                    return;
                 }
                 
                 console.log(`Final detected skills (${detectedSkills.length}):`, detectedSkills);
-                skillsData = { skills: detectedSkills.slice(0, 10) }; // Limit for performance
+                skillsData = { skills: detectedSkills };
             }
             
             // Set up for skill testing phase
@@ -343,21 +324,140 @@ export function ResumeMatcher() {
                             correct: 3
                         }
                     ],
-                    "SQL": [
+                    "Java": [
                         {
-                            question: "Which SQL command is used to retrieve data from a database?",
-                            options: ["A) GET", "B) SELECT", "C) FETCH", "D) RETRIEVE"],
-                            correct: 1
-                        },
-                        {
-                            question: "What does 'JOIN' do in SQL?",
-                            options: ["A) Combines rows from tables", "B) Deletes records", "C) Creates new table", "D) Updates records"],
+                            question: "What is Java?",
+                            options: ["A) Object-oriented programming language", "B) Scripting language", "C) Markup language", "D) Database"],
                             correct: 0
                         },
                         {
-                            question: "Which clause is used to filter records in SQL?",
-                            options: ["A) FILTER", "B) WHERE", "C) HAVING", "D) CONDITION"],
+                            question: "Which keyword is used to inherit a class in Java?",
+                            options: ["A) implements", "B) extends", "C) inherits", "D) super"],
                             correct: 1
+                        },
+                        {
+                            question: "What is JVM?",
+                            options: ["A) Java Virtual Machine", "B) Java Variable Method", "C) Java Version Manager", "D) Java Visual Model"],
+                            correct: 0
+                        }
+                    ],
+                    "Django": [
+                        {
+                            question: "What is Django?",
+                            options: ["A) Python web framework", "B) JavaScript library", "C) Database system", "D) CSS framework"],
+                            correct: 0
+                        },
+                        {
+                            question: "What does ORM stand for in Django?",
+                            options: ["A) Object Relational Mapping", "B) Online Resource Manager", "C) Operational Request Model", "D) Object Resource Method"],
+                            correct: 0
+                        },
+                        {
+                            question: "Which file defines URL patterns in Django?",
+                            options: ["A) views.py", "B) models.py", "C) urls.py", "D) settings.py"],
+                            correct: 2
+                        }
+                    ],
+                    "MySQL": [
+                        {
+                            question: "What type of database is MySQL?",
+                            options: ["A) NoSQL", "B) Relational", "C) Graph", "D) Document"],
+                            correct: 1
+                        },
+                        {
+                            question: "Which command is used to create a new database in MySQL?",
+                            options: ["A) NEW DATABASE", "B) CREATE DATABASE", "C) MAKE DATABASE", "D) ADD DATABASE"],
+                            correct: 1
+                        },
+                        {
+                            question: "What is a primary key in MySQL?",
+                            options: ["A) Unique identifier for records", "B) Foreign key reference", "C) Index type", "D) Data type"],
+                            correct: 0
+                        }
+                    ],
+                    "MongoDB": [
+                        {
+                            question: "What type of database is MongoDB?",
+                            options: ["A) Relational", "B) NoSQL document database", "C) Graph database", "D) Key-value store"],
+                            correct: 1
+                        },
+                        {
+                            question: "What format does MongoDB use to store data?",
+                            options: ["A) XML", "B) CSV", "C) BSON", "D) Plain text"],
+                            correct: 2
+                        },
+                        {
+                            question: "Which method is used to insert a document in MongoDB?",
+                            options: ["A) add()", "B) insert()", "C) insertOne()", "D) create()"],
+                            correct: 2
+                        }
+                    ],
+                    "Git": [
+                        {
+                            question: "What is Git?",
+                            options: ["A) Version control system", "B) Programming language", "C) Database", "D) Web server"],
+                            correct: 0
+                        },
+                        {
+                            question: "Which command is used to clone a repository?",
+                            options: ["A) git copy", "B) git clone", "C) git download", "D) git pull"],
+                            correct: 1
+                        },
+                        {
+                            question: "What does 'git commit' do?",
+                            options: ["A) Saves changes to local repository", "B) Uploads to remote", "C) Creates new branch", "D) Deletes files"],
+                            correct: 0
+                        }
+                    ],
+                    "Docker": [
+                        {
+                            question: "What is Docker?",
+                            options: ["A) Containerization platform", "B) Programming language", "C) Database system", "D) Web framework"],
+                            correct: 0
+                        },
+                        {
+                            question: "What is a Docker image?",
+                            options: ["A) Running container", "B) Template for containers", "C) Virtual machine", "D) Network configuration"],
+                            correct: 1
+                        },
+                        {
+                            question: "Which file defines a Docker image?",
+                            options: ["A) docker.json", "B) Dockerfile", "C) container.yml", "D) image.conf"],
+                            correct: 1
+                        }
+                    ],
+                    "C": [
+                        {
+                            question: "What type of language is C?",
+                            options: ["A) High-level scripting", "B) Low-level compiled", "C) Interpreted", "D) Markup"],
+                            correct: 1
+                        },
+                        {
+                            question: "Which function is used to print in C?",
+                            options: ["A) print()", "B) echo()", "C) printf()", "D) console.log()"],
+                            correct: 2
+                        },
+                        {
+                            question: "What is a pointer in C?",
+                            options: ["A) Variable storing memory address", "B) Function type", "C) Data structure", "D) Loop construct"],
+                            correct: 0
+                        }
+                    ],
+                    "C++": [
+                        {
+                            question: "What is C++?",
+                            options: ["A) Object-oriented extension of C", "B) Scripting language", "C) Database language", "D) Markup language"],
+                            correct: 0
+                        },
+                        {
+                            question: "Which operator is used for dynamic memory allocation in C++?",
+                            options: ["A) malloc", "B) new", "C) alloc", "D) create"],
+                            correct: 1
+                        },
+                        {
+                            question: "What is a class in C++?",
+                            options: ["A) Blueprint for objects", "B) Function type", "C) Variable type", "D) Loop structure"],
+                            correct: 0
                         }
                     ],
                     "HTML": [
@@ -391,6 +491,40 @@ export function ResumeMatcher() {
                         {
                             question: "How do you select an element with id 'header' in CSS?",
                             options: ["A) .header", "B) #header", "C) *header", "D) header"],
+                            correct: 1
+                        }
+                    ],
+                    "Mern": [
+                        {
+                            question: "What does MERN stand for?",
+                            options: ["A) MongoDB Express React Node", "B) MySQL Express React Next", "C) Mongo Engine React Native", "D) Modern Express React Network"],
+                            correct: 0
+                        },
+                        {
+                            question: "Which part of MERN handles the database?",
+                            options: ["A) Express", "B) React", "C) MongoDB", "D) Node"],
+                            correct: 2
+                        },
+                        {
+                            question: "What is the role of Express in MERN?",
+                            options: ["A) Frontend framework", "B) Backend framework", "C) Database", "D) Testing tool"],
+                            correct: 1
+                        }
+                    ],
+                    "SQL": [
+                        {
+                            question: "Which SQL command is used to retrieve data from a database?",
+                            options: ["A) GET", "B) SELECT", "C) FETCH", "D) RETRIEVE"],
+                            correct: 1
+                        },
+                        {
+                            question: "What does 'JOIN' do in SQL?",
+                            options: ["A) Combines rows from tables", "B) Deletes records", "C) Creates new table", "D) Updates records"],
+                            correct: 0
+                        },
+                        {
+                            question: "Which clause is used to filter records in SQL?",
+                            options: ["A) FILTER", "B) WHERE", "C) HAVING", "D) CONDITION"],
                             correct: 1
                         }
                     ]
@@ -500,6 +634,31 @@ export function ResumeMatcher() {
         const matchedSkills = skillsToTest.filter(skill => testResults[skill]);
         const missingSkills = skillsToTest.filter(skill => !testResults[skill]);
         const matchPercentage = Math.round((matchedSkills.length / skillsToTest.length) * 100);
+        
+        // Call ML API for skill level prediction
+        try {
+            const mlResponse = await fetch('/api/predict-skill', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    skill_count: skillsToTest.length,
+                    test_score: matchPercentage,
+                    project_count: 0
+                })
+            });
+            
+            if (mlResponse.ok) {
+                const mlPrediction = await mlResponse.json();
+                localStorage.setItem('nexia_ml_prediction', JSON.stringify({
+                    ...mlPrediction,
+                    test_score: matchPercentage,
+                    skill_count: skillsToTest.length
+                }));
+                console.log('ML Prediction saved:', mlPrediction);
+            }
+        } catch (error) {
+            console.error('ML prediction failed:', error);
+        }
         
         // Extract job description skills for recommendations
         let jobSkills: string[] = [];

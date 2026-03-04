@@ -73,6 +73,7 @@ export async function POST(req: Request) {
       })
     );
 
+    
     const response = await fetch(
       "https://api.groq.com/openai/v1/chat/completions",
       {
@@ -114,3 +115,5 @@ export async function POST(req: Request) {
     });
   }
 }
+
+

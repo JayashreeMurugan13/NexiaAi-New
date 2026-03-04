@@ -10,6 +10,12 @@ interface ProgressData {
     totalSessions: number;
     averageScore: number;
     improvementRate: number;
+    mlPrediction?: {
+        skill_level: string;
+        confidence: number;
+        test_score: number;
+        skill_count: number;
+    };
 }
 
 export function Dashboard() {
@@ -25,6 +31,7 @@ export function Dashboard() {
         // Load progress data from localStorage
         const interviewHistory = JSON.parse(localStorage.getItem('nexia_interview_history') || '[]');
         const skillHistory = JSON.parse(localStorage.getItem('nexia_skill_history') || '[]');
+        const mlPrediction = JSON.parse(localStorage.getItem('nexia_ml_prediction') || 'null');
         
         const avgScore = interviewHistory.length > 0 
             ? interviewHistory.reduce((sum: number, item: any) => sum + item.score, 0) / interviewHistory.length 
@@ -39,7 +46,8 @@ export function Dashboard() {
             skillTestScores: skillHistory,
             totalSessions: interviewHistory.length + skillHistory.length,
             averageScore: Math.round(avgScore),
-            improvementRate: Math.round(improvement)
+            improvementRate: Math.round(improvement),
+            mlPrediction: mlPrediction
         });
     }, []);
 
@@ -113,6 +121,41 @@ export function Dashboard() {
 
                 {/* Recent Activity */}
                 <div className="grid md:grid-cols-2 gap-6">
+                    {/* AI Skill Analysis - NEW SECTION */}
+                    {progressData.mlPrediction && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-2xl p-6 md:col-span-2"
+                        >
+                            <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                                <BarChart3 className="w-5 h-5 text-purple-400" />
+                                AI Skill Analysis
+                            </h3>
+                            <div className="grid md:grid-cols-3 gap-4">
+                                <div className="p-4 bg-zinc-800/50 rounded-lg">
+                                    <p className="text-sm text-zinc-400 mb-1">Test Score</p>
+                                    <p className="text-2xl font-bold text-white">{progressData.mlPrediction.test_score}%</p>
+                                </div>
+                                <div className="p-4 bg-zinc-800/50 rounded-lg">
+                                    <p className="text-sm text-zinc-400 mb-1">Predicted Level</p>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`w-3 h-3 rounded-full ${
+                                            progressData.mlPrediction.skill_level === 'Beginner' ? 'bg-red-500' :
+                                            progressData.mlPrediction.skill_level === 'Intermediate' ? 'bg-yellow-500' :
+                                            'bg-green-500'
+                                        }`}></span>
+                                        <p className="text-2xl font-bold text-white">{progressData.mlPrediction.skill_level}</p>
+                                    </div>
+                                </div>
+                                <div className="p-4 bg-zinc-800/50 rounded-lg">
+                                    <p className="text-sm text-zinc-400 mb-1">Confidence</p>
+                                    <p className="text-2xl font-bold text-white">{Math.round(progressData.mlPrediction.confidence * 100)}%</p>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}

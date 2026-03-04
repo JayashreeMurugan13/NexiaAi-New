@@ -65,12 +65,20 @@ export function AuthForm({ type }: AuthFormProps) {
     const handleGoogleLogin = async () => {
         setLoading(true);
         try {
-            await supabase.auth.signInWithOAuth({
-                provider: "google"
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: "google",
+                options: {
+                    redirectTo: `${window.location.origin}/auth/callback`,
+                    queryParams: {
+                        access_type: 'offline',
+                        prompt: 'consent'
+                    }
+                }
             });
+            if (error) throw error;
         } catch (error) {
             console.error('Google login failed:', error);
-        } finally {
+            alert('Google login failed. Please try again or use email/password.');
             setLoading(false);
         }
     };
