@@ -154,6 +154,15 @@ export function ResumeMatcher() {
                 console.log("Analyzing resume content for skills...");
                 console.log("Content sample:", combinedContent.substring(0, 300));
                 
+                // Platforms/tools/IDEs that are NOT skills (filter these out)
+                const nonSkills = [
+                    'leetcode', 'hackerrank', 'codechef', 'skillrack', 
+                    'streamlit', 'vscode', 'vs code', 'visual studio code', 'visual studio',
+                    'ibm granite', 'ibm', 'granite', 'llm', 'granite llm',
+                    'pycharm', 'intellij', 'eclipse', 'sublime', 'atom',
+                    'geeksforgeeks', 'codeforces', 'topcoder'
+                ];
+                
                 // Only detect skills that are explicitly mentioned
                 const skillCategories = {
                     programming: ['javascript', 'python', 'java', 'c++', 'c#', 'typescript', 'php', 'c'],
@@ -169,6 +178,11 @@ export function ResumeMatcher() {
                 // Strict detection - must be explicitly mentioned
                 for (const [category, skills] of Object.entries(skillCategories)) {
                     for (const skill of skills) {
+                        // Skip if it's in the non-skills list
+                        if (nonSkills.some(ns => skill.toLowerCase().includes(ns) || ns.includes(skill.toLowerCase()))) {
+                            continue;
+                        }
+                        
                         const variants = [
                             skill,
                             skill.replace('.', ''),
@@ -183,9 +197,26 @@ export function ResumeMatcher() {
                             return regex.test(combinedContent);
                         });
                         
-                        if (found && !detectedSkills.includes(skill.charAt(0).toUpperCase() + skill.slice(1))) {
-                            detectedSkills.push(skill.charAt(0).toUpperCase() + skill.slice(1));
-                            console.log(`✓ Found skill: ${skill}`);
+                        if (found) {
+                            // Double-check it's not part of a non-skill phrase
+                            let isNonSkill = false;
+                            for (const ns of nonSkills) {
+                                const nsRegex = new RegExp(`\\b${ns.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+                                if (nsRegex.test(combinedContent)) {
+                                    // Check if the skill appears as part of the non-skill phrase
+                                    const contextRegex = new RegExp(`${ns}[\\s\\-]*${skill}|${skill}[\\s\\-]*${ns}`, 'i');
+                                    if (contextRegex.test(combinedContent)) {
+                                        isNonSkill = true;
+                                        console.log(`✗ Filtered out: ${skill} (part of ${ns})`);
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            if (!isNonSkill && !detectedSkills.includes(skill.charAt(0).toUpperCase() + skill.slice(1))) {
+                                detectedSkills.push(skill.charAt(0).toUpperCase() + skill.slice(1));
+                                console.log(`✓ Found skill: ${skill}`);
+                            }
                         }
                     }
                 }
@@ -200,8 +231,30 @@ export function ResumeMatcher() {
                     return;
                 }
                 
-                console.log(`Final detected skills (${detectedSkills.length}):`, detectedSkills);
-                skillsData = { skills: detectedSkills };
+                // FILTER OUT NON-SKILLS after detection
+                const nonSkillKeywords = ['leetcode', 'hackerrank', 'codechef', 'skillrack', 'streamlit', 'vscode', 'vs code', 'ibm', 'granite'];
+                const filteredSkills = detectedSkills.filter(skill => {
+                    const skillLower = skill.toLowerCase();
+                    // Check if skill contains any non-skill keyword
+                    const isNonSkill = nonSkillKeywords.some(keyword => skillLower.includes(keyword));
+                    if (isNonSkill) {
+                        console.log(`✗ Filtered out non-skill: ${skill}`);
+                        return false;
+                    }
+                    return true;
+                });
+                
+                if (filteredSkills.length === 0) {
+                    console.log('All detected items were non-skills');
+                    setSkillsToTest([]);
+                    setStep("upload");
+                    alert('No valid technical skills found. Please add programming languages, frameworks, or databases.');
+                    setLoading(false);
+                    return;
+                }
+                
+                console.log(`Final filtered skills (${filteredSkills.length}):`, filteredSkills);
+                skillsData = { skills: filteredSkills };
             }
             
             // Set up for skill testing phase
@@ -710,6 +763,31 @@ export function ResumeMatcher() {
             }
         } catch (error) {
             console.error('ML prediction failed:', error);
+        }
+        
+        // Call Salary Prediction API
+        try {
+            const salaryResponse = await fetch('/api/predict-salary', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    skills: matchedSkills,
+                    test_score: matchPercentage,
+                    education: "Bachelor's"
+                })
+            });
+            
+            if (salaryResponse.ok) {
+                const salaryPrediction = await salaryResponse.json();
+                localStorage.setItem('nexia_salary_prediction', JSON.stringify({
+                    ...salaryPrediction,
+                    skills: matchedSkills,
+                    test_score: matchPercentage
+                }));
+                console.log('Salary Prediction saved:', salaryPrediction);
+            }
+        } catch (error) {
+            console.error('Salary prediction failed:', error);
         }
         
         // Extract job description skills for recommendations

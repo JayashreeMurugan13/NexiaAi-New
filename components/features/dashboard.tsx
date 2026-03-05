@@ -16,6 +16,13 @@ interface ProgressData {
         test_score: number;
         skill_count: number;
     };
+    salaryPrediction?: {
+        predicted_salary: number;
+        formatted_salary: string;
+        job_role: string;
+        skills: string[];
+        test_score: number;
+    };
 }
 
 export function Dashboard() {
@@ -32,6 +39,7 @@ export function Dashboard() {
         const interviewHistory = JSON.parse(localStorage.getItem('nexia_interview_history') || '[]');
         const skillHistory = JSON.parse(localStorage.getItem('nexia_skill_history') || '[]');
         const mlPrediction = JSON.parse(localStorage.getItem('nexia_ml_prediction') || 'null');
+        const salaryPrediction = JSON.parse(localStorage.getItem('nexia_salary_prediction') || 'null');
         
         const avgScore = interviewHistory.length > 0 
             ? interviewHistory.reduce((sum: number, item: any) => sum + item.score, 0) / interviewHistory.length 
@@ -47,7 +55,8 @@ export function Dashboard() {
             totalSessions: interviewHistory.length + skillHistory.length,
             averageScore: Math.round(avgScore),
             improvementRate: Math.round(improvement),
-            mlPrediction: mlPrediction
+            mlPrediction: mlPrediction,
+            salaryPrediction: salaryPrediction
         });
     }, []);
 
@@ -152,6 +161,72 @@ export function Dashboard() {
                                     <p className="text-sm text-zinc-400 mb-1">Confidence</p>
                                     <p className="text-2xl font-bold text-white">{Math.round(progressData.mlPrediction.confidence * 100)}%</p>
                                 </div>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* Salary Prediction - NEW SECTION */}
+                    {progressData.salaryPrediction && progressData.salaryPrediction.skills && progressData.salaryPrediction.skills.length > 0 && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 border border-green-500/30 rounded-2xl p-6 md:col-span-2"
+                        >
+                            <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                                <TrendingUp className="w-5 h-5 text-green-400" />
+                                AI Salary Prediction
+                            </h3>
+                            
+                            {/* Warning for insufficient data */}
+                            {(progressData.salaryPrediction.skills.length < 3 || progressData.salaryPrediction.test_score < 50) && (
+                                <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                                    <p className="text-yellow-300 text-sm flex items-center gap-2">
+                                        <span className="text-lg">⚠️</span>
+                                        <span>
+                                            <strong>Limited Data:</strong> Prediction may not be accurate. Complete at least 3 skill tests with 50%+ score for better results.
+                                        </span>
+                                    </p>
+                                </div>
+                            )}
+                            
+                            <div className="grid md:grid-cols-4 gap-4">
+                                <div className="p-4 bg-zinc-800/50 rounded-lg">
+                                    <p className="text-sm text-zinc-400 mb-1">Predicted Salary</p>
+                                    <p className="text-2xl font-bold text-green-400">{progressData.salaryPrediction.formatted_salary}</p>
+                                    <p className="text-xs text-zinc-500 mt-1">per year</p>
+                                </div>
+                                <div className="p-4 bg-zinc-800/50 rounded-lg">
+                                    <p className="text-sm text-zinc-400 mb-1">Job Role</p>
+                                    <p className="text-lg font-bold text-white">{progressData.salaryPrediction.job_role}</p>
+                                    <p className="text-xs text-zinc-500 mt-1">Based on your skills</p>
+                                </div>
+                                <div className="p-4 bg-zinc-800/50 rounded-lg">
+                                    <p className="text-sm text-zinc-400 mb-1">Skills Tested</p>
+                                    <p className={`text-2xl font-bold ${progressData.salaryPrediction.skills.length < 3 ? 'text-yellow-400' : 'text-white'}`}>
+                                        {progressData.salaryPrediction.skills.length}
+                                    </p>
+                                    <p className="text-xs text-zinc-500 mt-1">{progressData.salaryPrediction.skills.length < 3 ? 'Need 3+ skills' : 'Verified skills'}</p>
+                                </div>
+                                <div className="p-4 bg-zinc-800/50 rounded-lg">
+                                    <p className="text-sm text-zinc-400 mb-1">Test Score</p>
+                                    <p className={`text-2xl font-bold ${progressData.salaryPrediction.test_score < 50 ? 'text-red-400' : 'text-white'}`}>
+                                        {progressData.salaryPrediction.test_score}%
+                                    </p>
+                                    <p className="text-xs text-zinc-500 mt-1">{progressData.salaryPrediction.test_score < 50 ? 'Low score' : 'Overall performance'}</p>
+                                </div>
+                            </div>
+                            <div className="mt-4 p-4 bg-zinc-800/30 rounded-lg">
+                                <p className="text-xs text-zinc-400 mb-2 font-semibold">Salary based on these verified skills:</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {progressData.salaryPrediction.skills.slice(0, 10).map((skill, idx) => (
+                                        <span key={idx} className="px-3 py-1 bg-green-500/20 text-green-300 text-sm rounded-full border border-green-500/30">
+                                            ✓ {skill}
+                                        </span>
+                                    ))}
+                                </div>
+                                <p className="text-xs text-zinc-500 mt-3 italic">
+                                    💡 Complete more skill tests in Resume Matcher to get accurate salary predictions
+                                </p>
                             </div>
                         </motion.div>
                     )}
