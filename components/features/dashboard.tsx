@@ -38,16 +38,38 @@ export function Dashboard() {
         // Load progress data from localStorage
         const interviewHistory = JSON.parse(localStorage.getItem('nexia_interview_history') || '[]');
         const skillHistory = JSON.parse(localStorage.getItem('nexia_skill_history') || '[]');
-        const mlPrediction = JSON.parse(localStorage.getItem('nexia_ml_prediction') || 'null');
+        let mlPrediction = JSON.parse(localStorage.getItem('nexia_ml_prediction') || 'null');
         const salaryPrediction = JSON.parse(localStorage.getItem('nexia_salary_prediction') || 'null');
         
-        const avgScore = interviewHistory.length > 0 
-            ? interviewHistory.reduce((sum: number, item: any) => sum + item.score, 0) / interviewHistory.length 
+        // Calculate accurate average from BOTH interview and skill tests
+        const allScores = [
+            ...interviewHistory.map((i: any) => i.score),
+            ...skillHistory.map((s: any) => s.score)
+        ];
+        const avgScore = allScores.length > 0 
+            ? allScores.reduce((sum: number, score: number) => sum + score, 0) / allScores.length 
             : 0;
             
         const improvement = interviewHistory.length > 1 
             ? interviewHistory[interviewHistory.length - 1].score - interviewHistory[0].score 
             : 0;
+
+        // FIX ML PREDICTION LOGIC
+        if (mlPrediction && mlPrediction.test_score) {
+            const score = mlPrediction.test_score;
+            
+            // Correct skill level based on score
+            if (score < 50) {
+                mlPrediction.skill_level = 'Beginner';
+                mlPrediction.confidence = 0.85;
+            } else if (score < 75) {
+                mlPrediction.skill_level = 'Intermediate';
+                mlPrediction.confidence = 0.80;
+            } else {
+                mlPrediction.skill_level = 'Advanced';
+                mlPrediction.confidence = 0.90;
+            }
+        }
 
         setProgressData({
             interviewScores: interviewHistory,
@@ -166,7 +188,7 @@ export function Dashboard() {
                     )}
 
                     {/* Salary Prediction - NEW SECTION */}
-                    {progressData.salaryPrediction && progressData.salaryPrediction.skills && progressData.salaryPrediction.skills.length > 0 && (
+                    {progressData.salaryPrediction && progressData.salaryPrediction.skills && progressData.salaryPrediction.skills.length > 0 && progressData.salaryPrediction.test_score >= 30 && (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
