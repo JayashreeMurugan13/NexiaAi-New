@@ -2,525 +2,459 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, MicOff, Video, VideoOff, Download, RotateCcw, ChevronRight, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Video, VideoOff, Mic, MicOff, Download, RotateCcw, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import jsPDF from "jspdf";
 
-interface Question {
-  question: string;
-  topic: string;
+interface Question { question: string; topic: string; }
+interface Result {
+  question: string; topic: string; userAnswer: string;
+  status: "correct" | "partial" | "wrong"; feedback: string; correctAnswer: string;
 }
 
-interface AnswerResult {
-  question: string;
-  topic: string;
-  userAnswer: string;
-  status: "correct" | "partial" | "wrong";
-  feedback: string;
-  correctAnswer: string;
-}
-
-type Step = "setup" | "interview" | "results";
+type Step = "camera" | "role" | "interview" | "results";
 
 export function MockInterview() {
-  const [step, setStep] = useState<Step>("setup");
+  const [step, setStep] = useState<Step>("camera");
   const [role, setRole] = useState("");
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [results, setResults] = useState<AnswerResult[]>([]);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [results, setResults] = useState<Result[]>([]);
+  const [transcript, setTranscript] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [transcript, setTranscript] = useState("");
   const [loading, setLoading] = useState(false);
   const [cameraOn, setCameraOn] = useState(false);
-  const [statusMsg, setStatusMsg] = useState("");
+  const [aiText, setAiText] = useState("");
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recognitionRef = useRef<any>(null);
 
-  // Start camera
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-      streamRef.current = stream;
-      if (videoRef.current) videoRef.current.srcObject = stream;
-      setCameraOn(true);
-    } catch {
-      alert("Camera access denied. Please allow camera permissions.");
-    }
-  };
-
-  const stopCamera = () => {
-    streamRef.current?.getTracks().forEach(t => t.stop());
-    setCameraOn(false);
-  };
-
   useEffect(() => {
     return () => {
-      stopCamera();
+      streamRef.current?.getTracks().forEach(t => t.stop());
       window.speechSynthesis?.cancel();
       recognitionRef.current?.stop();
     };
   }, []);
 
-  // Text to speech
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      streamRef.current = stream;
+      if (videoRef.current) { videoRef.current.srcObject = stream; }
+      setCameraOn(true);
+    } catch {
+      alert("Please allow camera access to continue.");
+    }
+  };
+
   const speak = (text: string, onEnd?: () => void) => {
     window.speechSynthesis.cancel();
+    setAiText(text);
     const utter = new SpeechSynthesisUtterance(text);
-    utter.rate = 0.95;
-    utter.pitch = 1;
+    utter.rate = 0.92; utter.pitch = 1.05;
     utter.onstart = () => setIsSpeaking(true);
-    utter.onend = () => {
-      setIsSpeaking(false);
-      onEnd?.();
-    };
+    utter.onend = () => { setIsSpeaking(false); setAiText(""); onEnd?.(); };
     window.speechSynthesis.speak(utter);
   };
 
-  // Speech recognition
   const startListening = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("Speech recognition not supported. Please use Chrome.");
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = "en-US";
-
-    recognition.onresult = (e: any) => {
-      const t = Array.from(e.results).map((r: any) => r[0].transcript).join("");
-      setTranscript(t);
-    };
-
-    recognition.onend = () => setIsListening(false);
-    recognition.start();
-    recognitionRef.current = recognition;
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) { alert("Use Chrome for speech recognition."); return; }
+    const r = new SR();
+    r.continuous = true; r.interimResults = true; r.lang = "en-US";
+    r.onresult = (e: any) => setTranscript(Array.from(e.results).map((x: any) => x[0].transcript).join(""));
+    r.onend = () => setIsListening(false);
+    r.start();
+    recognitionRef.current = r;
     setIsListening(true);
     setTranscript("");
   };
 
-  const stopListening = () => {
-    recognitionRef.current?.stop();
-    setIsListening(false);
-  };
+  const stopListening = () => { recognitionRef.current?.stop(); setIsListening(false); };
 
-  // Generate questions via AI
-  const generateQuestions = async () => {
+  const startInterview = async () => {
     if (!role.trim()) return;
     setLoading(true);
     try {
       const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [
-            {
-              role: "system",
-              content: `Generate exactly 5 interview questions for a ${role} role. Return ONLY valid JSON:
-{
-  "questions": [
-    { "question": "Question text?", "topic": "Topic name" }
-  ]
-}`
-            },
-            { role: "user", content: `Generate 5 interview questions for ${role}` }
+            { role: "system", content: `Generate exactly 5 interview questions for ${role}. Return ONLY JSON: {"questions":[{"question":"...","topic":"..."}]}` },
+            { role: "user", content: `5 interview questions for ${role}` }
           ]
         })
       });
-
       const data = await res.json();
-      let jsonStr = data.content.trim();
-      if (jsonStr.includes("```json")) jsonStr = jsonStr.split("```json")[1].split("```")[0].trim();
-      else if (jsonStr.includes("```")) jsonStr = jsonStr.split("```")[1].split("```")[0].trim();
-
-      const parsed = JSON.parse(jsonStr);
+      let str = data.content.trim();
+      if (str.includes("```json")) str = str.split("```json")[1].split("```")[0].trim();
+      else if (str.includes("```")) str = str.split("```")[1].split("```")[0].trim();
+      const parsed = JSON.parse(str);
       setQuestions(parsed.questions);
       setStep("interview");
-      setCurrentIndex(0);
+      setCurrentIdx(0);
       setResults([]);
-
-      // Speak intro then first question
-      speak(
-        `Welcome to your ${role} mock interview. I will ask you 5 questions. Please answer clearly after each question. Let's begin.`,
-        () => {
-          setTimeout(() => {
-            speak(`Question 1. ${parsed.questions[0].question}`);
-            setStatusMsg("Listening for your answer...");
-          }, 500);
-        }
-      );
+      speak(`Hello! Welcome to your ${role} interview. I will ask you 5 questions. Please answer each one clearly. Let's begin. Question 1. ${parsed.questions[0].question}`);
     } catch {
-      // Fallback questions
       const fallback: Question[] = [
-        { question: `Tell me about yourself and your experience as a ${role}.`, topic: "Introduction" },
-        { question: `What are your key technical skills relevant to ${role}?`, topic: "Technical Skills" },
-        { question: `Describe a challenging project you worked on as a ${role}.`, topic: "Experience" },
-        { question: `How do you handle tight deadlines and pressure?`, topic: "Soft Skills" },
-        { question: `Where do you see yourself in 5 years as a ${role}?`, topic: "Career Goals" },
+        { question: `Tell me about yourself and your background as a ${role}.`, topic: "Introduction" },
+        { question: `What are your strongest technical skills for this ${role} role?`, topic: "Technical Skills" },
+        { question: `Describe a difficult problem you solved in a previous project.`, topic: "Problem Solving" },
+        { question: `How do you handle working under pressure and tight deadlines?`, topic: "Soft Skills" },
+        { question: `Where do you see yourself growing in the next 3 to 5 years?`, topic: "Career Goals" },
       ];
       setQuestions(fallback);
       setStep("interview");
-      speak(`Welcome to your ${role} mock interview. Let's begin. Question 1. ${fallback[0].question}`);
-    } finally {
-      setLoading(false);
-    }
+      speak(`Hello! Welcome to your ${role} interview. Let's begin. Question 1. ${fallback[0].question}`);
+    } finally { setLoading(false); }
   };
 
-  // Evaluate answer via AI
-  const evaluateAnswer = async (question: Question, answer: string): Promise<AnswerResult> => {
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [
-            {
-              role: "system",
-              content: `You are an expert interviewer for ${role}. Evaluate the candidate's answer. Return ONLY valid JSON:
-{
-  "status": "correct" | "partial" | "wrong",
-  "feedback": "Specific feedback on what they said",
-  "correctAnswer": "What the ideal answer should include"
-}`
-            },
-            {
-              role: "user",
-              content: `Question: ${question.question}\nCandidate Answer: ${answer || "(No answer given)"}`
-            }
-          ]
-        })
-      });
-
-      const data = await res.json();
-      let jsonStr = data.content.trim();
-      if (jsonStr.includes("```json")) jsonStr = jsonStr.split("```json")[1].split("```")[0].trim();
-      else if (jsonStr.includes("```")) jsonStr = jsonStr.split("```")[1].split("```")[0].trim();
-
-      const parsed = JSON.parse(jsonStr);
-      return {
-        question: question.question,
-        topic: question.topic,
-        userAnswer: answer || "(No answer given)",
-        status: parsed.status,
-        feedback: parsed.feedback,
-        correctAnswer: parsed.correctAnswer,
-      };
-    } catch {
-      const hasAnswer = answer.trim().length > 10;
-      return {
-        question: question.question,
-        topic: question.topic,
-        userAnswer: answer || "(No answer given)",
-        status: hasAnswer ? "partial" : "wrong",
-        feedback: hasAnswer ? "You gave an answer but it needs more detail." : "No answer was detected.",
-        correctAnswer: `A strong answer for this ${role} question should include specific examples and technical details.`,
-      };
-    }
-  };
-
-  // Submit answer and move to next
   const submitAnswer = async () => {
     stopListening();
     setLoading(true);
-    setStatusMsg("Evaluating your answer...");
+    const q = questions[currentIdx];
+    const ans = transcript.trim();
 
-    const result = await evaluateAnswer(questions[currentIndex], transcript);
+    let result: Result;
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [
+            { role: "system", content: `You are an expert ${role} interviewer. Evaluate this answer strictly. Return ONLY JSON: {"status":"correct"|"partial"|"wrong","feedback":"specific feedback mentioning what they said right or wrong","correctAnswer":"what the ideal answer should include"}` },
+            { role: "user", content: `Question: ${q.question}\nAnswer: ${ans || "(no answer)"}` }
+          ]
+        })
+      });
+      const data = await res.json();
+      let str = data.content.trim();
+      if (str.includes("```json")) str = str.split("```json")[1].split("```")[0].trim();
+      else if (str.includes("```")) str = str.split("```")[1].split("```")[0].trim();
+      const p = JSON.parse(str);
+      result = { question: q.question, topic: q.topic, userAnswer: ans || "(no answer)", status: p.status, feedback: p.feedback, correctAnswer: p.correctAnswer };
+    } catch {
+      result = {
+        question: q.question, topic: q.topic, userAnswer: ans || "(no answer)",
+        status: ans.length > 15 ? "partial" : "wrong",
+        feedback: ans.length > 15 ? "You gave an answer but it needs more depth and specific examples." : "No clear answer was detected.",
+        correctAnswer: `A strong ${role} answer should include specific examples, technical details, and measurable outcomes.`
+      };
+    }
+
     const newResults = [...results, result];
     setResults(newResults);
+    setTranscript("");
 
-    // Speak feedback
-    const feedbackText =
+    const spokenFeedback =
       result.status === "correct"
-        ? `Great answer! ${result.feedback}`
+        ? `Excellent answer! ${result.feedback}`
         : result.status === "partial"
-        ? `Good attempt. ${result.feedback} A better answer would include: ${result.correctAnswer}`
-        : `That wasn't quite right. ${result.feedback} The correct answer should be: ${result.correctAnswer}`;
+        ? `Good attempt. However, ${result.feedback}. A better answer would include: ${result.correctAnswer}`
+        : `That was not quite right. ${result.feedback}. The correct answer should be: ${result.correctAnswer}`;
 
-    const nextIdx = currentIndex + 1;
-
-    speak(feedbackText, () => {
-      if (nextIdx < questions.length) {
-        setCurrentIndex(nextIdx);
-        setTranscript("");
-        setStatusMsg("Listening for your answer...");
-        setTimeout(() => {
-          speak(`Question ${nextIdx + 1}. ${questions[nextIdx].question}`);
-        }, 300);
+    const next = currentIdx + 1;
+    speak(spokenFeedback, () => {
+      if (next < questions.length) {
+        setCurrentIdx(next);
+        setTimeout(() => speak(`Question ${next + 1}. ${questions[next].question}`), 400);
       } else {
         setStep("results");
-        setStatusMsg("");
-        speak("Interview complete! Well done. Here is your performance report.");
+        const sc = Math.round(((newResults.filter(r => r.status === "correct").length + newResults.filter(r => r.status === "partial").length * 0.5) / newResults.length) * 100);
+        speak(`Interview complete! Your overall score is ${sc} percent. Please review your detailed report below.`);
       }
     });
-
     setLoading(false);
   };
 
-  // Generate PDF report
-  const downloadReport = () => {
+  const downloadPDF = async () => {
+    const { default: jsPDF } = await import("jspdf");
     const doc = new jsPDF();
     const correct = results.filter(r => r.status === "correct").length;
     const partial = results.filter(r => r.status === "partial").length;
     const wrong = results.filter(r => r.status === "wrong").length;
     const score = Math.round(((correct + partial * 0.5) / results.length) * 100);
 
-    doc.setFontSize(20);
+    // Header
+    doc.setFillColor(20, 20, 20);
+    doc.rect(0, 0, 210, 40, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.text("NexiaAI Mock Interview Report", 20, 18);
+    doc.setFontSize(11);
+    doc.text(`Role: ${role}  |  Date: ${new Date().toLocaleDateString()}  |  Score: ${score}%`, 20, 30);
+
+    // Summary
     doc.setTextColor(40, 40, 40);
-    doc.text("NexiaAI Mock Interview Report", 20, 20);
-
     doc.setFontSize(12);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Role: ${role}`, 20, 35);
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 43);
-    doc.text(`Overall Score: ${score}%`, 20, 51);
-    doc.text(`Correct: ${correct} | Partial: ${partial} | Wrong: ${wrong}`, 20, 59);
-
+    doc.text(`Correct: ${correct}   Partial: ${partial}   Wrong: ${wrong}`, 20, 52);
     doc.setDrawColor(200, 200, 200);
-    doc.line(20, 65, 190, 65);
+    doc.line(20, 58, 190, 58);
 
-    let y = 75;
+    let y = 68;
     results.forEach((r, i) => {
-      if (y > 260) { doc.addPage(); y = 20; }
-
-      const color = r.status === "correct" ? [34, 197, 94] : r.status === "partial" ? [234, 179, 8] : [239, 68, 68];
-      doc.setTextColor(...color as [number, number, number]);
+      if (y > 255) { doc.addPage(); y = 20; }
+      const [cr, cg, cb] = r.status === "correct" ? [22, 163, 74] : r.status === "partial" ? [202, 138, 4] : [220, 38, 38];
+      doc.setTextColor(cr, cg, cb);
       doc.setFontSize(11);
-      doc.text(`Q${i + 1} [${r.status.toUpperCase()}] - ${r.topic}`, 20, y);
-      y += 8;
-
-      doc.setTextColor(40, 40, 40);
-      doc.setFontSize(10);
-      const qLines = doc.splitTextToSize(`Question: ${r.question}`, 170);
-      doc.text(qLines, 20, y);
-      y += qLines.length * 6 + 2;
-
-      const aLines = doc.splitTextToSize(`Your Answer: ${r.userAnswer}`, 170);
-      doc.text(aLines, 20, y);
-      y += aLines.length * 6 + 2;
-
-      doc.setTextColor(100, 100, 100);
-      const fLines = doc.splitTextToSize(`Feedback: ${r.feedback}`, 170);
-      doc.text(fLines, 20, y);
-      y += fLines.length * 6 + 2;
-
+      doc.text(`Q${i + 1} [${r.status.toUpperCase()}] — ${r.topic}`, 20, y); y += 7;
+      doc.setTextColor(30, 30, 30); doc.setFontSize(10);
+      const qL = doc.splitTextToSize(`Question: ${r.question}`, 170); doc.text(qL, 20, y); y += qL.length * 5 + 2;
+      const aL = doc.splitTextToSize(`Your Answer: ${r.userAnswer}`, 170); doc.text(aL, 20, y); y += aL.length * 5 + 2;
+      doc.setTextColor(80, 80, 80);
+      const fL = doc.splitTextToSize(`Feedback: ${r.feedback}`, 170); doc.text(fL, 20, y); y += fL.length * 5 + 2;
       if (r.status !== "correct") {
-        doc.setTextColor(34, 197, 94);
-        const cLines = doc.splitTextToSize(`Ideal Answer: ${r.correctAnswer}`, 170);
-        doc.text(cLines, 20, y);
-        y += cLines.length * 6 + 2;
+        doc.setTextColor(22, 163, 74);
+        const cL = doc.splitTextToSize(`Ideal Answer: ${r.correctAnswer}`, 170); doc.text(cL, 20, y); y += cL.length * 5 + 2;
       }
-
-      y += 6;
-      doc.setDrawColor(230, 230, 230);
-      doc.line(20, y, 190, y);
-      y += 8;
+      y += 4; doc.setDrawColor(220, 220, 220); doc.line(20, y, 190, y); y += 8;
     });
 
-    // What to learn section
+    // What to learn
     if (y > 240) { doc.addPage(); y = 20; }
-    doc.setTextColor(40, 40, 40);
-    doc.setFontSize(13);
-    doc.text("What to Improve:", 20, y);
-    y += 10;
+    doc.setTextColor(30, 30, 30); doc.setFontSize(13);
+    doc.text("Areas to Improve:", 20, y); y += 10;
     doc.setFontSize(10);
     results.filter(r => r.status !== "correct").forEach(r => {
-      const lines = doc.splitTextToSize(`• ${r.topic}: ${r.correctAnswer}`, 170);
-      doc.text(lines, 20, y);
-      y += lines.length * 6 + 4;
+      const l = doc.splitTextToSize(`• ${r.topic}: ${r.correctAnswer}`, 170);
+      doc.text(l, 20, y); y += l.length * 5 + 4;
     });
 
-    doc.save(`nexia-mock-interview-${role.replace(/\s+/g, "-")}.pdf`);
+    doc.save(`mock-interview-${role.replace(/\s+/g, "-")}-${Date.now()}.pdf`);
   };
 
   const reset = () => {
-    stopCamera();
+    streamRef.current?.getTracks().forEach(t => t.stop());
     window.speechSynthesis.cancel();
     recognitionRef.current?.stop();
-    setStep("setup");
-    setRole("");
-    setQuestions([]);
-    setCurrentIndex(0);
-    setResults([]);
-    setTranscript("");
-    setStatusMsg("");
+    setCameraOn(false); setStep("camera"); setRole(""); setQuestions([]);
+    setCurrentIdx(0); setResults([]); setTranscript(""); setAiText("");
   };
 
-  const correct = results.filter(r => r.status === "correct").length;
-  const partial = results.filter(r => r.status === "partial").length;
-  const wrong = results.filter(r => r.status === "wrong").length;
-  const score = results.length > 0 ? Math.round(((correct + partial * 0.5) / results.length) * 100) : 0;
+  const score = results.length > 0 ? Math.round(((results.filter(r => r.status === "correct").length + results.filter(r => r.status === "partial").length * 0.5) / results.length) * 100) : 0;
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-zinc-950 p-4 md:p-8 overflow-y-auto">
-      <div className="max-w-3xl mx-auto w-full">
+    <div className="flex-1 flex flex-col h-full bg-zinc-950 overflow-y-auto">
 
-        {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-          <Mic className="w-14 h-14 mx-auto mb-3 text-rose-400" />
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-rose-400 to-orange-400 bg-clip-text text-transparent mb-2">
-            Mock Interview
-          </h1>
-          <p className="text-zinc-400 text-sm">AI-powered voice interview with real-time feedback</p>
-        </motion.div>
+      {/* Full screen camera background during interview */}
+      {step === "interview" && (
+        <div className="fixed inset-0 z-0">
+          <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1] opacity-30" />
+          <div className="absolute inset-0 bg-zinc-950/70" />
+        </div>
+      )}
 
+      <div className={`relative z-10 flex flex-col h-full ${step === "interview" ? "" : "p-4 md:p-8"}`}>
         <AnimatePresence mode="wait">
 
-          {/* STEP 1: Setup */}
-          {step === "setup" && (
-            <motion.div key="setup" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
-              <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 space-y-4">
-                <h3 className="text-white font-semibold text-lg">What role are you interviewing for?</h3>
-                <input
-                  type="text"
-                  value={role}
-                  onChange={e => setRole(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && generateQuestions()}
-                  placeholder="e.g. Software Engineer, Data Scientist, Product Manager..."
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-500"
-                />
+          {/* ── STEP 1: Camera Permission ── */}
+          {step === "camera" && (
+            <motion.div key="camera" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="flex flex-col items-center justify-center min-h-screen p-6 text-center">
+              <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 2 }}
+                className="w-24 h-24 rounded-full bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center mb-6 shadow-2xl shadow-rose-500/30">
+                <Video className="w-12 h-12 text-white" />
+              </motion.div>
+              <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">Mock Interview</h1>
+              <p className="text-zinc-400 mb-8 max-w-md">To begin your AI-powered interview, we need access to your camera. This helps simulate a real interview environment.</p>
 
-                {/* Camera preview */}
-                <div className="rounded-xl overflow-hidden bg-black aspect-video relative">
-                  <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
-                  {!cameraOn && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-500">
-                      <VideoOff className="w-10 h-10 mb-2" />
-                      <p className="text-sm">Camera off</p>
-                    </div>
-                  )}
-                </div>
+              {/* Camera preview */}
+              <div className="w-full max-w-md aspect-video bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800 mb-6 relative">
+                <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
+                {!cameraOn && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-600">
+                    <VideoOff className="w-12 h-12 mb-2" />
+                    <p className="text-sm">Camera preview will appear here</p>
+                  </div>
+                )}
+                {cameraOn && <div className="absolute top-3 left-3 bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1"><span className="w-2 h-2 bg-white rounded-full animate-pulse" />Live</div>}
+              </div>
 
-                <div className="flex gap-3">
-                  <Button onClick={cameraOn ? stopCamera : startCamera} variant="outline" className={`flex-1 border-zinc-700 ${cameraOn ? "text-red-400 border-red-500/40" : "text-zinc-300"}`}>
-                    {cameraOn ? <><VideoOff className="w-4 h-4 mr-2" />Turn Off Camera</> : <><Video className="w-4 h-4 mr-2" />Turn On Camera</>}
-                  </Button>
-                  <Button onClick={generateQuestions} disabled={!role.trim() || loading} className="flex-1 bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 disabled:opacity-50">
-                    {loading ? "Preparing..." : <><ChevronRight className="w-4 h-4 mr-2" />Start Interview</>}
-                  </Button>
+              {!cameraOn ? (
+                <Button onClick={startCamera} className="bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 px-8 py-3 text-lg">
+                  <Video className="w-5 h-5 mr-2" /> Allow Camera & Continue
+                </Button>
+              ) : (
+                <Button onClick={() => setStep("role")} className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 px-8 py-3 text-lg">
+                  Camera Ready — Continue →
+                </Button>
+              )}
+            </motion.div>
+          )}
+
+          {/* ── STEP 2: Select Role ── */}
+          {step === "role" && (
+            <motion.div key="role" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              className="flex flex-col items-center justify-center min-h-screen p-6">
+
+              {/* Small camera preview */}
+              <div className="w-32 h-24 rounded-xl overflow-hidden border border-zinc-700 mb-8 relative">
+                <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
+                <div className="absolute top-1 left-1 bg-green-500 text-white text-[9px] px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />Live
                 </div>
               </div>
 
-              <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-400 space-y-1">
-                <p>📌 <strong className="text-zinc-300">How it works:</strong></p>
-                <p>1. Enter your target job role</p>
-                <p>2. Turn on camera (optional)</p>
-                <p>3. AI asks 5 role-specific questions via voice</p>
-                <p>4. Answer using your microphone</p>
-                <p>5. Get instant feedback + downloadable PDF report</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 text-center">What role are you interviewing for?</h2>
+              <p className="text-zinc-400 mb-8 text-center">I'll ask you 5 tailored questions based on your role</p>
+
+              <div className="w-full max-w-md space-y-4">
+                <input
+                  type="text" value={role} onChange={e => setRole(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && startInterview()}
+                  placeholder="e.g. Software Engineer, Data Analyst, Product Manager..."
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white text-lg placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500"
+                  autoFocus
+                />
+
+                {/* Quick role suggestions */}
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {["Software Engineer", "Data Scientist", "Product Manager", "Frontend Developer", "Backend Developer", "Full Stack Developer"].map(r => (
+                    <button key={r} onClick={() => setRole(r)}
+                      className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-full text-sm text-zinc-300 transition-colors">
+                      {r}
+                    </button>
+                  ))}
+                </div>
+
+                <Button onClick={startInterview} disabled={!role.trim() || loading}
+                  className="w-full bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 py-4 text-lg disabled:opacity-50">
+                  {loading ? "Preparing your interview..." : "🎤 Start Interview"}
+                </Button>
               </div>
             </motion.div>
           )}
 
-          {/* STEP 2: Interview */}
+          {/* ── STEP 3: Interview ── */}
           {step === "interview" && (
-            <motion.div key="interview" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-5">
+            <motion.div key="interview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="flex flex-col h-screen">
 
-              {/* Progress */}
-              <div className="flex items-center gap-2">
-                {questions.map((_, i) => (
-                  <div key={i} className={`flex-1 h-2 rounded-full transition-all ${i < currentIndex ? "bg-green-500" : i === currentIndex ? "bg-rose-500" : "bg-zinc-800"}`} />
-                ))}
+              {/* Top bar */}
+              <div className="flex items-center justify-between px-4 py-3 bg-zinc-950/80 backdrop-blur-sm border-b border-zinc-800/50">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                  <span className="text-white font-semibold text-sm">{role} Interview</span>
+                </div>
+                <div className="flex gap-1">
+                  {questions.map((_, i) => (
+                    <div key={i} className={`w-6 h-1.5 rounded-full transition-all ${i < currentIdx ? "bg-green-500" : i === currentIdx ? "bg-rose-500" : "bg-zinc-700"}`} />
+                  ))}
+                </div>
+                <span className="text-zinc-400 text-sm">Q{currentIdx + 1}/{questions.length}</span>
               </div>
-              <p className="text-zinc-400 text-sm text-center">Question {currentIndex + 1} of {questions.length}</p>
 
-              {/* Camera */}
-              <div className="rounded-2xl overflow-hidden bg-black aspect-video relative">
+              {/* Main camera view */}
+              <div className="flex-1 relative">
                 <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
-                {!cameraOn && (
-                  <div className="absolute inset-0 flex items-center justify-center text-zinc-600">
-                    <VideoOff className="w-8 h-8" />
-                  </div>
-                )}
-                {isSpeaking && (
-                  <div className="absolute bottom-3 left-3 bg-rose-600/90 text-white text-xs px-3 py-1 rounded-full flex items-center gap-1">
-                    <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                    AI Speaking...
-                  </div>
-                )}
+
+                {/* AI speaking overlay */}
+                <AnimatePresence>
+                  {isSpeaking && aiText && (
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
+                      className="absolute inset-x-4 bottom-32 bg-zinc-900/95 backdrop-blur-sm border border-rose-500/40 rounded-2xl p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center flex-shrink-0">
+                          <span className="text-white text-xs font-bold">AI</span>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-rose-400 text-xs font-semibold">Speaking</span>
+                            <div className="flex gap-0.5">
+                              {[0, 1, 2].map(i => (
+                                <motion.div key={i} className="w-1 h-3 bg-rose-400 rounded-full"
+                                  animate={{ scaleY: [1, 2, 1] }} transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.2 }} />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-white text-sm leading-relaxed">{aiText}</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Listening indicator */}
                 {isListening && (
-                  <div className="absolute bottom-3 right-3 bg-green-600/90 text-white text-xs px-3 py-1 rounded-full flex items-center gap-1">
-                    <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                  <div className="absolute top-4 right-4 bg-green-600/90 backdrop-blur-sm text-white text-xs px-3 py-2 rounded-full flex items-center gap-2">
+                    <motion.div className="w-2 h-2 bg-white rounded-full" animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity, duration: 0.8 }} />
                     Listening...
                   </div>
                 )}
               </div>
 
-              {/* Current Question */}
-              <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5">
-                <p className="text-xs text-rose-400 font-semibold mb-2 uppercase tracking-wider">{questions[currentIndex]?.topic}</p>
-                <p className="text-white text-lg font-medium">{questions[currentIndex]?.question}</p>
-              </div>
+              {/* Bottom controls */}
+              <div className="bg-zinc-950/95 backdrop-blur-sm border-t border-zinc-800/50 p-4 space-y-3">
+                {/* Transcript */}
+                {(transcript || isListening) && (
+                  <div className="bg-zinc-900/80 border border-zinc-700 rounded-xl px-4 py-3 min-h-[50px]">
+                    <p className="text-zinc-500 text-xs mb-1">Your answer:</p>
+                    <p className="text-white text-sm">{transcript || <span className="text-zinc-600 italic">Speak now...</span>}</p>
+                  </div>
+                )}
 
-              {/* Transcript */}
-              <div className="bg-zinc-900/40 border border-zinc-700 rounded-xl p-4 min-h-[80px]">
-                <p className="text-xs text-zinc-500 mb-2">Your Answer:</p>
-                <p className="text-zinc-200 text-sm">{transcript || <span className="text-zinc-600 italic">Start speaking after clicking the mic...</span>}</p>
-              </div>
-
-              {statusMsg && <p className="text-center text-zinc-400 text-sm">{statusMsg}</p>}
-
-              {/* Controls */}
-              <div className="flex gap-3">
-                <Button
-                  onClick={isListening ? stopListening : startListening}
-                  disabled={isSpeaking || loading}
-                  className={`flex-1 ${isListening ? "bg-red-600 hover:bg-red-500" : "bg-green-600 hover:bg-green-500"} disabled:opacity-40`}
-                >
-                  {isListening ? <><MicOff className="w-4 h-4 mr-2" />Stop Mic</> : <><Mic className="w-4 h-4 mr-2" />Start Mic</>}
-                </Button>
-                <Button onClick={submitAnswer} disabled={loading || isSpeaking || !transcript.trim()} className="flex-1 bg-rose-600 hover:bg-rose-500 disabled:opacity-40">
-                  {loading ? "Evaluating..." : "Submit Answer"}
-                </Button>
+                <div className="flex gap-3">
+                  <Button onClick={isListening ? stopListening : startListening}
+                    disabled={isSpeaking || loading}
+                    className={`flex-1 py-3 ${isListening ? "bg-red-600 hover:bg-red-500" : "bg-zinc-800 hover:bg-zinc-700 border border-zinc-600"} disabled:opacity-40`}>
+                    {isListening ? <><MicOff className="w-5 h-5 mr-2" />Stop</> : <><Mic className="w-5 h-5 mr-2" />Speak</>}
+                  </Button>
+                  <Button onClick={submitAnswer}
+                    disabled={loading || isSpeaking || !transcript.trim()}
+                    className="flex-1 py-3 bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 disabled:opacity-40">
+                    {loading ? "Evaluating..." : "Submit Answer →"}
+                  </Button>
+                </div>
               </div>
             </motion.div>
           )}
 
-          {/* STEP 3: Results */}
+          {/* ── STEP 4: Results ── */}
           {step === "results" && (
-            <motion.div key="results" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-5">
+            <motion.div key="results" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              className="p-4 md:p-8 space-y-6 max-w-3xl mx-auto w-full">
 
-              {/* Score Card */}
-              <div className="bg-gradient-to-br from-rose-900/20 to-orange-900/20 border border-rose-500/30 rounded-2xl p-6 text-center">
-                <p className="text-zinc-400 text-sm mb-1">Overall Score</p>
-                <p className={`text-5xl font-bold mb-3 ${score >= 70 ? "text-green-400" : score >= 50 ? "text-yellow-400" : "text-red-400"}`}>{score}%</p>
-                <div className="flex justify-center gap-6 text-sm">
-                  <span className="text-green-400">✓ {correct} Correct</span>
-                  <span className="text-yellow-400">~ {partial} Partial</span>
-                  <span className="text-red-400">✗ {wrong} Wrong</span>
+              {/* Score */}
+              <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 rounded-3xl p-8 text-center">
+                <h2 className="text-white text-2xl font-bold mb-4">Interview Complete! 🎉</h2>
+                <div className={`text-7xl font-black mb-4 ${score >= 70 ? "text-green-400" : score >= 50 ? "text-yellow-400" : "text-red-400"}`}>{score}%</div>
+                <div className="flex justify-center gap-8 text-sm">
+                  <div className="text-center"><p className="text-2xl font-bold text-green-400">{results.filter(r => r.status === "correct").length}</p><p className="text-zinc-400">Correct</p></div>
+                  <div className="text-center"><p className="text-2xl font-bold text-yellow-400">{results.filter(r => r.status === "partial").length}</p><p className="text-zinc-400">Partial</p></div>
+                  <div className="text-center"><p className="text-2xl font-bold text-red-400">{results.filter(r => r.status === "wrong").length}</p><p className="text-zinc-400">Wrong</p></div>
                 </div>
               </div>
 
-              {/* Per Question Results */}
+              {/* Per question breakdown */}
               <div className="space-y-4">
                 {results.map((r, i) => (
-                  <div key={i} className={`border rounded-2xl p-5 ${r.status === "correct" ? "bg-green-900/10 border-green-500/30" : r.status === "partial" ? "bg-yellow-900/10 border-yellow-500/30" : "bg-red-900/10 border-red-500/30"}`}>
-                    <div className="flex items-center gap-2 mb-2">
+                  <div key={i} className={`rounded-2xl border p-5 ${r.status === "correct" ? "bg-green-950/30 border-green-500/30" : r.status === "partial" ? "bg-yellow-950/30 border-yellow-500/30" : "bg-red-950/30 border-red-500/30"}`}>
+                    <div className="flex items-center gap-2 mb-3">
                       {r.status === "correct" ? <CheckCircle className="w-5 h-5 text-green-400" /> : r.status === "partial" ? <AlertCircle className="w-5 h-5 text-yellow-400" /> : <XCircle className="w-5 h-5 text-red-400" />}
-                      <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">{r.topic}</span>
+                      <span className="text-white font-semibold">Q{i + 1}: {r.topic}</span>
                       <span className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-full ${r.status === "correct" ? "bg-green-500/20 text-green-300" : r.status === "partial" ? "bg-yellow-500/20 text-yellow-300" : "bg-red-500/20 text-red-300"}`}>
-                        {r.status.toUpperCase()}
+                        {r.status === "correct" ? "✓ CORRECT" : r.status === "partial" ? "~ PARTIAL" : "✗ WRONG"}
                       </span>
                     </div>
-                    <p className="text-white text-sm font-medium mb-2">{r.question}</p>
-                    <p className="text-zinc-400 text-sm mb-2"><span className="text-zinc-300 font-medium">Your answer:</span> {r.userAnswer}</p>
-                    <p className="text-zinc-400 text-sm mb-2"><span className="text-zinc-300 font-medium">Feedback:</span> {r.feedback}</p>
+                    <p className="text-zinc-300 text-sm mb-2 font-medium">{r.question}</p>
+                    <p className="text-zinc-400 text-sm mb-2"><span className="text-zinc-200">Your answer:</span> {r.userAnswer}</p>
+                    <p className="text-zinc-400 text-sm mb-2"><span className="text-zinc-200">Feedback:</span> {r.feedback}</p>
                     {r.status !== "correct" && (
-                      <p className="text-green-300 text-sm"><span className="font-medium">Ideal answer:</span> {r.correctAnswer}</p>
+                      <div className="mt-2 p-3 bg-green-950/40 border border-green-500/20 rounded-xl">
+                        <p className="text-green-300 text-sm"><span className="font-semibold">✅ Ideal Answer:</span> {r.correctAnswer}</p>
+                      </div>
                     )}
                   </div>
                 ))}
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3">
-                <Button onClick={downloadReport} className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500">
+              <div className="flex gap-3 pb-8">
+                <Button onClick={downloadPDF} className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 py-3">
                   <Download className="w-4 h-4 mr-2" />Download PDF Report
                 </Button>
-                <Button onClick={reset} variant="outline" className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800">
+                <Button onClick={reset} variant="outline" className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800 py-3">
                   <RotateCcw className="w-4 h-4 mr-2" />New Interview
                 </Button>
               </div>
