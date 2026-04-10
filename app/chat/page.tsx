@@ -10,6 +10,7 @@ import { ResumeMatcher } from "@/components/features/resume-matcher";
 import { InterviewCoach } from "@/components/features/interview-coach";
 import { JobRecommendations } from "@/components/features/job-recommendations";
 import { Dashboard } from "@/components/features/dashboard";
+import { MockInterview } from "@/components/features/mock-interview";
 import { useRouter } from "next/navigation";
 
 export default function ChatPage() {
@@ -53,6 +54,8 @@ export default function ChatPage() {
                         return <Goals />;
                     case "karaoke":
                         return <ChatKaraoke />;
+                    case "mockinterview":
+                        return <MockInterview />;
                     default:
                         return <ChatInterface />;
                 }

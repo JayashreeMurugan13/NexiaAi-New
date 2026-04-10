@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, MessageSquare, Layout, LogOut, User as UserIcon, Settings, Target, Music, Menu, X, TrendingUp, Video, BarChart3, Briefcase } from "lucide-react";
+import { Sparkles, MessageSquare, Layout, LogOut, User as UserIcon, Settings, Target, Music, Menu, X, TrendingUp, Video, BarChart3, Briefcase, Mic } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -14,13 +14,13 @@ if (typeof document !== 'undefined') {
 }
 
 interface AppShellProps {
-    children: (activeTab: "chat" | "studio" | "resume" | "interview" | "goals" | "karaoke" | "dashboard" | "jobs") => React.ReactNode;
-    initialTab?: "chat" | "studio" | "resume" | "interview" | "goals" | "karaoke" | "dashboard" | "jobs";
+    children: (activeTab: "chat" | "studio" | "resume" | "interview" | "goals" | "karaoke" | "dashboard" | "jobs" | "mockinterview") => React.ReactNode;
+    initialTab?: "chat" | "studio" | "resume" | "interview" | "goals" | "karaoke" | "dashboard" | "jobs" | "mockinterview";
     user?: User | null;
 }
 
 export function AppShell({ children, initialTab = "chat", user }: AppShellProps) {
-    const [activeTab, setActiveTab] = useState<"chat" | "studio" | "resume" | "interview" | "goals" | "karaoke" | "dashboard" | "jobs">(initialTab);
+    const [activeTab, setActiveTab] = useState<"chat" | "studio" | "resume" | "interview" | "goals" | "karaoke" | "dashboard" | "jobs" | "mockinterview">(initialTab);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [userName, setUserName] = useState("Guest");
     const router = useRouter();
@@ -96,6 +96,13 @@ export function AppShell({ children, initialTab = "chat", user }: AppShellProps)
             icon: Music,
             gradient: "from-green-500 to-teal-500",
             description: "Turn chats into songs"
+        },
+        {
+            id: "mockinterview" as const,
+            label: "Mock Interview",
+            icon: Mic,
+            gradient: "from-rose-500 to-orange-500",
+            description: "AI voice interview practice"
         }
     ];
 
