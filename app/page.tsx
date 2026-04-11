@@ -11,13 +11,13 @@ import { Dashboard } from "@/components/features/dashboard";
 import { JobRecommendations } from "@/components/features/job-recommendations";
 import { InterviewCoach } from "@/components/features/interview-coach";
 import { ChatKaraoke } from "@/components/features/chat-karaoke";
+import { FortuneTeller } from "@/components/features/fortune-teller";
+import { MockInterview } from "@/components/features/mock-interview";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [showOnboarding, setShowOnboarding] = useState(false);
-    const [showApp, setShowApp] = useState(true); // Start with app shown
     const router = useRouter();
 
     useEffect(() => {
@@ -25,13 +25,7 @@ export default function Home() {
             const currentUser = localStorage.getItem('nexia_current_user');
             if (currentUser) {
                 setUser(JSON.parse(currentUser));
-                // Check if user was already using the app (skip landing page)
-                const hasUsedApp = localStorage.getItem('nexia_has_used_app');
-                if (hasUsedApp === 'true') {
-                    setShowApp(true);
-                }
             } else {
-                // Check for user from OAuth callback cookie
                 const cookies = document.cookie.split(';');
                 const userCookie = cookies.find(c => c.trim().startsWith('nexia_user='));
                 if (userCookie) {
@@ -52,33 +46,22 @@ export default function Home() {
         return <HomePage 
             onGetStarted={() => router.push('/signup')} 
             onGoToStudio={() => router.push('/signup')}
-            onGoToGoals={() => router.push('/signup')}
-        />;
-    }
-
-    if (showOnboarding) {
-        return <WelcomeFlow onComplete={() => setShowOnboarding(false)} />;
-    }
-
-    if (!showApp && !user) {
-        return <HomePage 
-            onGetStarted={() => router.push('/signup')} 
-            onGoToStudio={() => router.push('/signup')}
-            onGoToGoals={() => router.push('/signup')}
         />;
     }
 
     return (
         <AppShell>
             {(activeTab) => {
-                if (activeTab === "dashboard") return <Dashboard />;
-                if (activeTab === "jobs") return <JobRecommendations />;
                 if (activeTab === "chat") return <ChatInterface />;
                 if (activeTab === "studio") return <PromptStudio />;
-                if (activeTab === "goals") return <Goals />;
                 if (activeTab === "resume") return <ResumeMatcher />;
                 if (activeTab === "interview") return <InterviewCoach />;
+                if (activeTab === "jobs") return <JobRecommendations />;
+                if (activeTab === "goals") return <Goals />;
+                if (activeTab === "dashboard") return <Dashboard />;
                 if (activeTab === "karaoke") return <ChatKaraoke />;
+                if (activeTab === "fortune") return <FortuneTeller />;
+                if (activeTab === "mockinterview") return <MockInterview />;
                 return <ChatInterface />;
             }}
         </AppShell>

@@ -13,6 +13,7 @@ type ChatRequestBody = {
   messages: ChatMessage[];
   enhance?: boolean;
   formatQA?: boolean;
+  useSystemAsIs?: boolean;
 };
 
 type GroqResponse = {
@@ -51,6 +52,7 @@ export async function POST(req: Request) {
     // ✅ FORCE TYPES
     const messages: ChatMessage[] = parsedBody.messages;
     const enhance: boolean = Boolean(parsedBody.enhance);
+    const useSystemAsIs: boolean = Boolean(parsedBody.useSystemAsIs);
 
     if (!process.env.GROQ_API_KEY) {
       return NextResponse.json({
@@ -74,6 +76,11 @@ export async function POST(req: Request) {
     );
 
     
+    // If useSystemAsIs, pass messages as-is (system message already included by caller)
+    const finalMessages: ChatMessage[] = useSystemAsIs
+      ? cleanMessages
+      : [{ role: "system", content: systemPrompt }, ...cleanMessages];
+
     const response = await fetch(
       "https://api.groq.com/openai/v1/chat/completions",
       {
@@ -84,10 +91,7 @@ export async function POST(req: Request) {
         },
         body: JSON.stringify({
           model: "llama-3.1-8b-instant",
-          messages: [
-            { role: "system", content: systemPrompt },
-            ...cleanMessages,
-          ],
+          messages: finalMessages,
           temperature: 0.7,
           max_tokens: 1000,
         }),

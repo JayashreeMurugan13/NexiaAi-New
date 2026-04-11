@@ -78,20 +78,12 @@ export function MockInterview() {
     if (!role.trim()) return;
     setLoading(true);
     try {
-      const res = await fetch("/api/chat", {
+      const res = await fetch("/api/interview", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [
-            { role: "system", content: `Generate exactly 5 interview questions for ${role}. Return ONLY JSON: {"questions":[{"question":"...","topic":"..."}]}` },
-            { role: "user", content: `5 interview questions for ${role}` }
-          ]
-        })
+        body: JSON.stringify({ type: "questions", role })
       });
       const data = await res.json();
-      let str = data.content.trim();
-      if (str.includes("```json")) str = str.split("```json")[1].split("```")[0].trim();
-      else if (str.includes("```")) str = str.split("```")[1].split("```")[0].trim();
-      const parsed = JSON.parse(str);
+      const parsed = data;
       setQuestions(parsed.questions);
       setStep("interview");
       setCurrentIdx(0);
@@ -119,20 +111,11 @@ export function MockInterview() {
 
     let result: Result;
     try {
-      const res = await fetch("/api/chat", {
+      const res = await fetch("/api/interview", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [
-            { role: "system", content: `You are an expert ${role} interviewer. Evaluate this answer strictly. Return ONLY JSON: {"status":"correct"|"partial"|"wrong","feedback":"specific feedback mentioning what they said right or wrong","correctAnswer":"what the ideal answer should include"}` },
-            { role: "user", content: `Question: ${q.question}\nAnswer: ${ans || "(no answer)"}` }
-          ]
-        })
+        body: JSON.stringify({ type: "evaluate", role, question: q.question, answer: ans || "(no answer)" })
       });
-      const data = await res.json();
-      let str = data.content.trim();
-      if (str.includes("```json")) str = str.split("```json")[1].split("```")[0].trim();
-      else if (str.includes("```")) str = str.split("```")[1].split("```")[0].trim();
-      const p = JSON.parse(str);
+      const p = await res.json();
       result = { question: q.question, topic: q.topic, userAnswer: ans || "(no answer)", status: p.status, feedback: p.feedback, correctAnswer: p.correctAnswer };
     } catch {
       result = {
@@ -235,23 +218,23 @@ export function MockInterview() {
   const score = results.length > 0 ? Math.round(((results.filter(r => r.status === "correct").length + results.filter(r => r.status === "partial").length * 0.5) / results.length) * 100) : 0;
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-zinc-950 overflow-y-auto">
+    <div className="flex flex-col flex-1 h-full bg-zinc-950 relative" style={{ minHeight: 0 }}>
 
       {/* Full screen camera background during interview */}
       {step === "interview" && (
-        <div className="fixed inset-0 z-0">
+        <div className="absolute inset-0 z-0">
           <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1] opacity-30" />
           <div className="absolute inset-0 bg-zinc-950/70" />
         </div>
       )}
 
-      <div className={`relative z-10 flex flex-col h-full ${step === "interview" ? "" : "p-4 md:p-8"}`}>
+      <div className={`relative z-10 flex flex-col flex-1 ${step === "interview" ? "overflow-hidden" : "overflow-y-auto p-4 md:p-8"}`} style={{ minHeight: 0 }}>
         <AnimatePresence mode="wait">
 
           {/* ── STEP 1: Camera Permission ── */}
           {step === "camera" && (
             <motion.div key="camera" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center min-h-screen p-6 text-center">
+              className="flex flex-col items-center justify-center min-h-full p-6 text-center">
               <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 2 }}
                 className="w-24 h-24 rounded-full bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center mb-6 shadow-2xl shadow-rose-500/30">
                 <Video className="w-12 h-12 text-white" />
@@ -286,7 +269,7 @@ export function MockInterview() {
           {/* ── STEP 2: Select Role ── */}
           {step === "role" && (
             <motion.div key="role" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center min-h-screen p-6">
+              className="flex flex-col items-center justify-center min-h-full p-6">
 
               {/* Small camera preview */}
               <div className="w-32 h-24 rounded-xl overflow-hidden border border-zinc-700 mb-8 relative">
@@ -329,7 +312,7 @@ export function MockInterview() {
           {/* ── STEP 3: Interview ── */}
           {step === "interview" && (
             <motion.div key="interview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="flex flex-col h-screen">
+              className="flex flex-col h-full">
 
               {/* Top bar */}
               <div className="flex items-center justify-between px-4 py-3 bg-zinc-950/80 backdrop-blur-sm border-b border-zinc-800/50">
