@@ -148,6 +148,8 @@ export function MockInterview() {
     a.download = `interview-${role.replace(/\s+/g, '-')}-${Date.now()}.webm`;
     a.click();
   };
+
+  const capturePhoto = () => {
     const video = interviewVideoRef.current || videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
