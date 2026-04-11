@@ -28,12 +28,16 @@ export function MockInterview() {
   const [capturedPhoto, setCapturedPhoto] = useState<string>("");
   const [cheatWarning, setCheatWarning] = useState("");
   const [lookAwayCount, setLookAwayCount] = useState(0);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordedVideoUrl, setRecordedVideoUrl] = useState<string>("");
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const interviewVideoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recognitionRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
 
   // Attach stream to interview video when step changes to interview
   useEffect(() => {
@@ -48,6 +52,7 @@ export function MockInterview() {
       streamRef.current?.getTracks().forEach(t => t.stop());
       window.speechSynthesis?.cancel();
       recognitionRef.current?.stop();
+      if (recordedVideoUrl) URL.revokeObjectURL(recordedVideoUrl);
     };
   }, []);
 
@@ -109,7 +114,40 @@ export function MockInterview() {
     }
   };
 
-  const capturePhoto = () => {
+  const startRecording = () => {
+    if (!streamRef.current) return;
+    recordedChunksRef.current = [];
+    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') 
+      ? 'video/webm;codecs=vp9' 
+      : 'video/webm';
+    const recorder = new MediaRecorder(streamRef.current, { mimeType });
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) recordedChunksRef.current.push(e.data);
+    };
+    recorder.onstop = () => {
+      const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      setRecordedVideoUrl(url);
+    };
+    recorder.start(1000);
+    mediaRecorderRef.current = recorder;
+    setIsRecording(true);
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const downloadVideo = () => {
+    if (!recordedVideoUrl) return;
+    const a = document.createElement('a');
+    a.href = recordedVideoUrl;
+    a.download = `interview-${role.replace(/\s+/g, '-')}-${Date.now()}.webm`;
+    a.click();
+  };
     const video = interviewVideoRef.current || videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
@@ -181,6 +219,7 @@ export function MockInterview() {
       setStep("interview");
       setCurrentIdx(0);
       setResults([]);
+      startRecording();
       speak(`Hello! Welcome to your ${role} interview. I will ask you 5 questions. Let's begin. Question 1. ${data.questions[0].question}`);
     } catch {
       const fallback: Question[] = [
@@ -192,6 +231,7 @@ export function MockInterview() {
       ];
       setQuestions(fallback);
       setStep("interview");
+      startRecording();
       speak(`Hello! Welcome to your ${role} interview. Let's begin. Question 1. ${fallback[0].question}`);
     } finally { setLoading(false); }
   };
@@ -243,6 +283,7 @@ export function MockInterview() {
         // Capture final photo
         const finalPhoto = capturePhoto();
         if (finalPhoto) setCapturedPhoto(finalPhoto);
+        stopRecording();
         setStep("results");
         const sc = Math.round(((newResults.filter(r => r.status === "correct").length + newResults.filter(r => r.status === "partial").length * 0.5) / newResults.length) * 100);
         speak(`Interview complete! Your overall score is ${sc} percent.`);
@@ -310,9 +351,11 @@ export function MockInterview() {
     streamRef.current?.getTracks().forEach(t => t.stop());
     window.speechSynthesis.cancel();
     recognitionRef.current?.stop();
+    stopRecording();
     setCameraOn(false); setStep("camera"); setRole(""); setQuestions([]);
     setCurrentIdx(0); setResults([]); setTranscript(""); setAiText("");
     setCapturedPhoto(""); setCheatWarning(""); setLookAwayCount(0);
+    setRecordedVideoUrl("");
   };
 
   const score = results.length > 0 ? Math.round(((results.filter(r => r.status === "correct").length + results.filter(r => r.status === "partial").length * 0.5) / results.length) * 100) : 0;
@@ -424,6 +467,11 @@ export function MockInterview() {
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                 <span className="text-white font-semibold text-sm">{role}</span>
+                {isRecording && (
+                  <span className="text-red-400 text-xs flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />REC
+                  </span>
+                )}
               </div>
               <div className="flex gap-1">
                 {questions.map((_, i) => (
@@ -557,10 +605,15 @@ export function MockInterview() {
               ))}
             </div>
 
-            <div className="flex gap-3 pb-8">
+            <div className="flex gap-3 pb-8 flex-wrap">
               <Button onClick={downloadPDF} className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 py-3">
                 <Download className="w-4 h-4 mr-2" />Download PDF
               </Button>
+              {recordedVideoUrl && (
+                <Button onClick={downloadVideo} className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 py-3">
+                  <Video className="w-4 h-4 mr-2" />Download Video
+                </Button>
+              )}
               <Button onClick={reset} variant="outline" className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800 py-3">
                 <RotateCcw className="w-4 h-4 mr-2" />New Interview
               </Button>
