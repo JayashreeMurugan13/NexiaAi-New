@@ -139,9 +139,27 @@ export function MockInterview() {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) { alert("Use Chrome for speech recognition."); return; }
     const r = new SR();
-    r.continuous = true; r.interimResults = true; r.lang = "en-US";
-    r.onresult = (e: any) => setTranscript(Array.from(e.results).map((x: any) => x[0].transcript).join(""));
+    r.continuous = true;
+    r.interimResults = true;
+    r.lang = "en-IN"; // Indian English for better accent recognition
+    r.maxAlternatives = 3;
+    r.onresult = (e: any) => {
+      let finalTranscript = "";
+      let interimTranscript = "";
+      for (let i = 0; i < e.results.length; i++) {
+        if (e.results[i].isFinal) {
+          finalTranscript += e.results[i][0].transcript;
+        } else {
+          interimTranscript += e.results[i][0].transcript;
+        }
+      }
+      setTranscript(finalTranscript || interimTranscript);
+    };
     r.onend = () => setIsListening(false);
+    r.onerror = (e: any) => {
+      console.error('Speech error:', e.error);
+      setIsListening(false);
+    };
     r.start();
     recognitionRef.current = r;
     setIsListening(true);
@@ -469,8 +487,13 @@ export function MockInterview() {
             <div className="bg-zinc-950 border-t border-zinc-800 p-4 space-y-3">
               {(transcript || isListening) && (
                 <div className="bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3">
-                  <p className="text-zinc-500 text-xs mb-1">Your answer:</p>
-                  <p className="text-white text-sm">{transcript || <span className="text-zinc-600 italic">Speak now...</span>}</p>
+                  <p className="text-zinc-500 text-xs mb-1">Your answer: <span className="text-zinc-600">(you can edit if misheard)</span></p>
+                  <textarea
+                    value={transcript}
+                    onChange={(e) => setTranscript(e.target.value)}
+                    className="w-full bg-transparent text-white text-sm resize-none focus:outline-none min-h-[60px]"
+                    placeholder="Speak now or type your answer..."
+                  />
                 </div>
               )}
               <div className="flex gap-3">
